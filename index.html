@@ -28,7 +28,7 @@
     height: 580px;
     background: #111;
     border: 4px solid var(--orange);
-    box-shadow: 0 0 25px var(--orange), inset 0 0 50px rgba(255,107,0,0.1);
+    box-shadow: 0 0 30px var(--orange), inset 0 0 60px rgba(255,107,0,0.15);
     position: relative;
     overflow: hidden;
     padding: 25px;
@@ -38,69 +38,69 @@
   .scanlines {
     position: absolute;
     inset: 0;
-    background: repeating-linear-gradient(to bottom, transparent 0px, transparent 4px, rgba(255,107,0,0.07) 4px, rgba(255,107,0,0.07) 7px);
+    background: repeating-linear-gradient(to bottom, transparent 0px, transparent 4px, rgba(255,107,0,0.1) 4px, rgba(255,107,0,0.1) 7px);
     pointer-events: none;
     z-index: 20;
-    animation: scan 4s linear infinite;
+    animation: scan 2.5s linear infinite;
   }
 
   @keyframes scan {
     0% { background-position: 0 0; }
-    100% { background-position: 0 300px; }
+    100% { background-position: 0 400px; }
   }
 
   .header {
     text-align: center;
-    font-size: 20px;
+    font-size: 22px;
     letter-spacing: 8px;
-    margin-bottom: 15px;
-    text-shadow: 0 0 15px var(--orange);
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px var(--orange);
   }
 
   .gauge-container {
     position: relative;
-    width: 260px;
-    height: 260px;
-    margin: 0 auto 20px;
+    width: 280px;
+    height: 280px;
+    margin: 0 auto 25px;
   }
 
   .gauge {
-    width: 260px;
-    height: 260px;
+    width: 280px;
+    height: 280px;
     border-radius: 50%;
-    background: conic-gradient(var(--orange) 0deg 280deg, #222 280deg 360deg);
-    box-shadow: 0 0 35px var(--orange), inset 0 0 70px rgba(0,0,0,0.8);
-    border: 10px solid #222;
+    background: conic-gradient(var(--orange) 0deg 0deg, #222 0deg 360deg);
+    box-shadow: 0 0 40px var(--orange), inset 0 0 80px rgba(0,0,0,0.8);
+    border: 12px solid #222;
     position: relative;
-    transition: background 0.8s ease-out;
+    transition: background 1.2s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .gauge::after {
     content: '';
     position: absolute;
-    inset: 22px;
+    inset: 25px;
     background: #0A0A0A;
     border-radius: 50%;
-    box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
   }
 
   .gauge-value {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 72px;
+    font-size: 82px;
     font-weight: 900;
     z-index: 2;
-    text-shadow: 0 0 25px var(--orange);
-    transition: color 0.4s ease, transform 0.2s ease;
+    text-shadow: 0 0 30px var(--orange);
+    transition: all 0.4s ease;
   }
 
   .gauge-label {
     position: absolute;
-    bottom: 42px; left: 50%;
+    bottom: 45px; left: 50%;
     transform: translateX(-50%);
-    font-size: 14px;
-    letter-spacing: 4px;
+    font-size: 15px;
+    letter-spacing: 5px;
     z-index: 2;
     opacity: 0.85;
   }
@@ -108,57 +108,57 @@
   .vitals {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    margin-bottom: 18px;
+    gap: 16px;
+    margin-bottom: 20px;
   }
 
   .vital {
-    background: rgba(255,107,0,0.06);
-    border: 2px solid var(--orange);
-    padding: 10px 6px;
+    background: rgba(255,107,0,0.08);
+    border: 3px solid var(--orange);
+    padding: 12px 8px;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.4s ease;
   }
 
   .vital-value {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: bold;
     line-height: 1;
-    transition: color 0.3s ease, transform 0.15s ease;
+    transition: all 0.3s ease;
   }
 
   .status {
     text-align: center;
-    font-size: 14px;
-    padding: 10px;
-    border: 2px solid var(--orange);
-    letter-spacing: 2px;
-    background: rgba(0,0,0,0.5);
-    transition: all 0.5s ease;
+    font-size: 15px;
+    padding: 12px;
+    border: 3px solid var(--orange);
+    letter-spacing: 3px;
+    background: rgba(0,0,0,0.6);
+    transition: all 0.6s ease;
   }
 
-  .status.good { border-color: var(--green); color: var(--green); }
-  .status.warning { border-color: var(--red); color: var(--red); }
+  .status.good { border-color: var(--green); color: var(--green); box-shadow: 0 0 20px var(--green); }
+  .status.warning { border-color: var(--red); color: var(--red); box-shadow: 0 0 20px var(--red); }
 
   @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 25px var(--orange); }
-    50% { box-shadow: 0 0 40px var(--green); }
+    0%, 100% { box-shadow: 0 0 30px var(--orange); }
+    50% { box-shadow: 0 0 50px var(--green); }
   }
 
   .good-pulse {
-    animation: pulse 2s infinite ease-in-out;
+    animation: pulse 1.8s infinite ease-in-out;
   }
 
   @keyframes glitch {
     0% { transform: translate(0); }
-    20% { transform: translate(-2px, 2px); }
-    40% { transform: translate(-2px, -2px); }
-    60% { transform: translate(2px, 2px); }
-    80% { transform: translate(2px, -2px); }
+    20% { transform: translate(-3px, 3px); }
+    40% { transform: translate(-3px, -3px); }
+    60% { transform: translate(3px, 3px); }
+    80% { transform: translate(3px, -3px); }
     100% { transform: translate(0); }
   }
 
-  .glitch { animation: glitch 0.3s linear; }
+  .glitch { animation: glitch 0.35s linear; }
 </style>
 </head>
 <body>
@@ -178,7 +178,7 @@
   <div class="vitals">
     <div class="vital" id="vital-protein">
       <div class="vital-label">LCL CONC.</div>
-      <div class="vital-value" id="protein">142<span style="font-size:13px">g</span></div>
+      <div class="vital-value" id="protein">142<span style="font-size:14px">g</span></div>
     </div>
     <div class="vital" id="vital-activity">
       <div class="vital-label">POWER OUT</div>
@@ -186,7 +186,7 @@
     </div>
     <div class="vital" id="vital-water">
       <div class="vital-label">HYDRATION</div>
-      <div class="vital-value" id="water">2.1<span style="font-size:13px">L</span></div>
+      <div class="vital-value" id="water">2.1<span style="font-size:14px">L</span></div>
     </div>
   </div>
 
@@ -194,7 +194,7 @@
 </div>
 
 <script>
-// Load / Save data
+// Load / Save
 let data = {
   sync: 87,
   protein: 142,
@@ -213,9 +213,9 @@ function saveData() {
 
 function updateUI() {
   document.getElementById('sync').textContent = data.sync;
-  document.getElementById('protein').innerHTML = data.protein + '<span style="font-size:13px">g</span>';
+  document.getElementById('protein').innerHTML = data.protein + '<span style="font-size:14px">g</span>';
   document.getElementById('activity').textContent = (data.activity / 1000).toFixed(1) + 'k';
-  document.getElementById('water').innerHTML = data.water + '<span style="font-size:13px">L</span>';
+  document.getElementById('water').innerHTML = data.water + '<span style="font-size:14px">L</span>';
 
   const gauge = document.getElementById('gauge');
   const angle = data.sync * 3.6;
@@ -229,6 +229,8 @@ function updateUI() {
     gauge.style.background = `conic-gradient(var(--red) 0deg ${angle}deg, #222 ${angle}deg 360deg)`;
     document.getElementById('status').className = 'status warning';
     document.getElementById('status').textContent = 'WARNING: SYNC LOW • RECALIBRATE';
+    gauge.classList.add('glitch');
+    setTimeout(() => gauge.classList.remove('glitch'), 500);
   } else {
     gauge.style.background = `conic-gradient(var(--orange) 0deg ${angle}deg, #222 ${angle}deg 360deg)`;
     document.getElementById('status').className = 'status';
@@ -237,7 +239,7 @@ function updateUI() {
   }
 }
 
-// Gesture simulation (index pinch = log protein)
+// Gesture
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     data.protein += 10;
