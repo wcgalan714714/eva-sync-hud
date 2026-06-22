@@ -209,9 +209,9 @@
   .g-core{width:200px;height:200px;border-radius:50%;border:4px solid var(--purple-dark);
     background:conic-gradient(var(--orange) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);
     box-shadow:0 0 26px rgba(255,107,0,.7);transition:background .05s;position:relative}
-  .g-core.good{background:conic-gradient(var(--green-neon) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gp .3s ease-in-out infinite}
+  .g-core.good{background:conic-gradient(var(--green-neon) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gp .45s ease-in-out infinite}
   .g-core.low{background:conic-gradient(var(--red) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gw .12s ease-in-out infinite}
-  @keyframes gp{50%{box-shadow:0 0 48px var(--green-neon);transform:scale(1.03)}}
+  @keyframes gp{50%{box-shadow:0 0 52px var(--green-neon),0 0 20px rgba(153,92,208,.4);transform:scale(1.02)}}
   @keyframes gw{50%{box-shadow:0 0 40px var(--red)}}
   .g-hole{position:absolute;inset:24px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
   .sync-n{font-size:48px;font-weight:900;color:var(--orange-bright);line-height:1}
@@ -229,7 +229,8 @@
   .tox-p .bars{display:flex;gap:3px;align-items:flex-end;height:32px;border-left:2px solid var(--purple);padding-left:4px}
   .tox-p .bars .b{width:16px;background:var(--green-neon);animation:tb .45s ease-in-out infinite}
   .tox-p .bars .b.bad{background:var(--red)}
-  .wv{position:absolute;left:26px;right:8px;bottom:44px;height:58px;border:1px solid rgba(142,223,95,.3);overflow:hidden}
+  .wv{position:absolute;left:26px;right:8px;bottom:44px;height:62px;border:1px solid rgba(142,223,95,.35);overflow:hidden;
+    box-shadow:inset 0 0 16px rgba(153,92,208,.15)}
   #hud-wv{width:100%;height:100%;display:block}
   .wv-label{position:absolute;left:30px;bottom:46px;font-size:5px;color:var(--orange);letter-spacing:1.5px;z-index:2;pointer-events:none}
   .log-p{position:absolute;left:26px;right:8px;bottom:6px;height:32px;border:1px solid var(--orange);padding:3px 6px;font-size:7px}
@@ -365,7 +366,7 @@
     </div>
     <div class="tox-p"><h>MENTAL TOXICITY</h><div class="bars" id="tox-p"></div></div>
     <div class="wv-label">NEURAL SYNC TRACE • 神経同期</div>
-    <div class="wv"><canvas id="hud-wv" width="564" height="58"></canvas></div>
+    <div class="wv"><canvas id="hud-wv" width="564" height="62"></canvas></div>
     <div class="log-p"><div class="h">NEURAL LOG • <span id="log-t">--:--:--</span></div><div class="b" id="log-b">SYSTEM ONLINE</div></div>
   </div>
 </div>
@@ -622,69 +623,42 @@ function drawWave(ctx,w,h,stress,fast){
   });
 }
 
-/* HUD main menu — scrolling ECG / neural monitor traces (not sine blobs) */
-function waveSpike(phase,type,stress){
-  const p=((phase%1)+1)%1;
-  if(type==='ecg'){
-    if(p<.05)return 0;
-    if(p<.085)return .14*Math.sin((p-.05)/.035*Math.PI);
-    if(p<.12)return 0;
-    if(p<.135)return -.1-.05*stress;
-    if(p<.148)return 1.15+.35*stress;
-    if(p<.162)return -.45-.15*stress;
-    if(p<.22)return 0;
-    if(p<.34)return .28*Math.sin((p-.22)/.12*Math.PI)*(.6+stress*.4);
-    return 0;
-  }
-  if(type==='theta'){
-    if(p<.08)return 0;
-    if(p<.2)return .55*Math.sin((p-.08)/.12*Math.PI);
-    if(p<.45)return 0;
-    if(p<.58)return -.35*Math.sin((p-.45)/.13*Math.PI);
-    return .06*Math.sin(p*Math.PI*8);
-  }
-  const burst=p>.7&&p<.82?.7*Math.sin((p-.7)/.12*Math.PI)*(stress+.3):0;
-  return .1*Math.sin(p*Math.PI*2)+.06*Math.sin(p*Math.PI*11)+burst;
+/* HUD main menu — wide rolling sync waves (Evangelion-style, not ECG) */
+function hudWaveY(x,ft,wv,h,stress){
+  const t=x*wv.freq-ft*wv.scroll+wv.phase;
+  const a=wv.amp*(wv.ampScale||1);
+  return h/2
+    +Math.sin(t)*a
+    +Math.sin(t*.41+wv.phase)*a*.42
+    +Math.sin(t*.19)*a*.18
+    +(wv.hi?Math.sin(t*1.7)*a*.12*(.4+stress):0);
 }
 
 function drawHudWaveform(ctx,w,h,stress){
   const ft=animT();
-  const scroll=ft*.28;
-  const lanes=3,lh=h/lanes;
+  ctx.fillStyle='#030305';ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='rgba(142,223,95,.06)';ctx.lineWidth=1;
+  for(let x=0;x<w;x+=28){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  ctx.strokeStyle='rgba(153,92,208,.12)';ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
 
-  ctx.fillStyle='#040406';ctx.fillRect(0,0,w,h);
-  ctx.strokeStyle='rgba(142,223,95,.07)';ctx.lineWidth=1;
-  for(let x=0;x<w;x+=18){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
-  for(let i=1;i<lanes;i++){
-    ctx.strokeStyle='rgba(153,92,208,.18)';ctx.beginPath();ctx.moveTo(0,i*lh);ctx.lineTo(w,i*lh);ctx.stroke();
-  }
-
-  const channels=[
-    {col:'#8EDF5F',type:'ecg',cycle:68+stress*12,amp:lh*.4,lane:0},
-    {col:'#995CD0',type:'theta',cycle:105,amp:lh*.32,lane:1},
-    {col:'#FF6B00',type:'noise',cycle:42,amp:lh*.26,lane:2,off:14},
+  const waves=[
+    {col:'#995CD0',freq:.007,amp:h*.34,phase:0,scroll:.022,lw:1.8,fill:.06},
+    {col:'#8EDF5F',freq:.005,amp:h*.42,phase:1.8,scroll:.018,lw:2.2,fill:.08,ampScale:.85+stress*.2},
+    {col:'#FF6B00',freq:.009,amp:h*.28,phase:3.6,scroll:.026,lw:1.6,fill:.05,hi:true},
   ];
 
-  channels.forEach(ch=>{
-    const mid=ch.lane*lh+lh/2;
-    ctx.strokeStyle='rgba(255,45,0,.2)';ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(0,mid);ctx.lineTo(w,mid);ctx.stroke();
+  waves.forEach(wv=>{
+    const pts=[];
+    for(let x=0;x<=w;x+=2)pts.push([x,hudWaveY(x,ft,wv,h,stress)]);
 
-    ctx.strokeStyle=ch.col;ctx.lineWidth=1.5;ctx.shadowColor=ch.col;ctx.shadowBlur=5;
-    ctx.beginPath();
-    let px=-1,py=mid;
-    for(let x=0;x<w;x++){
-      const phase=(x+scroll+(ch.off||0))/ch.cycle;
-      const y=mid-waveSpike(phase,ch.type,stress)*ch.amp;
-      if(px>=0&&Math.abs(y-py)>lh*.35){ctx.lineTo(x,y)}else{x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
-      px=x;py=y;
-    }
-    ctx.stroke();ctx.shadowBlur=0;
+    ctx.beginPath();ctx.moveTo(0,h);pts.forEach(([x,y])=>ctx.lineTo(x,y));ctx.lineTo(w,h);ctx.closePath();
+    const g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,wv.col+'00');g.addColorStop(.5,wv.col+Math.floor(wv.fill*255).toString(16).padStart(2,'0'));g.addColorStop(1,wv.col+'00');
+    ctx.fillStyle=g;ctx.fill();
+
+    ctx.strokeStyle=wv.col;ctx.lineWidth=wv.lw;ctx.shadowColor=wv.col;ctx.shadowBlur=8;
+    ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();
+    ctx.shadowBlur=0;
   });
-
-  const sweep=((ft*1.4)%w)|0;
-  ctx.fillStyle='rgba(0,229,255,.55)';ctx.fillRect(sweep,0,2,h);
-  ctx.fillStyle='rgba(0,229,255,.25)';ctx.fillRect(sweep-6,0,6,h);
 }
 
 function drawEvaMini(ctx,w,h){
@@ -785,41 +759,41 @@ async function runBootSequence(){
   // Phase 1: System check (gif8) — fullscreen canvas + DOM slam
   await setBootPhase('bp-sys','SYSTEM CHECK — ENTRY PLUG');
   sysBoot=true;sysLevels=[0,0,0];segLevels=[0,0,0,0,0,0];
-  await wait(550);
+  await wait(320);
   $('boot-sys-ui').style.opacity='1';
-  for(const row of document.querySelectorAll('.boot-sys .sys-row')){if(!bootOn)break;row.classList.add('on');flash('#FF6B00');await wait(55)}
-  for(const seg of document.querySelectorAll('.boot-sys .seg')){if(!bootOn)break;seg.classList.add('on');await wait(35)}
-  await wait(120);sysBoot=false;
+  for(const row of document.querySelectorAll('.boot-sys .sys-row')){if(!bootOn)break;row.classList.add('on');flash('#FF6B00');await wait(38)}
+  for(const seg of document.querySelectorAll('.boot-sys .seg')){if(!bootOn)break;seg.classList.add('on');await wait(22)}
+  await wait(50);sysBoot=false;
 
   await setBootPhase('bp-eva','STRUCTURAL INSPECTION — 初号機');
-  bootPhase='eva';await wait(900);bootPhase='';
+  bootPhase='eva';await wait(520);bootPhase='';
 
   await setBootPhase('bp-magi','MAGI DEFENSE SCREEN');
   const c0=223.231,tM=performance.now();
   await new Promise(res=>{
     function tm(now){if(!bootOn){res();return}
       $('b-raised').textContent=fmt7((now-tM)/1000);
-      $('b-collapse').textContent=fmt7(Math.max(0,c0-(now-tM)*0.12));
-      if(now-tM<850)requestAnimationFrame(tm);else res()}
+      $('b-collapse').textContent=fmt7(Math.max(0,c0-(now-tM)*0.18));
+      if(now-tM<480)requestAnimationFrame(tm);else res()}
     requestAnimationFrame(tm);
   });
 
   await setBootPhase('bp-psycho','PSYCHOGRAPHIC — LINK A');
-  psychoBoot=true;await wait(850);psychoBoot=false;
+  psychoBoot=true;await wait(480);psychoBoot=false;
 
   await setBootPhase('bp-neural','NEURAL ACTIVITY — 神経活動');
-  neuralBoot=true;await wait(750);neuralBoot=false;
+  neuralBoot=true;await wait(420);neuralBoot=false;
 
   await setBootPhase('bp-cal','SYNCHRONIZATION — 同期率');
   await new Promise(res=>{
-    const s0=performance.now(),dur=1200;
+    const s0=performance.now(),dur=750;
     function cal(now){if(!bootOn){res();return}
       const p=Math.min(100,(now-s0)/dur*100);
       $('bc-ring').style.setProperty('--ca',p*3.6+'deg');
       $('bc-num').textContent=Math.floor(p).toString().padStart(2,'0');
       const msgs=['NEURAL LINK...','AT FIELD CALIB...','LCL STABLE','初号機 SYNC COMPLETE'];
       $('bc-msg').textContent=msgs[Math.min(3,Math.floor(p/25))];
-      if(p<100)requestAnimationFrame(cal);else setTimeout(res,200)}
+      if(p<100)requestAnimationFrame(cal);else setTimeout(res,100)}
     requestAnimationFrame(cal);
   });
 
@@ -878,7 +852,7 @@ function tick(){
     if(Math.abs(d)>.2)displaySync+=d*.45;else displaySync=state.sync;
     updateHud();tickLiveData();
     drawEvaMini($('eva-mini').getContext('2d'),84,96);
-    drawHudWaveform($('hud-wv').getContext('2d'),564,58,displaySync/100);
+    drawHudWaveform($('hud-wv').getContext('2d'),564,62,displaySync/100);
     if(frame%80===0)chroma();
     if(displaySync<45&&frame%20===0)flash('rgba(255,45,0,.35)');
   }
