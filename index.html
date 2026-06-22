@@ -78,7 +78,7 @@
     border:2px solid var(--orange);background:rgba(255,107,0,.08);
     display:flex;align-items:center;justify-content:center;
     font-size:8px;letter-spacing:4px;color:var(--orange-bright);
-    cursor:pointer;z-index:15;animation:eng .4s step-end infinite;
+    cursor:pointer;z-index:30;animation:eng .4s step-end infinite;
   }
   @keyframes eng{50%{background:rgba(142,223,95,.15);color:var(--green-neon);box-shadow:0 0 20px rgba(142,223,95,.4)}}
   .land-engage.wait{opacity:.35;pointer-events:none;animation:none}
@@ -214,13 +214,13 @@
     <div class="feed feed-psycho"><span class="feed-label">PSYCHOGRAPHIC</span><canvas id="fc-psycho" width="178" height="88"></canvas></div>
     <div class="feed feed-tox"><span class="feed-label">MENTAL TOXICITY</span><div class="tox-bars-land" id="land-tox"></div></div>
     <div class="feed feed-wave"><span class="feed-label">SYNC WAVEFORM • SHINJI IKARI</span><canvas id="fc-wave" width="586" height="54"></canvas></div>
-    <button class="land-engage wait" id="engage-btn">INITIALIZING FEEDS...</button>
+    <button type="button" class="land-engage wait" id="engage-btn">INITIALIZING FEEDS...</button>
   </div>
 
   <!-- ACK -->
   <div id="screen-ack" class="screen">
     <div class="ack-hex"><div class="jp">第一種戦闘配置</div><div class="en">BATTLE STATIONS — CONDITIONS ONE</div></div>
-    <button class="ack-btn" id="ack-btn">ACKNOWLEDGE • BEGIN EVA STARTUP</button>
+    <button type="button" class="ack-btn" id="ack-btn">ACKNOWLEDGE • BEGIN EVA STARTUP</button>
     <div class="ack-magi"><div class="m">MAGI MELCHIOR 1</div><div class="m">MAGI BALTHASAR 2</div><div class="m">MAGI CASPER 3</div></div>
     <div class="hazard"></div>
   </div>
@@ -300,6 +300,19 @@ const $=id=>document.getElementById(id);
 function loadState(){try{const s=localStorage.getItem('evaSyncState');if(s)state={...state,...JSON.parse(s)}}catch(_){}displaySync=state.sync}
 function saveState(){localStorage.setItem('evaSyncState',JSON.stringify(state))}
 function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function enableEngage(){
+  if(landReady)return;
+  landReady=true;
+  const btn=$('engage-btn');
+  btn.classList.remove('wait');
+  btn.textContent='▶ ENGAGE PILOT INTERFACE — ENTER / CLICK';
+}
+
+function goToAck(){
+  if(!landReady||transitioning||screen!=='landing')return;
+  hardTo('ack','#FF2D00');
+}
 
 function flash(c='#fff'){const f=$('flash');f.style.background=c;f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
 function chroma(){$('chroma').classList.remove('on');void $('chroma').offsetWidth;$('chroma').classList.add('on')}
@@ -442,12 +455,6 @@ function tickLandingFeeds(){
 
   const elapsed=(performance.now()-landT0)/1000;
   $('cc-clock').textContent=elapsed.toFixed(3);
-  if(!landBooting&&elapsed>1.2&&!landReady){
-    landReady=true;
-    const btn=$('engage-btn');
-    btn.classList.remove('wait');
-    btn.textContent='▶ ENGAGE PILOT INTERFACE — ENTER / CLICK';
-  }
   if(frame%40===0&&landReady)chroma();
   if(frame%90===0&&landReady){
     const live=[...document.querySelectorAll('.feed.live')];
@@ -459,18 +466,23 @@ async function bootLandingFeeds(){
   landBooting=true;landReady=false;
   const status=$('land-boot-status');
   const msgs=['SCANNING MAGI ARRAY...','LINKING NEURAL FEEDS...','EVA-01 STRUCTURAL ONLINE...','PSYCHOGRAPHIC ACTIVE...','ALL FEEDS NOMINAL'];
-  for(let i=0;i<FEED_ORDER.length;i++){
-    flash(i%2?'#995CD0':'#FF6B00');chroma();tears();
-    status.textContent=msgs[Math.min(i,msgs.length-1)];
-    const el=document.querySelector('.'+FEED_ORDER[i]);
-    el.classList.add('live');
-    await wait(95);
+  try{
+    for(let i=0;i<FEED_ORDER.length;i++){
+      flash(i%2?'#995CD0':'#FF6B00');chroma();tears();
+      status.textContent=msgs[Math.min(i,msgs.length-1)];
+      const el=document.querySelector('.'+FEED_ORDER[i]);
+      if(el)el.classList.add('live');
+      await wait(95);
+    }
+    flash('#8EDF5F');$('cc-header').style.opacity='1';
+    status.textContent='CONTROL CENTER ONLINE';
+    await wait(280);
+  }finally{
+    $('land-boot').classList.add('hide');
+    landBooting=false;landT0=performance.now();
+    // Do not gate on requestAnimationFrame — embedded browsers may throttle rAF
+    setTimeout(enableEngage,400);
   }
-  flash('#8EDF5F');$('cc-header').style.opacity='1';
-  status.textContent='CONTROL CENTER ONLINE';
-  await wait(280);
-  $('land-boot').classList.add('hide');
-  landBooting=false;landT0=performance.now();
 }
 
 function buildBootSysUi(){
@@ -604,15 +616,16 @@ function tick(){
   requestAnimationFrame(tick);
 }
 
-$('engage-btn').onclick=()=>{if(landReady)hardTo('ack','#FF2D00')};
-$('ack-btn').onclick=()=>runBootSequence();
-document.onkeydown=e=>{
+$('engage-btn').addEventListener('click',goToAck);
+$('engage-btn').addEventListener('touchend',e=>{e.preventDefault();goToAck()});
+$('ack-btn').addEventListener('click',()=>runBootSequence());
+document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&bootOn){e.preventDefault();skipBoot();return}
-  if(e.key!=='Enter'&&e.key!==' ')return;e.preventDefault();
-  if(screen==='landing'&&landReady)hardTo('ack','#FF2D00');
-  else if(screen==='ack')runBootSequence();
-  else if(screen==='hud')logProtein();
-};
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  if(screen==='landing'){e.preventDefault();goToAck()}
+  else if(screen==='ack'){e.preventDefault();runBootSequence()}
+  else if(screen==='hud'){e.preventDefault();logProtein()}
+});
 $('g-core').onclick=()=>{if(screen==='hud')logProtein()};
 
 buildDom();loadState();requestAnimationFrame(tick);bootLandingFeeds();
