@@ -10,3 +10,8 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+.vercel
+
+# Local reference dumps (for revamp inspiration — not deployed)
+references/**/*
+!references/**/.gitkeep
