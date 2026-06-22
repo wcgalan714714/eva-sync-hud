@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=600, height=600, initial-scale=1.0">
 <title>EVA SYNC HUD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
     --black:#000; --bg:#080810; --panel:#0C0C18;
@@ -15,7 +17,10 @@
     --cyan:#00E5FF; --text:#E8E8F0; --muted:#5A5A6E;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--black);font-family:ui-monospace,Menlo,Consolas,monospace;width:600px;height:600px;margin:0 auto;overflow:hidden}
+  body{background:var(--black);font-family:'Share Tech Mono',ui-monospace,Menlo,Consolas,monospace;width:600px;height:600px;margin:0 auto;overflow:hidden}
+  .nge-jp{font-family:'Noto Serif JP',serif;font-weight:900}
+  .nge-drama{font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 0 20px var(--green-neon),0 0 40px var(--purple)}
+  .nge-drama.red{color:#fff;text-shadow:0 0 24px var(--red),0 0 50px var(--orange)}
   #app{width:600px;height:600px;position:relative;overflow:hidden;background:var(--bg);
     border:2px solid var(--purple-eva);box-shadow:0 0 40px rgba(122,62,181,.25),inset 0 0 60px rgba(0,0,0,.9)}
   #app::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
@@ -56,6 +61,29 @@
   .chroma.on{animation:ch .05s steps(3) 6}
   @keyframes ch{33%{box-shadow:inset 14px 0 rgba(255,0,0,.85),inset -14px 0 rgba(0,255,159,.85)}
     66%{box-shadow:inset -10px 0 rgba(153,92,208,.7),inset 10px 0 rgba(255,107,0,.7)}}
+  .vhs{position:absolute;inset:0;z-index:93;pointer-events:none;opacity:0}
+  .vhs.on{animation:vhs .05s steps(2) 4}
+  @keyframes vhs{25%{transform:translateX(3px) scaleY(1.02)}50%{transform:translateX(-4px);filter:saturate(2)}75%{transform:skewX(2deg)}}
+  #fui-global{position:absolute;inset:0;z-index:85;pointer-events:none;overflow:hidden}
+  #drama-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:98;opacity:0;pointer-events:none}
+  #drama-flash.on{animation:drama .18s ease-out}
+  #drama-flash .w{font-size:42px;line-height:1;opacity:0;transform:scale(1.4)}
+  #drama-flash.on .w{animation:dramw .18s ease-out forwards}
+  @keyframes drama{0%{opacity:1;background:rgba(0,0,0,.7)}100%{opacity:0;background:transparent}}
+  @keyframes dramw{0%{opacity:0;transform:scale(1.6) skewX(-6deg)}40%{opacity:1;transform:scale(1) skewX(2deg)}100%{opacity:0;transform:scale(.9)}}
+  #alert-cascade{position:absolute;top:36px;right:6px;width:148px;z-index:86;display:flex;flex-direction:column;gap:2px;align-items:flex-end}
+  .alert-chip{border:1px solid var(--red);background:rgba(230,0,18,.15);color:#fff;font-size:4px;letter-spacing:1.5px;
+    padding:2px 5px;max-width:148px;opacity:0;transform:translateX(20px);animation:chipIn .2s ease-out forwards}
+  .alert-chip.warn{border-color:var(--orange);background:rgba(255,107,0,.12);color:var(--orange-bright)}
+  .alert-chip.ok{border-color:var(--green-neon);background:rgba(0,255,159,.08);color:var(--green-neon)}
+  @keyframes chipIn{to{opacity:1;transform:none}}
+  #fui-micro{position:absolute;inset:0;width:600px;height:600px;opacity:.55}
+  .fui-micro-panel{position:absolute;border:1px solid rgba(122,62,181,.45);background:rgba(8,8,16,.72);
+    font-size:4px;letter-spacing:1px;color:rgba(142,223,95,.6);padding:2px 4px;line-height:1.45;overflow:hidden;z-index:7;pointer-events:none}
+  .fui-micro-panel .s{color:var(--orange-bright);font-weight:900}
+  .fui-micro-panel .scroll{animation:marquee 8s linear infinite;display:inline-block;padding-left:100%;white-space:nowrap}
+  .split-v{position:absolute;top:0;bottom:0;width:1px;background:rgba(122,62,181,.25);z-index:6;pointer-events:none}
+  .split-h{position:absolute;left:0;right:0;height:1px;background:rgba(122,62,181,.2);z-index:6;pointer-events:none}
 
   .feed{border:1px solid rgba(122,62,181,.5);background:rgba(8,8,16,.82);position:absolute;overflow:hidden;
     box-shadow:0 0 12px rgba(153,92,208,.15),inset 0 0 24px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.04);
@@ -76,6 +104,12 @@
   .land-boot .t{font-size:11px;letter-spacing:5px;color:var(--orange-bright);text-shadow:0 0 12px var(--orange)}
   .land-boot .s{font-size:7px;letter-spacing:3px;color:var(--green-neon);animation:live .2s step-end infinite}
   .land-boot.hide{display:none}
+  #opening-canvas{position:absolute;inset:0;z-index:24;opacity:.85}
+  .opening-word{position:absolute;font-size:28px;font-weight:900;color:#fff;opacity:0;z-index:26;letter-spacing:.2em;
+    text-shadow:0 0 30px var(--purple);animation:ow .12s ease-out forwards}
+  @keyframes ow{0%{opacity:0;transform:scale(1.5)}30%{opacity:1}100%{opacity:0;transform:scale(.8)}}
+  #land-angel{position:absolute;right:6px;top:108px;width:72px;height:56px;z-index:9;border:1px solid rgba(230,0,18,.4);
+    background:rgba(0,0,0,.6)}
 
   /* LANDING — NERV control center (cavernous, dense FUI) */
   #screen-landing{background:linear-gradient(175deg,#050508,#0a0814 45%,#06060e);z-index:3}
@@ -215,9 +249,29 @@
   .boot-cal .ring::before{content:'';position:absolute;inset:18px;border-radius:50%;background:var(--bg)}
   .boot-cal .num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:var(--orange-bright);z-index:2}
   .boot-cal .msg{position:absolute;bottom:70px;left:0;right:0;text-align:center;font-size:9px;color:var(--green-neon);letter-spacing:2px}
+  #boot-cascade{position:absolute;left:8px;bottom:8px;right:8px;z-index:6;font-size:5px;color:var(--green-neon);line-height:1.6;
+    border-top:1px solid rgba(142,223,95,.3);padding-top:4px;max-height:48px;overflow:hidden}
+  #boot-cascade .line{opacity:0;animation:cline .3s ease-out forwards}
+  @keyframes cline{to{opacity:1}}
+  #boot-magi-cv{position:absolute;inset:28px 8px 8px 8px;z-index:4;opacity:.45}
+  .boot-confirm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:8;
+    border:2px solid var(--orange);background:rgba(0,0,0,.9);padding:12px 20px;text-align:center;
+    font-size:8px;color:var(--orange-bright);letter-spacing:3px;opacity:0;pointer-events:none}
+  .boot-confirm.on{animation:conf .5s ease-out forwards}
+  @keyframes conf{0%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
 
   /* HUD — Present Status (clinical, melancholy, Eva-01 purple) */
   #screen-hud{color:var(--green-neon);background:linear-gradient(160deg,#06060e,#0f0a1c 35%,#080810);z-index:3}
+  .hud-lcl{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.12;
+    background:radial-gradient(ellipse 80% 60% at 50% 80%,rgba(122,62,181,.35),transparent),
+      repeating-linear-gradient(0deg,transparent 0 18px,rgba(0,255,159,.03) 18px 19px);
+    animation:lcl 4s ease-in-out infinite}
+  @keyframes lcl{50%{opacity:.18;transform:scale(1.02)}}
+  #hud-scope{position:absolute;right:52px;top:72px;width:120px;height:120px;z-index:3;opacity:.35;pointer-events:none}
+  #hud-atfield{position:absolute;left:200px;top:88px;width:64px;height:64px;z-index:3;opacity:.5;pointer-events:none}
+  #hud-gauss{position:absolute;right:200px;top:218px;width:80px;height:36px;z-index:3;opacity:.6;pointer-events:none}
+  .hud-alert-strip{position:absolute;left:28px;top:218px;width:165px;font-size:4px;line-height:1.5;color:rgba(230,0,18,.7);
+    border-left:2px solid var(--red);padding-left:4px;z-index:4;max-height:28px;overflow:hidden}
   .hud-side{position:absolute;left:0;top:0;bottom:0;width:22px;
     background:linear-gradient(180deg,var(--purple-deep) 0%,var(--purple-eva) 40%,var(--blood) 100%);
     box-shadow:4px 0 20px rgba(122,62,181,.3)}
@@ -286,6 +340,8 @@
   .hud-fringe{position:absolute;top:34px;right:8px;font-size:4px;color:var(--muted);letter-spacing:2px;text-align:right;line-height:1.5;z-index:4}
   .log-p .h{color:var(--purple)}.log-p .b{color:var(--orange-bright)}
   .log-p .b.hit{animation:ch .08s steps(2) 3}
+  #ack-crosshair{position:absolute;inset:0;z-index:4;opacity:.2;pointer-events:none}
+  .ack-stack{position:absolute;left:24px;top:148px;width:120px;z-index:4;font-size:4px;color:var(--red);line-height:1.4;opacity:.85}
 </style>
 </head>
 <body>
@@ -295,10 +351,17 @@
   <div class="chroma" id="chroma"></div>
   <div id="fx-cut"></div>
   <div class="flash" id="flash"></div>
+  <div class="vhs" id="vhs"></div>
   <div class="impact-bar" id="impact"></div>
+  <div id="fui-global">
+    <canvas id="fui-micro" width="600" height="600"></canvas>
+    <div id="alert-cascade"></div>
+    <div id="drama-flash"><div class="w nge-drama" id="drama-word"></div></div>
+  </div>
 
   <!-- LANDING: multi live-feed control center -->
   <div id="screen-landing" class="screen active">
+    <canvas id="opening-canvas" width="600" height="600"></canvas>
     <div class="land-boot" id="land-boot">
       <div class="t nge-type">NERV COMMAND</div>
       <div class="s nge-flicker" id="land-boot-status">INITIALIZING LIVE FEEDS...</div>
@@ -311,6 +374,11 @@
       </div>
       <div class="cc-ticker"><span class="track" id="cc-track"></span></div>
     </div>
+    <div class="split-v" style="left:154px"></div><div class="split-v" style="left:308px"></div>
+    <div class="split-h" style="top:166px"></div><div class="split-h" style="top:254px"></div>
+    <canvas id="land-angel" width="72" height="56"></canvas>
+    <div class="fui-micro-panel" style="left:158px;top:112px;width:90px"><span class="s">ANGEL</span><br><span class="scroll" id="land-angel-txt">PATTERN BLUE — NO CONTACT</span></div>
+    <div class="fui-micro-panel" style="left:6px;top:314px;width:110px"><span class="s">MAGI</span><br><span id="land-magi-txt">CONSENSUS IDLE</span></div>
     <div class="feed feed-sys"><span class="feed-label">SYSTEM CHECK</span><span class="feed-jp">システム</span><span class="feed-stat" id="st-sys">OK</span><canvas id="fc-sys" width="146" height="120"></canvas></div>
     <div class="feed feed-neural"><span class="feed-label">NEURAL ACTIVITY</span><span class="feed-jp">神経活動</span><span class="feed-stat" id="st-neural">6CH</span><canvas id="fc-neural" width="282" height="64"></canvas></div>
     <div class="feed feed-magi"><span class="feed-label">MAGI SCOPE</span><span class="feed-jp">マギ</span><span class="feed-stat" id="st-magi">01</span><canvas id="fc-magi" width="146" height="120"></canvas></div>
@@ -328,6 +396,8 @@
   <!-- ACK — Battle Stations -->
   <div id="screen-ack" class="screen">
     <canvas id="ack-bg" width="600" height="600"></canvas>
+    <canvas id="ack-crosshair" width="600" height="600"></canvas>
+    <div class="ack-stack" id="ack-stack"></div>
     <div class="ack-stripe l"></div><div class="ack-stripe r"></div>
     <div class="hazard top"></div>
     <div class="ack-hd">
@@ -369,6 +439,8 @@
   <div id="screen-boot" class="screen">
     <div class="boot-tag" id="boot-tag">EVA STARTUP</div>
     <div class="boot-timer" id="boot-timer">000.000</div>
+    <div id="boot-cascade"></div>
+    <div class="boot-confirm" id="boot-confirm">CONFIRM</div>
 
     <div class="boot-phase on" id="bp-sys">
       <canvas class="boot-canvas" id="bc-sys" width="584" height="560"></canvas>
@@ -378,6 +450,7 @@
       <canvas class="boot-canvas" id="bc-eva" width="584" height="560"></canvas>
     </div>
     <div class="boot-phase" id="bp-magi">
+      <canvas class="boot-canvas" id="boot-magi-cv" width="584" height="560"></canvas>
       <div class="boot-ui boot-magi">
         <div class="rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
         <div class="box tl">DAMAGE TYPE-B DEFENSE<br>MAGI-01 ORIGINAL</div>
@@ -402,6 +475,7 @@
 
   <!-- HUD -->
   <div id="screen-hud" class="screen">
+    <div class="hud-lcl"></div>
     <div class="hud-side"></div>
     <div class="hud-hd"><span class="t">PRESENT STATUS — 初号機 EVA-01</span><span class="m" id="hud-mode">FIELD OPS</span></div>
     <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • ENTRY PLUG DEPTH 4.2m</div>
@@ -418,6 +492,10 @@
     <div class="parts-p" id="parts-p"></div>
     <div class="hud-ref" id="hud-ref">LINK: ACTIVE<br>LIFE SUPPORT: OK<br>AT FIELD: MONITOR</div>
     <canvas class="hud-dna" id="hud-dna" width="36" height="36"></canvas>
+    <canvas id="hud-atfield" width="64" height="64"></canvas>
+    <canvas id="hud-scope" width="120" height="120"></canvas>
+    <canvas id="hud-gauss" width="80" height="36"></canvas>
+    <div class="hud-alert-strip" id="hud-alerts"></div>
     <div class="hud-fringe">A.T.FIELD<br>第3新東京市<br>NERV-01</div>
     <div class="gauge-z">
       <div class="g-orbit"></div>
@@ -447,6 +525,10 @@ const TICKER=['MAGI ARRAY NOMINAL','AT FIELD STABLE ±0.03','LCL pH 7.0 • DENS
   'SYNC CABLE DISCONNECTED','BERSERK MODE LOCKED','SECOND IMPACT SCAR ZONE','GEOFRONT DEPTH 1200m',
   'HUMAN INSTRUMENTALITY — LOCKED','PROTEIN INTAKE TRACKING','第3新東京市 — 司令部'];
 const MAGI_VERDICTS=['APPROVE','APPROVE','DENY','APPROVE','HOLD'];
+const DRAMA_WORDS=['SYNC','LINK','ALERT','MAGI','初号機','ANGEL','AT FIELD','LCL','NERV','第3新東京市'];
+const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY NOMINAL','MAGI ARRAY ONLINE',
+  'BERSERK LOCKED','GEOFRONT DEPTH 1200m','ENTRY PLUG STANDBY','NEURAL LINK ACTIVE','SYNC CABLE OFF'];
+const OPENING_FLASH=['DNA','ANGEL','SYNC','MAGI','AT FIELD','初号機','CROSS','LCL','NERV','LINK'];
 const NGE={bg:'#080810',panel:'#0C0C18',purple:'#995CD0',eva:'#7A3EB5',green:'#00FF9F',greenS:'#8EDF5F',
   red:'#E60012',orange:'#FF6B00',amber:'#FF9500',cyan:'#00E5FF',blue:'#4A90D9',text:'#E8E8F0'};
 
@@ -488,11 +570,13 @@ function enableEngage(){
 
 function goToAck(){
   if(!landReady||transitioning||screen!=='landing')return;
-  hardTo('ack','#FF2D00');
+  cascadeAlert('PILOT INTERFACE ENGAGED','ok');
+  hardTo('ack','#E60012');
 }
 
 function flash(c='#fff'){const f=$('flash');f.style.background=c;f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
 function chroma(){$('chroma').classList.remove('on');void $('chroma').offsetWidth;$('chroma').classList.add('on')}
+function vhs(){const v=$('vhs');v.classList.remove('on');void v.offsetWidth;v.classList.add('on')}
 function impact(y=50){const b=$('impact');b.style.setProperty('--iy',y+'%');b.classList.remove('on');void b.offsetWidth;b.classList.add('on')}
 function tears(){
   const o=$('fx-cut');o.innerHTML='';
@@ -501,17 +585,44 @@ function tears(){
     t.style.background=i%3?'#000':i%2?'rgba(153,92,208,.55)':'rgba(255,107,0,.35)';
     t.style.setProperty('--dx',(Math.random()*80-40)+'px');o.appendChild(t);requestAnimationFrame(()=>t.classList.add('go'))}
 }
+function cascadeAlert(msg,type='warn'){
+  const o=$('alert-cascade');if(!o)return;
+  const c=document.createElement('div');c.className='alert-chip '+type;c.textContent=msg;
+  o.prepend(c);while(o.children.length>5)o.lastChild.remove();
+  setTimeout(()=>c.remove(),2800);
+}
+function dramaFlash(word,red=false){
+  const d=$('drama-flash'),w=$('drama-word');if(!d||!w)return;
+  w.textContent=word;w.classList.toggle('red',red);w.classList.toggle('nge-jp',/[\u3000-\u9fff]/.test(word));
+  d.classList.remove('on');void d.offsetWidth;d.classList.add('on');
+}
+function bootCascadeLine(txt){
+  const o=$('boot-cascade');if(!o)return;
+  const l=document.createElement('div');l.className='line';l.textContent='▶ '+txt;
+  o.prepend(l);while(o.children.length>4)o.lastChild.remove();
+}
+async function bootConfirm(txt){
+  const el=$('boot-confirm');if(!el)return;
+  el.textContent=txt;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
+  flash('#FF6B00');await wait(420);
+}
 
 async function hardTo(name,color='#fff'){
   if(transitioning)return;transitioning=true;
   $('scanlines').classList.add('hot');
-  for(let i=0;i<8;i++){flash(i%2?color:'#fff');chroma();tears();impact(8+i*11);await wait(16)}
+  const dramas=name==='ack'?['ALERT','第1種','BATTLE']:name==='boot'?['LINK','初号機','SYNC']:name==='hud'?['SYNC','LINK','READY']:['NERV','MAGI'];
+  for(let i=0;i<10;i++){
+    flash(i%2?color:'#fff');chroma();vhs();tears();impact(6+i*9);
+    if(i%3===0)dramaFlash(dramas[i%dramas.length],name==='ack');
+    if(i%2===0)cascadeAlert(CASCADE_ALERTS[(frame+i)%CASCADE_ALERTS.length],i%4?'warn':'ok');
+    await wait(14);
+  }
   document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active','slam');s.style.display='none'});
   const el=$('screen-'+name);el.style.display='block';el.classList.add('active','slam');
   screen=name;
-  if(name==='ack')ackT0=performance.now();
+  if(name==='ack'){ackT0=performance.now();$('ack-stack').innerHTML=CASCADE_ALERTS.slice(0,4).map(a=>'▶ '+a+'<br>').join('')}
   $('scanlines').classList.toggle('hot',name!=='hud');
-  flash(color);impact(50);await wait(28);transitioning=false;
+  flash(color);dramaFlash(dramas[0],name==='ack');impact(50);await wait(24);transitioning=false;
 }
 
 function fmt7(n,d=3){const s=n.toFixed(d).split('.');return s[0].padStart(3,'0')+'.'+s[1].padStart(d,'0')}
@@ -520,6 +631,81 @@ function drawNgeGrid(ctx,w,h,alpha=.06){
   ctx.strokeStyle=`rgba(122,62,181,${alpha})`;ctx.lineWidth=.5;
   for(let x=0;x<w;x+=14){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
   for(let y=0;y<h;y+=14){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+}
+function drawGaussCurve(ctx,w,h,ft){
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle=NGE.purple;ctx.lineWidth=1;ctx.beginPath();
+  for(let x=0;x<w;x++){const t=(x/w-0.5)*4+Math.sin(ft*.02)*.3;const y=h/2+Math.exp(-t*t*2)*(h*.38)*Math.cos(ft*.04+x*.05);
+    x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+  ctx.stroke();
+  ctx.strokeStyle=NGE.greenS;ctx.setLineDash([2,3]);ctx.beginPath();
+  for(let x=0;x<w;x++){const t=(x/w-0.5)*3;const y=h/2+Math.exp(-t*t)*(h*.25);
+    x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+  ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=NGE.orange;ctx.font='4px monospace';ctx.fillText('GAUSS κ',2,8);
+}
+function drawCrosshair(ctx,w,h,ft,pulse=1){
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,r=Math.min(w,h)*.38;
+  ctx.strokeStyle=`rgba(255,255,255,${.15+.08*Math.sin(ft*.06)})`;ctx.lineWidth=.8;
+  ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r*.55+Math.sin(ft*.08)*3*pulse,ft*.02,ft*.02+Math.PI*1.5);ctx.strokeStyle=NGE.red;ctx.stroke();
+  for(let i=0;i<4;i++){const a=ft*.015+i*Math.PI/2;ctx.strokeStyle=NGE.orange;
+    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r*.3,cy+Math.sin(a)*r*.3);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.stroke()}
+}
+function drawAtField(ctx,w,h,ft,strength){
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2;
+  ctx.strokeStyle=NGE.orange;ctx.lineWidth=1;
+  for(let i=0;i<6;i++){const a=Math.PI/3*i+ft*.01;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*w*.42,cy+Math.sin(a)*h*.42);ctx.stroke()}
+  ctx.strokeStyle=`rgba(0,255,159,${.3+.2*strength})`;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,w*.2+Math.sin(ft*.05)*2,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=NGE.greenS;ctx.font='4px monospace';ctx.fillText('A.T.',2,h-4);
+}
+function drawAngelMap(ctx,w,h,ft){
+  ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.08);
+  const cx=w/2,cy=h/2;
+  ctx.strokeStyle='rgba(230,0,18,.4)';ctx.lineWidth=.8;
+  for(let r=8;r<Math.min(w,h)/2;r+=7){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke()}
+  const ax=cx+Math.sin(ft*.02)*12,ay=cy+Math.cos(ft*.015)*8;
+  ctx.strokeStyle=NGE.red;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ax,ay);ctx.stroke();
+  ctx.fillStyle=NGE.red;ctx.beginPath();ctx.arc(ax,ay,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=NGE.orange;ctx.font='4px monospace';ctx.fillText('ANGEL',2,8);
+  ctx.fillStyle=NGE.greenS;ctx.fillText('NO SIG',2,14);
+}
+function drawFuiMicro(ctx,w,h,ft,scr){
+  ctx.clearRect(0,0,w,h);
+  const streams=[
+    {x:4,y:h-18,txt:'HEX 0x'+((ft*17|0)%65536).toString(16).toUpperCase()},
+    {x:w-88,y:4,txt:'T-'+fmt7(ft*.01%30)},
+    {x:w-72,y:h-10,txt:'CH-'+(ft%99|0)}
+  ];
+  ctx.font='4px monospace';
+  streams.forEach(s=>{ctx.fillStyle='rgba(142,223,95,.35)';ctx.fillText(s.txt,s.x,s.y)});
+  if(scr==='hud'){ctx.save();ctx.translate(w-52,4);drawDnaHelix(ctx,48,16,ft);ctx.restore()}
+  if(scr==='ack'){ctx.fillStyle='rgba(230,0,18,.25)';for(let i=0;i<6;i++)ctx.fillRect(0,(ft*2+i*90)%h,w,1)}
+}
+async function runOpeningMontage(){
+  const cv=$('opening-canvas'),ctx=cv?.getContext('2d');
+  $('land-boot-status').textContent='EMOTIONAL ONBOARDING...';
+  for(let i=0;i<14;i++){
+    if(ctx){
+      ctx.fillStyle='#000';ctx.fillRect(0,0,600,600);
+      drawNgeGrid(ctx,600,600,.04);
+      if(i%3===0)drawDnaHelix(ctx,120,40,frame+i*3);
+      if(i%4===1){ctx.strokeStyle=NGE.red;ctx.lineWidth=2;ctx.beginPath();
+        ctx.moveTo(300,200);ctx.lineTo(300,400);ctx.moveTo(200,300);ctx.lineTo(400,300);ctx.stroke()}
+      if(i%4===2)drawGaussCurve(ctx,200,60,frame+i);
+      drawCrosshair(ctx,600,600,frame+i*.5,.5);
+    }
+    const w=OPENING_FLASH[i%OPENING_FLASH.length];
+    dramaFlash(w,i%3===0);flash(i%2?NGE.purple:NGE.orange);chroma();vhs();
+    await wait(55);
+  }
+  if(ctx){ctx.fillStyle='#000';ctx.fillRect(0,0,600,600)}
+  $('opening-canvas').style.opacity='0';
 }
 
 function drawDnaHelix(ctx,w,h,ft){
@@ -712,7 +898,8 @@ function drawMagi(ctx,w,h,fast){
   });
   ctx.fillStyle=NGE.orange;ctx.font='7px monospace';ctx.fillText('MAGI 01',cx-18,cy+4);
   ctx.fillStyle=NGE.greenS;ctx.font='6px monospace';ctx.fillText(live.magi[0]+'%',cx-12,cy+16);
-  if(h>80){ctx.fillStyle=NGE.purple;ctx.fillText('DEFENSE',cx-16,cy+26)}
+  if(h>80){ctx.fillStyle=NGE.purple;ctx.fillText('DEFENSE',cx-16,cy+26);
+    ctx.save();ctx.translate(0,h-20);drawGaussCurve(ctx,w,18,ft);ctx.restore()}
 }
 
 function drawEvaScan(ctx,w,h,fast){
@@ -833,7 +1020,13 @@ function tickLandingFeeds(){
     const feeds=[...document.querySelectorAll('.feed.live')];
     if(feeds.length){const f=feeds[Math.floor(t/22)%feeds.length];f.classList.add('glitch');setTimeout(()=>f.classList.remove('glitch'),120)}
   }
-  if(frame%14===0)$('cc-meta').textContent=['第3新東京市 • 司令室','GEOFRONT • DEPTH 1200m','NERV-01 • MAGI ARRAY'][Math.floor(t/55)%3];
+  if(frame%14===0){
+    $('cc-meta').textContent=['第3新東京市 • 司令室','GEOFRONT • DEPTH 1200m','NERV-01 • MAGI ARRAY'][Math.floor(t/55)%3];
+    $('land-magi-txt').textContent='VOTE '+live.magi.join('/')+'%';
+    $('land-angel-txt').textContent=['PATTERN BLUE — NO CONTACT','ANGEL SIG NULL','RADAR SWEEP ACTIVE'][Math.floor(t/40)%3];
+  }
+  drawAngelMap($('land-angel').getContext('2d'),72,56,t);
+  if(frame%180===0&&landReady)cascadeAlert(CASCADE_ALERTS[Math.floor(t/20)%CASCADE_ALERTS.length],'warn');
 }
 
 async function bootLandingFeeds(){
@@ -842,7 +1035,9 @@ async function bootLandingFeeds(){
   const msgs=['SCANNING MAGI ARRAY...','LINKING NEURAL FEEDS...','EVA-01 STRUCTURAL ONLINE...','PSYCHOGRAPHIC ACTIVE...','ALL FEEDS NOMINAL'];
   try{
     for(let i=0;i<FEED_ORDER.length;i++){
-      flash(i%2?'#995CD0':'#FF6B00');chroma();tears();
+      flash(i%2?'#995CD0':'#FF6B00');chroma();vhs();tears();
+      if(i%2===0)dramaFlash(['MAGI','LINK','SYNC','FEED','初号機'][i%5]);
+      cascadeAlert(msgs[Math.min(i,msgs.length-1)],'ok');
       status.textContent=msgs[Math.min(i,msgs.length-1)];
       const el=document.querySelector('.'+FEED_ORDER[i]);
       if(el)el.classList.add('live');
@@ -874,12 +1069,14 @@ function buildDom(){
   buildBootSysUi();
 }
 
-async function setBootPhase(id,tag){
-  for(let i=0;i<3;i++){flash(i%2?'#fff':'#995CD0');chroma();tears();impact(20+i*25);await wait(12)}
+async function setBootPhase(id,tag,confirm){
+  for(let i=0;i<4;i++){flash(i%2?'#fff':'#995CD0');chroma();vhs();tears();impact(18+i*22);await wait(10)}
   document.querySelectorAll('.boot-phase').forEach(p=>p.classList.remove('on'));
   $(id).classList.add('on');
   $('boot-tag').textContent=tag;
-  flash('#FF6B00');impact(60);
+  bootCascadeLine(tag);
+  if(confirm)await bootConfirm(confirm);
+  flash('#FF6B00');dramaFlash(tag.split('—')[0].trim().split(' ')[0]);impact(60);
 }
 
 async function runBootSequence(){
@@ -889,18 +1086,18 @@ async function runBootSequence(){
   const clk=setInterval(()=>{if(!bootOn){clearInterval(clk);return}$('boot-timer').textContent=fmt7((performance.now()-t0)/1000)},33);
 
   // Phase 1: System check (gif8) — fullscreen canvas + DOM slam
-  await setBootPhase('bp-sys','SYSTEM CHECK — ENTRY PLUG');
+  await setBootPhase('bp-sys','SYSTEM CHECK — ENTRY PLUG','CONFIRM: LIFE SUPPORT');
   sysBoot=true;sysLevels=[0,0,0];segLevels=[0,0,0,0,0,0];
   await wait(320);
   $('boot-sys-ui').style.opacity='1';
-  for(const row of document.querySelectorAll('.boot-sys .sys-row')){if(!bootOn)break;row.classList.add('on');flash('#FF6B00');await wait(38)}
+  for(const row of document.querySelectorAll('.boot-sys .sys-row')){if(!bootOn)break;row.classList.add('on');flash('#FF6B00');bootCascadeLine(row.querySelector('.box')?.textContent||'SYS');await wait(38)}
   for(const seg of document.querySelectorAll('.boot-sys .seg')){if(!bootOn)break;seg.classList.add('on');await wait(22)}
   await wait(50);sysBoot=false;
 
-  await setBootPhase('bp-eva','STRUCTURAL INSPECTION — 初号機');
+  await setBootPhase('bp-eva','STRUCTURAL INSPECTION — 初号機','CONFIRM: EVA-01 ARMED');
   bootPhase='eva';await wait(520);bootPhase='';
 
-  await setBootPhase('bp-magi','MAGI DEFENSE SCREEN');
+  await setBootPhase('bp-magi','MAGI DEFENSE SCREEN','CONFIRM: MAGI CONSENSUS');
   const c0=223.231,tM=performance.now();
   await new Promise(res=>{
     function tm(now){if(!bootOn){res();return}
@@ -910,13 +1107,13 @@ async function runBootSequence(){
     requestAnimationFrame(tm);
   });
 
-  await setBootPhase('bp-psycho','PSYCHOGRAPHIC — LINK A');
+  await setBootPhase('bp-psycho','PSYCHOGRAPHIC — LINK A','CONFIRM: PILOT LINK');
   psychoBoot=true;await wait(480);psychoBoot=false;
 
-  await setBootPhase('bp-neural','NEURAL ACTIVITY — 神経活動');
+  await setBootPhase('bp-neural','NEURAL ACTIVITY — 神経活動','CONFIRM: NEURAL BRIDGE');
   neuralBoot=true;await wait(420);neuralBoot=false;
 
-  await setBootPhase('bp-cal','SYNCHRONIZATION — 同期率');
+  await setBootPhase('bp-cal','SYNCHRONIZATION — 同期率','CONFIRM: SYNC RATE');
   await new Promise(res=>{
     const s0=performance.now(),dur=750;
     function cal(now){if(!bootOn){res();return}
@@ -988,14 +1185,33 @@ function tick(){
   }
   if(psychoBoot)drawPsycho($('bc-psycho').getContext('2d'),584,560,true);
   if(neuralBoot)drawNeural($('bc-neural').getContext('2d'),584,560,true);
-  if(screen==='ack'){drawAckBg($('ack-bg').getContext('2d'));tickLiveData()}
+  if(screen==='ack'){
+    drawAckBg($('ack-bg').getContext('2d'));
+    drawCrosshair($('ack-crosshair').getContext('2d'),600,600,animT(),1.2);
+    tickLiveData();
+    if(frame%120===0)cascadeAlert(CASCADE_ALERTS[Math.floor(animT()/25)%CASCADE_ALERTS.length],'warn');
+  }
+  const magiOn=$('bp-magi')?.classList.contains('on');
+  if(magiOn&&bootOn){
+    const mc=$('boot-magi-cv').getContext('2d');
+    mc.fillStyle=NGE.bg;mc.fillRect(0,0,584,560);drawNgeGrid(mc,584,560,.04);
+    drawGaussCurve(mc,584,140,frame);drawCrosshair(mc,584,560,frame,.9);
+  }
+  drawFuiMicro($('fui-micro').getContext('2d'),600,600,animT(),screen);
   if(screen==='hud'){
     const d=state.sync-displaySync;
     if(Math.abs(d)>.2)displaySync+=d*.45;else displaySync=state.sync;
     updateHud();tickLiveData();
     drawHoloPanel($('holo-canvas').getContext('2d'),164,134,displaySync/100);
     drawDnaHelix($('hud-dna').getContext('2d'),36,36,animT());
+    drawCrosshair($('hud-scope').getContext('2d'),120,120,animT(),displaySync/100);
+    drawAtField($('hud-atfield').getContext('2d'),64,64,animT(),displaySync/100);
+    drawGaussCurve($('hud-gauss').getContext('2d'),80,36,animT());
     drawWave($('hud-wv').getContext('2d'),564,58,displaySync/100,false);
+    if(frame%14===0){
+      const alerts=['PAIN IND: LOW','LCL pH 7.0','PLUG DEPTH OK','NEURAL FEED ACTIVE'];
+      $('hud-alerts').innerHTML=alerts.map((a,i)=>'▶ '+a).join('<br>');
+    }
     const wvEl=document.querySelector('.wv');
     if(wvEl)wvEl.classList.toggle('overload',displaySync<45);
     if(frame%90===0)chroma();
@@ -1017,7 +1233,8 @@ document.addEventListener('keydown',e=>{
 });
 $('g-core').onclick=()=>{if(screen==='hud')logProtein()};
 
-buildDom();loadState();requestAnimationFrame(tick);bootLandingFeeds();
+buildDom();loadState();requestAnimationFrame(tick);
+runOpeningMontage().then(()=>bootLandingFeeds());
 </script>
 </body>
 </html>
