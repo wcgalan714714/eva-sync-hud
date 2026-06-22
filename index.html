@@ -194,47 +194,61 @@
 </div>
 
 <script>
-function updateVitals(newSync, newProtein, newActivity, newWater) {
-  const syncEl = document.getElementById('sync');
+// Load / Save data
+let data = {
+  sync: 87,
+  protein: 142,
+  activity: 8400,
+  water: 2.1
+};
+
+function loadData() {
+  const saved = localStorage.getItem('evaSyncData');
+  if (saved) data = JSON.parse(saved);
+}
+
+function saveData() {
+  localStorage.setItem('evaSyncData', JSON.stringify(data));
+}
+
+function updateUI() {
+  document.getElementById('sync').textContent = data.sync;
+  document.getElementById('protein').innerHTML = data.protein + '<span style="font-size:13px">g</span>';
+  document.getElementById('activity').textContent = (data.activity / 1000).toFixed(1) + 'k';
+  document.getElementById('water').innerHTML = data.water + '<span style="font-size:13px">L</span>';
+
   const gauge = document.getElementById('gauge');
-  const statusEl = document.getElementById('status');
+  const angle = data.sync * 3.6;
 
-  syncEl.textContent = newSync;
-  const angle = newSync * 3.6;
-
-  if (newSync >= 90) {
+  if (data.sync >= 90) {
     gauge.style.background = `conic-gradient(var(--green) 0deg ${angle}deg, #222 ${angle}deg 360deg)`;
-    statusEl.className = 'status good';
-    statusEl.textContent = 'AT FIELD MAXIMUM • EXCELLENT SYNC';
+    document.getElementById('status').className = 'status good';
+    document.getElementById('status').textContent = 'AT FIELD MAXIMUM • EXCELLENT SYNC';
     gauge.classList.add('good-pulse');
-  } else if (newSync < 60) {
+  } else if (data.sync < 60) {
     gauge.style.background = `conic-gradient(var(--red) 0deg ${angle}deg, #222 ${angle}deg 360deg)`;
-    statusEl.className = 'status warning';
-    statusEl.textContent = 'WARNING: SYNC LOW • RECALIBRATE';
-    gauge.classList.add('glitch');
-    setTimeout(() => gauge.classList.remove('glitch'), 400);
+    document.getElementById('status').className = 'status warning';
+    document.getElementById('status').textContent = 'WARNING: SYNC LOW • RECALIBRATE';
   } else {
     gauge.style.background = `conic-gradient(var(--orange) 0deg ${angle}deg, #222 ${angle}deg 360deg)`;
-    statusEl.className = 'status';
-    statusEl.textContent = 'AT FIELD STABLE • FIELD OPS MODE';
+    document.getElementById('status').className = 'status';
+    document.getElementById('status').textContent = 'AT FIELD STABLE • FIELD OPS MODE';
     gauge.classList.remove('good-pulse');
-  }
-
-  if (newProtein !== undefined) {
-    const p = document.getElementById('protein');
-    p.textContent = newProtein + (newProtein > 100 ? '' : '<span style="font-size:13px">g</span>');
-    document.getElementById('vital-protein').classList.add('glitch');
-    setTimeout(() => document.getElementById('vital-protein').classList.remove('glitch'), 300);
   }
 }
 
-document.getElementById('gauge').addEventListener('click', () => {
-  const current = parseInt(document.getElementById('sync').textContent);
-  const next = current >= 95 ? 52 : current + 12;
-  updateVitals(next, 152, 9200, 2.3);
+// Gesture simulation (index pinch = log protein)
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    data.protein += 10;
+    data.sync = Math.min(100, Math.round((data.protein / 180) * 100));
+    updateUI();
+    saveData();
+  }
 });
 
-updateVitals(87, 142, 8400, 2.1);
+loadData();
+updateUI();
 </script>
 </body>
 </html>
