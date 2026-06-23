@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   async redirects() {
     return [
-      { source: '/classic', destination: '/cinematic/index.html', permanent: false },
+      { source: '/classic', destination: '/', permanent: false },
+      { source: '/cinematic', destination: '/cinematic/index.html', permanent: false },
     ];
   },
 };

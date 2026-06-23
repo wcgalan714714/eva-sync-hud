@@ -10,6 +10,7 @@ import { NutritionWing } from '@/components/wings/NutritionWing';
 import { TrendsWing } from '@/components/wings/TrendsWing';
 import { usePilotSync } from '@/hooks/usePilotSync';
 
+/** Dev/alternate React dashboard — main experience is cinematic HUD at / */
 export default function DashboardPage() {
   const [wing, setWing] = useState<WingId>('status');
   const { pilot, history, connected, loading, error, sync, refreshManual } = usePilotSync();
@@ -37,11 +38,11 @@ export default function DashboardPage() {
       >
         {loading ? 'SYNCING…' : 'FORCE SYNC'}
       </button>
-      <a
-        href="/api/oura/auth"
-        style={{ fontSize: '0.55rem', marginLeft: 4 }}
-      >
+      <a href="/api/oura/auth" style={{ fontSize: '0.55rem', marginLeft: 4 }}>
         CONNECT OURA
+      </a>
+      <a href="/" style={{ fontSize: '0.55rem', marginLeft: 8, color: 'var(--purple)' }}>
+        ← CINEMATIC HUD
       </a>
       {error && <div style={{ color: 'var(--red)', marginTop: 4 }}>{error}</div>}
     </div>

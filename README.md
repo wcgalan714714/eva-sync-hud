@@ -4,10 +4,11 @@ Neon Genesis Evangelion–styled **pilot health command center**. Live biometric
 
 ## Live
 
-- **Dashboard (new):** https://eva-sync-hud.vercel.app
-- **Cinematic HUD (legacy):** https://eva-sync-hud.vercel.app/cinematic/index.html
+- **Cinematic HUD (main):** https://eva-sync-hud.vercel.app — landing → ack → boot → Present Status main menu
+- **Ray-Ban / classic path:** https://eva-sync-hud.vercel.app/cinematic/index.html
+- **React dashboard (dev alt):** https://eva-sync-hud.vercel.app/dashboard
 
-## Main menu wings
+## Main menu wings (integrated into HUD Present Status screen)
 
 1. **Pilot Status** — Readiness SYNC gauge, HRV, RHR, stress, alert cascade
 2. **Sleep & Recovery** — Oura sleep score + recovery
