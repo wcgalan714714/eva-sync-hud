@@ -211,8 +211,9 @@
   #screen-ack .hazard.top{top:8%}.hazard.bot{bottom:0}
   @keyframes hz{to{background-position:22px 0}}
   #screen-ack .ack-btn,#screen-ack .ack-jp-bar{display:none!important}
-  #screen-ack.ack-transition-active{z-index:4;opacity:1;transition:opacity .32s ease}
-  #screen-ack.ack-fade-out{opacity:0!important;pointer-events:none}
+  #screen-ack.ack-transition-active{z-index:5;opacity:1;transition:opacity .3s ease}
+  #screen-ack.ack-fade-out{opacity:0!important;pointer-events:none;transition:opacity .38s ease}
+  #screen-ack.ack-opening{z-index:6}
 
   /* BOOT — reference MP4 only */
   #screen-boot{background:#000;z-index:3}
@@ -226,8 +227,20 @@
   #screen-hud.xfade-in{opacity:1!important;transition:opacity .48s ease}
   #screen-hud.xfade-prep{opacity:0}
   #screen-hud.hud-video-prime{display:block!important;opacity:0!important;pointer-events:none;z-index:1}
+  #screen-hud.hud-glitch-in{animation:hudGlitchIn .52s ease-out forwards}
+  @keyframes hudGlitchIn{
+    0%{opacity:0;filter:brightness(1.6) saturate(1.2);transform:skewX(-1.2deg) scale(1.015)}
+    30%{opacity:.65;filter:brightness(1.15) hue-rotate(6deg);transform:skewX(.6deg)}
+    55%{opacity:.88;filter:none;transform:none}
+    100%{opacity:1;filter:none;transform:none}
+  }
   #screen-hud .holo-video.is-playing{opacity:1}
   #screen-hud .holo-video{opacity:1;transition:opacity .2s ease}
+  #app.boot-hud-glitch{animation:bhg .24s steps(3) 3}
+  @keyframes bhg{
+    33%{transform:translateX(2px) skewX(.4deg);filter:saturate(1.35) contrast(1.08)}
+    66%{transform:translateX(-3px) skewX(-.3deg);filter:hue-rotate(4deg) brightness(1.1)}
+  }
   #sync-handoff{display:none!important}
   #screen-boot .boot-phase.on{animation:bootbreath 1.2s ease-in-out infinite}
   @keyframes bootbreath{50%{filter:brightness(1.08)}}
@@ -589,11 +602,15 @@ const DRAMA_WORDS=['SYNC','LINK','ALERT','MAGI','初号機','ANGEL','AT FIELD','
 const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY NOMINAL','MAGI ARRAY ONLINE',
   'BERSERK LOCKED','GEOFRONT DEPTH 1200m','ENTRY PLUG STANDBY','NEURAL LINK ACTIVE','SYNC CABLE OFF'];
 const OPENING_FLASH=['DNA','ANGEL','SYNC','MAGI','AT FIELD','初号機','CROSS','LCL','NERV','LINK'];
+const MONTAGE_BEATS=9;
+const MONTAGE_BEAT_MS=100;
 const BOOT_DURATION_MS=3000;
 const BOOT_PLAYBACK_RATE=2.38;
-const BOOT_ACK_XFADE_MS=320;
-const ACK_HOLD_MS=680;
-const ACK_HUD_XFADE_MS=480;
+const ACK_OPEN_IN_MS=260;
+const ACK_OPEN_HOLD_MS=920;
+const ACK_OPEN_OUT_MS=380;
+const BOOT_HUD_GLITCH_MS=260;
+const BOOT_HUD_FADE_MS=520;
 const HOLO_VIDEO_SRC='/assets/motion/eva01-visuals.mp4';
 const EvaAudio=(()=>{
   const intro=document.getElementById('eva-intro-audio')||new Audio('/assets/sound/eva-ui-sound.mp3');
@@ -858,47 +875,72 @@ async function showBoot(){
   await wait(40);transitioning=false;
 }
 
-async function runAckTransition(){
+async function runOpeningAckTransition(){
   if(transitioning)return;transitioning=true;
-  const bootEl=$('screen-boot'),ackEl=$('screen-ack'),hudEl=$('screen-hud');
+  const landEl=$('screen-landing'),ackEl=$('screen-ack'),cv=$('opening-canvas');
+  landEl?.classList.remove('montage-active');
+  if(cv)cv.style.opacity='0';
+  ackEl.style.display='block';
+  ackEl.classList.remove('slam','ack-fade-out');
+  ackEl.classList.add('active','ack-transition-active','ack-opening');
+  ackEl.style.opacity='0';
+  screen='ack';
+  ackT0=performance.now();
+  $('ack-threat').textContent='⚠ ANGEL DETECTED — PATTERN BLUE UNCONFIRMED';
+  $('ack-status').textContent='AUTO-ACK • BATTLE STATIONS ENGAGED';
+  syncAllCanvases();
+  await wait(16);
+  flash('rgba(230,0,18,.22)');
+  dramaFlash('第1種',true);
+  ackEl.style.opacity='1';
+  await wait(ACK_OPEN_IN_MS);
+  await wait(ACK_OPEN_HOLD_MS);
+  ackEl.classList.add('ack-fade-out');
+  landEl.style.display='block';
+  landEl.classList.add('active');
+  screen='landing';
+  $('land-boot-status').textContent='BATTLE STATIONS ACK — LINKING FEEDS...';
+  await wait(ACK_OPEN_OUT_MS);
+  ackEl.classList.remove('active','ack-transition-active','ack-opening','ack-fade-out');
+  ackEl.style.display='none';
+  ackEl.style.opacity='';
+  transitioning=false;
+}
+
+async function runBootToHudTransition(){
+  if(transitioning)return;transitioning=true;
+  const bootEl=$('screen-boot'),hudEl=$('screen-hud'),app=$('app');
   await fetchHoloAsset();
   primeHudScreen();
   await ensureHudVideoPlaying();
   document.querySelectorAll('.screen').forEach(s=>{
-    if(s!==bootEl&&s!==ackEl&&s!==hudEl){
-      s.classList.remove('active','slam','xfade-out','xfade-in','xfade-prep','hud-video-prime');
+    if(s!==bootEl&&s!==hudEl){
+      s.classList.remove('active','slam','xfade-out','xfade-in','xfade-prep','hud-video-prime','hud-glitch-in');
       s.style.display='none';
     }
   });
   hudEl.style.display='block';
   hudEl.classList.add('active','hud-video-prime');
-  hudEl.classList.remove('xfade-in','xfade-prep','slam');
-  ackEl.style.display='block';
-  ackEl.classList.remove('slam','ack-fade-out');
-  ackEl.classList.add('active','ack-transition-active');
-  ackEl.style.opacity='0';
-  screen='ack';
-  ackT0=performance.now();
-  syncAllCanvases();
-  await wait(16);
+  hudEl.classList.remove('xfade-in','hud-glitch-in','slam');
+  $('scanlines').classList.add('hot');
+  app?.classList.add('boot-hud-glitch');
+  chroma();
+  vhs();
+  flash('rgba(0,255,159,.1)');
+  impact(48);
+  await wait(BOOT_HUD_GLITCH_MS);
+  app?.classList.remove('boot-hud-glitch');
   bootEl.classList.add('xfade-out');
-  ackEl.style.opacity='1';
-  flash('rgba(230,0,18,.14)');
-  await wait(BOOT_ACK_XFADE_MS);
-  bootEl.classList.remove('active','xfade-out');
-  bootEl.style.display='none';
-  await wait(ACK_HOLD_MS);
-  ackEl.classList.add('ack-fade-out');
   hudEl.classList.remove('hud-video-prime');
-  hudEl.classList.add('xfade-in');
+  hudEl.classList.add('xfade-in','hud-glitch-in');
   screen='hud';
   await ensureHudVideoPlaying();
-  await wait(ACK_HUD_XFADE_MS);
-  ackEl.classList.remove('active','ack-transition-active','ack-fade-out');
-  ackEl.style.display='none';
-  ackEl.style.opacity='';
-  hudEl.classList.remove('xfade-in');
+  await wait(BOOT_HUD_FADE_MS);
+  bootEl.classList.remove('active','xfade-out');
+  bootEl.style.display='none';
+  hudEl.classList.remove('xfade-in','hud-glitch-in');
   unprimeHudScreen();
+  $('scanlines').classList.remove('hot');
   maintainHudVideo();
   transitioning=false;
 }
@@ -1000,29 +1042,27 @@ async function runOpeningMontage(){
   land?.classList.add('montage-active');
   if(cv)cv.style.opacity='1';
   EvaAudio.playIntro();
-  for(let i=0;i<14;i++){
+  for(let i=0;i<MONTAGE_BEATS;i++){
     EvaAudio.stingAt(EvaAudio.MONTAGE_CUES[Math.min(i,EvaAudio.MONTAGE_CUES.length-1)]||i*.35);
     if(ctx){
       ctx.fillStyle='#000';ctx.fillRect(0,0,ow,oh);
-      drawNgeGrid(ctx,ow,oh,.06);
+      drawNgeGrid(ctx,ow,oh,.05);
       if(i%3===0)drawDnaHelix(ctx,ow*.22,oh*.08,frame+i*4);
-      if(i%4===1){ctx.strokeStyle=NGE.red;ctx.lineWidth=2;ctx.beginPath();
-        ctx.moveTo(ow/2,oh*.28);ctx.lineTo(ow/2,oh*.72);ctx.moveTo(ow*.28,oh/2);ctx.lineTo(ow*.72,oh/2);ctx.stroke()}
+      if(i%4===1){ctx.strokeStyle=NGE.red;ctx.lineWidth=1.5;ctx.beginPath();
+        ctx.moveTo(ow/2,oh*.3);ctx.lineTo(ow/2,oh*.7);ctx.moveTo(ow*.3,oh/2);ctx.lineTo(ow*.7,oh/2);ctx.stroke()}
       if(i%4===2)drawGaussCurve(ctx,ow*.35,oh*.12,frame+i*2);
-      drawCrosshair(ctx,ow,oh,frame+i*.6,.55);
+      drawCrosshair(ctx,ow,oh,frame+i*.55,.45);
       const w=OPENING_FLASH[i%OPENING_FLASH.length];
-      ctx.fillStyle='rgba(255,255,255,.92)';ctx.font='bold 22px monospace';ctx.textAlign='center';
-      ctx.shadowColor=NGE.purple;ctx.shadowBlur=16;
+      ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 20px monospace';ctx.textAlign='center';
+      ctx.shadowColor=NGE.purple;ctx.shadowBlur=12;
       ctx.fillText(w,ow/2,oh*.46);ctx.shadowBlur=0;ctx.textAlign='left';
     }
     const w=OPENING_FLASH[i%OPENING_FLASH.length];
-    if(i%2===0)dramaFlash(w,false);
-    if(i%3===0)flash(i%2?'rgba(153,92,208,.3)':'rgba(255,107,0,.25)');
-    await wait(130);
+    if(i%3===0)dramaFlash(w,false);
+    if(i%4===0)flash(i%2?'rgba(153,92,208,.22)':'rgba(255,107,0,.18)');
+    await wait(MONTAGE_BEAT_MS);
   }
   if(ctx){ctx.fillStyle='#000';ctx.fillRect(0,0,ow,oh)}
-  land?.classList.remove('montage-active');
-  if(cv)cv.style.opacity='0';
 }
 
 function drawDnaHelix(ctx,w,h,ft){
@@ -1416,7 +1456,7 @@ async function runBootSequence(){
   EvaAudio.stopBoot();
   EvaAudio.resetBootAudioRate();
   if(video){video.pause();video.currentTime=0;video.playbackRate=1}
-  await runAckTransition();
+  await runBootToHudTransition();
   updateHud(true);
 }
 
@@ -1427,7 +1467,7 @@ async function skipBoot(){
   if(video){video.pause();video.currentTime=0;video.playbackRate=1}
   EvaAudio.stopBoot();
   EvaAudio.resetBootAudioRate();
-  await runAckTransition();
+  await runBootToHudTransition();
   updateHud(true);
 }
 
@@ -1692,7 +1732,12 @@ applyHealthAnim();updateHealthCards();renderHudLive();updateOuraBadge();
 fetchHoloAsset();syncAllCanvases();
 let resizeT;window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(syncAllCanvases,80)});
 requestAnimationFrame(tick);
-runOpeningMontage().then(()=>{syncAllCanvases();bootLandingFeeds();fetchHoloAsset().then(()=>ensureHudVideoPlaying())});
+runOpeningMontage().then(async()=>{
+  syncAllCanvases();
+  await runOpeningAckTransition();
+  bootLandingFeeds();
+  fetchHoloAsset().then(()=>ensureHudVideoPlaying());
+});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)maintainHudVideo()});
 document.addEventListener('pointerdown',()=>{fetchHoloAsset();primeHudScreen();ensureHudVideoPlaying()},{once:true,passive:true});
 syncOura();setInterval(syncOura,REFRESH_MS);
