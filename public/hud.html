@@ -57,14 +57,14 @@
   .tear.go{animation:tear .06s ease-out forwards}
   @keyframes tear{0%{opacity:1;transform:translateX(0) scaleX(1.2)}100%{opacity:0;transform:translateX(var(--dx,40px)) scaleX(.8)}}
   .flash{position:absolute;inset:0;z-index:96;pointer-events:none;opacity:0}
-  .flash.on{animation:fb .04s ease-out}
-  @keyframes fb{0%{opacity:1}100%{opacity:0}}
+  .flash.on{animation:fb .14s ease-out}
+  @keyframes fb{0%{opacity:.35}100%{opacity:0}}
   .chroma{position:absolute;inset:0;z-index:94;pointer-events:none}
-  .chroma.on{animation:ch .05s steps(3) 6}
-  @keyframes ch{33%{box-shadow:inset 14px 0 rgba(255,0,0,.85),inset -14px 0 rgba(0,255,159,.85)}
-    66%{box-shadow:inset -10px 0 rgba(153,92,208,.7),inset 10px 0 rgba(255,107,0,.7)}}
+  .chroma.on{animation:ch .14s steps(2) 2}
+  @keyframes ch{33%{box-shadow:inset 8px 0 rgba(255,0,0,.35),inset -8px 0 rgba(0,255,159,.35)}
+    66%{box-shadow:inset -6px 0 rgba(153,92,208,.3),inset 6px 0 rgba(255,107,0,.3)}}
   .vhs{position:absolute;inset:0;z-index:93;pointer-events:none;opacity:0}
-  .vhs.on{animation:vhs .05s steps(2) 4}
+  .vhs.on{animation:vhs .1s steps(2) 2}
   @keyframes vhs{25%{transform:translateX(3px) scaleY(1.02)}50%{transform:translateX(-4px);filter:saturate(2)}75%{transform:skewX(2deg)}}
   #fui-global{position:absolute;inset:0;z-index:85;pointer-events:none;overflow:hidden}
   #drama-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:98;opacity:0;pointer-events:none}
@@ -91,8 +91,8 @@
   #screen-landing .feed,#screen-ack .feed{border:2px solid rgba(122,62,181,.55);background:rgba(8,8,16,.88);position:absolute;overflow:hidden;
     box-shadow:0 0 14px rgba(153,92,208,.18),inset 0 0 20px rgba(0,0,0,.85)}
   .feed{opacity:0;filter:brightness(3);transform:scale(1.04)}
-  .feed.live{opacity:1;filter:none;transform:none;animation:feedIn .12s ease-out}
-  @keyframes feedIn{0%{filter:brightness(2.8);transform:scale(1.06);border-color:var(--green-neon)}100%{filter:none;transform:none}}
+  .feed.live{opacity:1;filter:none;transform:none;animation:feedIn .2s ease-out}
+  @keyframes feedIn{0%{filter:brightness(1.5);transform:scale(1.02);border-color:var(--green-neon)}100%{filter:none;transform:none}}
   .feed.pulse{border-color:var(--green-neon);box-shadow:0 0 16px rgba(142,223,95,.5)}
   .feed.glitch{animation:fgl .08s steps(2) 2}
   @keyframes fgl{25%{transform:translateX(2px) skewX(1deg);filter:hue-rotate(20deg)}75%{transform:translateX(-2px);filter:brightness(1.4)}}
@@ -127,13 +127,12 @@
   #screen-landing .cc-ticker .track{display:inline-block;white-space:nowrap;font-size:7px;letter-spacing:2px;color:rgba(142,223,95,.9);
     animation:marquee 22s linear infinite;padding-left:100%}
   @keyframes marquee{to{transform:translateX(-100%)}}
-  #screen-landing .feed-sys{left:1%;top:10%;width:24%;height:27%}
-  #screen-landing .feed-neural{left:26%;top:10%;width:48%;height:15%}
-  #screen-landing .feed-magi{right:1%;top:10%;width:24%;height:27%}
-  #screen-landing .feed-eva{left:1%;top:38%;width:34%;height:31%}
-  #screen-landing .feed-psycho{left:36%;top:38%;width:31%;height:19%}
-  #screen-landing .feed-tox{right:1%;top:38%;width:24%;height:19%}
-  #screen-landing .feed-wave{left:1%;right:1%;bottom:10%;height:12%}
+  #screen-landing .land-feed-grid{
+    position:absolute;left:1.5%;right:1.5%;top:11%;height:55%;
+    display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);
+    gap:1.2%;z-index:6}
+  #screen-landing .land-feed-grid .feed{position:relative;left:auto;right:auto;top:auto;bottom:auto;width:100%;height:100%}
+  #screen-landing .feed-wave{left:1.5%;right:1.5%;top:67%;height:14%;width:auto}
   #screen-landing .land-engage{
     position:absolute;bottom:1%;left:1%;right:1%;height:8%;
     border:2px solid var(--orange);background:rgba(255,107,0,.1);
@@ -162,15 +161,14 @@
   #screen-ack .ack-hd .nerv{font-size:9px;letter-spacing:2px;color:var(--red);font-weight:900;text-shadow:0 0 10px var(--red)}
   #screen-ack .ack-hd .lvl{font-size:8px;color:#000;background:var(--red);padding:3px 8px;font-weight:900}
   #screen-ack .ack-cnt{font-size:11px;color:var(--red);letter-spacing:2px;font-variant-numeric:tabular-nums;
-    text-shadow:0 0 12px var(--red);animation:live .2s step-end infinite;font-weight:900}
+    text-shadow:0 0 10px var(--red);font-weight:900}
   #screen-ack .ack-hex-wrap{position:absolute;left:50%;top:9%;transform:translateX(-50%);width:92%;height:17%;z-index:5}
   #screen-ack .ack-hex-out{position:absolute;inset:0;border:2px solid var(--red);
     clip-path:polygon(6% 0%,94% 0%,100% 50%,94% 100%,6% 100%,0% 50%);
-    animation:vx .04s linear infinite;box-shadow:0 0 36px rgba(255,45,0,.6)}
+    box-shadow:0 0 24px rgba(255,45,0,.45)}
   #screen-ack .ack-hex{position:absolute;inset:6px;background:var(--red);color:#000;
     clip-path:polygon(6% 0%,94% 0%,100% 50%,94% 100%,6% 100%,0% 50%);
-    text-align:center;padding-top:14%;animation:vx .04s linear infinite}
-  @keyframes vx{50%{transform:translateX(3px) skewX(1deg)}}
+    text-align:center;padding-top:14%}
   #screen-ack .ack-hex .jp{font-size:clamp(16px,4.5vmin,22px);letter-spacing:5px;font-weight:900}
   #screen-ack .ack-hex .en{font-size:10px;margin-top:4px;letter-spacing:2px;font-weight:900}
   #screen-ack .ack-hex .sub{font-size:8px;margin-top:3px;opacity:.8}
@@ -189,13 +187,13 @@
   #screen-ack .ack-deploy{position:absolute;left:6px;right:6px;top:66%;z-index:5;display:flex;gap:5px}
   #screen-ack .ack-deploy .box{flex:1;border:2px solid var(--red);padding:8px 6px;font-size:7px;color:rgba(255,255,255,.7);line-height:1.45}
   #screen-ack .ack-deploy .box b{display:block;font-size:8px;color:var(--orange-bright);margin-bottom:3px;font-weight:900}
-  #screen-ack .ack-deploy .box .v{color:var(--green-neon);font-weight:900;font-size:11px;animation:live .35s step-end infinite}
-  #screen-ack .ack-mrow .ver.flash-v{animation:vf .15s step-end 3}
-  @keyframes vf{50%{color:#fff;background:var(--red)}}
+  #screen-ack .ack-deploy .box .v{color:var(--green-neon);font-weight:900;font-size:11px}
+  #screen-ack .ack-mrow .ver.flash-v{animation:vf .4s ease-out 1}
+  @keyframes vf{50%{color:#fff;background:rgba(230,0,18,.35)}}
   #screen-ack .ack-btn{position:absolute;bottom:11%;left:50%;transform:translateX(-50%);border:2px solid var(--red);
     background:rgba(255,45,0,.4);color:#fff;padding:14px 24px;font-size:clamp(10px,2.8vmin,12px);letter-spacing:3px;
-    cursor:pointer;font-family:inherit;font-weight:900;z-index:10;animation:ab .18s ease-in-out infinite;width:88%}
-  @keyframes ab{50%{box-shadow:0 0 36px var(--red);background:rgba(255,45,0,.6)}}
+    cursor:pointer;font-family:inherit;font-weight:900;z-index:10;animation:ab 2.4s ease-in-out infinite;width:88%}
+  @keyframes ab{50%{box-shadow:0 0 22px rgba(230,0,18,.45);background:rgba(255,45,0,.5)}}
   #screen-ack .ack-jp-bar{position:absolute;bottom:5%;left:6px;right:6px;text-align:center;font-size:8px;
     color:var(--purple);letter-spacing:2px;z-index:5;font-weight:900}
   #screen-ack .hazard{position:absolute;left:0;right:0;height:12px;z-index:6;
@@ -400,12 +398,14 @@
     <canvas id="land-angel" width="72" height="56"></canvas>
     <div class="fui-micro-panel" style="left:158px;top:112px;width:90px"><span class="s">ANGEL</span><br><span class="scroll" id="land-angel-txt">PATTERN BLUE — NO CONTACT</span></div>
     <div class="fui-micro-panel" style="left:6px;top:314px;width:110px"><span class="s">MAGI</span><br><span id="land-magi-txt">CONSENSUS IDLE</span></div>
-    <div class="feed feed-sys"><span class="feed-label">SYSTEM CHECK</span><span class="feed-jp">システム</span><span class="feed-stat" id="st-sys">OK</span><canvas id="fc-sys" width="146" height="120"></canvas></div>
-    <div class="feed feed-neural"><span class="feed-label">NEURAL ACTIVITY</span><span class="feed-jp">神経活動</span><span class="feed-stat" id="st-neural">6CH</span><canvas id="fc-neural" width="282" height="64"></canvas></div>
-    <div class="feed feed-magi"><span class="feed-label">MAGI SCOPE</span><span class="feed-jp">マギ</span><span class="feed-stat" id="st-magi">01</span><canvas id="fc-magi" width="146" height="120"></canvas></div>
-    <div class="feed feed-eva"><span class="feed-label">EVA-01 SCAN</span><span class="feed-jp">初号機</span><span class="feed-stat" id="st-eva">SCAN</span><canvas id="fc-eva" width="198" height="140"></canvas></div>
-    <div class="feed feed-psycho"><span class="feed-label">PSYCHOGRAPHIC</span><span class="feed-jp">心象</span><span class="feed-stat" id="st-psycho">LINK-A</span><canvas id="fc-psycho" width="178" height="82"></canvas></div>
-    <div class="feed feed-tox"><span class="feed-label">MENTAL TOXICITY</span><span class="feed-jp">毒性</span><span class="feed-stat" id="st-tox">LOW</span><div class="tox-bars-land" id="land-tox"></div></div>
+    <div class="land-feed-grid">
+      <div class="feed feed-sys"><span class="feed-label">SYSTEM CHECK</span><span class="feed-jp">システム</span><span class="feed-stat" id="st-sys">OK</span><canvas id="fc-sys" width="146" height="120"></canvas></div>
+      <div class="feed feed-neural"><span class="feed-label">NEURAL ACTIVITY</span><span class="feed-jp">神経活動</span><span class="feed-stat" id="st-neural">6CH</span><canvas id="fc-neural" width="282" height="64"></canvas></div>
+      <div class="feed feed-magi"><span class="feed-label">MAGI SCOPE</span><span class="feed-jp">マギ</span><span class="feed-stat" id="st-magi">01</span><canvas id="fc-magi" width="146" height="120"></canvas></div>
+      <div class="feed feed-eva"><span class="feed-label">EVA-01 SCAN</span><span class="feed-jp">初号機</span><span class="feed-stat" id="st-eva">SCAN</span><canvas id="fc-eva" width="198" height="140"></canvas></div>
+      <div class="feed feed-psycho"><span class="feed-label">PSYCHOGRAPHIC</span><span class="feed-jp">心象</span><span class="feed-stat" id="st-psycho">LINK-A</span><canvas id="fc-psycho" width="178" height="82"></canvas></div>
+      <div class="feed feed-tox"><span class="feed-label">MENTAL TOXICITY</span><span class="feed-jp">毒性</span><span class="feed-stat" id="st-tox">LOW</span><div class="tox-bars-land" id="land-tox"></div></div>
+    </div>
     <div class="feed feed-wave"><span class="feed-label">SYNC WAVEFORM • IKARI SHINJI</span><span class="feed-jp">同期率</span><span class="feed-stat" id="st-sync">--%</span><canvas id="fc-wave" width="586" height="50"></canvas></div>
     <div class="land-fringe tl">GEOFRONT<br>DEPTH 1200m</div>
     <div class="land-fringe tr">A.T.FIELD<br>±0.03</div>
@@ -725,20 +725,28 @@ async function bootConfirm(txt){
 
 async function hardTo(name,color='#fff'){
   if(transitioning)return;transitioning=true;
+  const gentle=name==='ack';
   $('scanlines').classList.add('hot');
   const dramas=name==='ack'?['ALERT','第1種','BATTLE']:name==='boot'?['LINK','初号機','SYNC']:name==='hud'?['SYNC','LINK','READY']:['NERV','MAGI'];
-  for(let i=0;i<10;i++){
-    flash(i%2?color:'#fff');chroma();vhs();tears();impact(6+i*9);
-    if(i%3===0)dramaFlash(dramas[i%dramas.length],name==='ack');
-    if(i%2===0)cascadeAlert(CASCADE_ALERTS[(frame+i)%CASCADE_ALERTS.length],i%4?'warn':'ok');
-    await wait(14);
+  const loops=gentle?3:10;
+  for(let i=0;i<loops;i++){
+    if(!gentle){
+      flash(i%2?color:'#fff');chroma();vhs();tears();impact(6+i*9);
+      if(i%3===0)dramaFlash(dramas[i%dramas.length],false);
+      if(i%2===0)cascadeAlert(CASCADE_ALERTS[(frame+i)%CASCADE_ALERTS.length],i%4?'warn':'ok');
+      await wait(14);
+    }else{
+      if(i===0)flash('rgba(230,0,18,.22)');
+      await wait(36);
+    }
   }
   document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active','slam');s.style.display='none'});
   const el=$('screen-'+name);el.style.display='block';el.classList.add('active','slam');
   screen=name;
   if(name==='ack'){ackT0=performance.now();$('ack-stack').innerHTML=CASCADE_ALERTS.slice(0,4).map(a=>'▶ '+a+'<br>').join('')}
   $('scanlines').classList.toggle('hot',name!=='hud');
-  flash(color);dramaFlash(dramas[0],name==='ack');impact(50);await wait(24);
+  if(gentle){flash('rgba(230,0,18,.18)');impact(40);await wait(32)}
+  else{flash(color);dramaFlash(dramas[0],name==='ack');impact(50);await wait(24)}
   requestAnimationFrame(syncAllCanvases);transitioning=false;
 }
 
@@ -809,19 +817,20 @@ async function runOpeningMontage(){
   const cv=$('opening-canvas'),ctx=cv?.getContext('2d');
   const ow=cv?.width||600,oh=cv?.height||600;
   $('land-boot-status').textContent='EMOTIONAL ONBOARDING...';
-  for(let i=0;i<14;i++){
+  for(let i=0;i<8;i++){
     if(ctx){
       ctx.fillStyle='#000';ctx.fillRect(0,0,ow,oh);
       drawNgeGrid(ctx,ow,oh,.04);
       if(i%3===0)drawDnaHelix(ctx,ow*.2,oh*.07,frame+i*3);
-      if(i%4===1){ctx.strokeStyle=NGE.red;ctx.lineWidth=2;ctx.beginPath();
+      if(i%4===1){ctx.strokeStyle=NGE.red;ctx.lineWidth=1.5;ctx.beginPath();
         ctx.moveTo(ow/2,oh*.33);ctx.lineTo(ow/2,oh*.67);ctx.moveTo(ow*.33,oh/2);ctx.lineTo(ow*.67,oh/2);ctx.stroke()}
       if(i%4===2)drawGaussCurve(ctx,ow*.33,oh*.1,frame+i);
-      drawCrosshair(ctx,ow,oh,frame+i*.5,.5);
+      drawCrosshair(ctx,ow,oh,frame+i*.5,.4);
     }
     const w=OPENING_FLASH[i%OPENING_FLASH.length];
-    dramaFlash(w,i%3===0);flash(i%2?NGE.purple:NGE.orange);chroma();vhs();
-    await wait(55);
+    if(i%3===0)dramaFlash(w,false);
+    if(i%4===0)flash(i%2?'rgba(153,92,208,.25)':'rgba(255,107,0,.2)');
+    await wait(85);
   }
   if(ctx){ctx.fillStyle='#000';ctx.fillRect(0,0,ow,oh)}
   $('opening-canvas').style.opacity='0';
@@ -914,7 +923,7 @@ function tickLiveData(){
     $('ack-sync').textContent=Math.round(state.sync)+'%';
     $('ack-eva').textContent=['STANDBY','ARMED','READY'][Math.floor(t/45)%3];
     $('ack-status').textContent='MAGI VOTE '+Math.floor(t/28)%3+'/3 • BARRIER '+live.at.toFixed(2);
-    $('ack-threat').textContent=Math.floor(t/22)%2
+    $('ack-threat').textContent=Math.floor(t/90)%2
       ?'⚠ ANGEL DETECTED — PATTERN BLUE UNCONFIRMED'
       :'⚠ ALL PERSONNEL — BATTLE STATIONS IMMEDIATE';
   }
@@ -1161,15 +1170,14 @@ async function bootLandingFeeds(){
   const msgs=['SCANNING MAGI ARRAY...','LINKING NEURAL FEEDS...','EVA-01 STRUCTURAL ONLINE...','PSYCHOGRAPHIC ACTIVE...','ALL FEEDS NOMINAL'];
   try{
     for(let i=0;i<FEED_ORDER.length;i++){
-      flash(i%2?'#995CD0':'#FF6B00');chroma();vhs();tears();
-      if(i%2===0)dramaFlash(['MAGI','LINK','SYNC','FEED','初号機'][i%5]);
-      cascadeAlert(msgs[Math.min(i,msgs.length-1)],'ok');
+      if(i%3===0)flash(i%2?'rgba(153,92,208,.2)':'rgba(255,107,0,.18)');
+      if(i%4===0)cascadeAlert(msgs[Math.min(i,msgs.length-1)],'ok');
       status.textContent=msgs[Math.min(i,msgs.length-1)];
       const el=document.querySelector('.'+FEED_ORDER[i]);
       if(el){el.classList.add('live');const cv=el.querySelector('canvas');if(cv)requestAnimationFrame(()=>syncCanvas(cv))}
       await wait(65);
     }
-    flash('#8EDF5F');$('cc-header').style.opacity='1';
+    flash('rgba(142,223,95,.2)');$('cc-header').style.opacity='1';
     status.textContent='CONTROL CENTER ONLINE';
     await wait(280);
   }finally{
