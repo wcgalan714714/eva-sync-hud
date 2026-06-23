@@ -315,7 +315,7 @@
     border:1px solid rgba(122,62,181,.5);padding:6px 10px;background:rgba(8,8,16,.92);font-weight:900}
   #screen-hud .oura-badge.live{color:var(--green-neon);border-color:var(--green-neon)}
   #screen-hud .oura-badge.mock{color:var(--orange)}
-  #screen-hud .holo-panel{position:absolute;left:6px;top:30px;width:42%;height:36%;
+  #screen-hud .holo-panel{position:absolute;left:6px;top:28px;width:44%;height:40%;
     border:2px solid rgba(122,62,181,.7);background:var(--panel);overflow:hidden;
     box-shadow:0 0 24px rgba(122,62,181,.28),inset 0 0 40px rgba(0,0,0,.92);
     animation:none}
@@ -340,9 +340,9 @@
   #screen-hud .holo-fill{height:100%;background:linear-gradient(90deg,#8EDF5F,#00FF9F);box-shadow:0 0 12px var(--green-neon);transition:width .6s ease}
   #screen-hud .holo-scan{position:absolute;bottom:24px;left:8px;font-size:9px;color:var(--green-neon);z-index:4;letter-spacing:1px;font-weight:900;text-shadow:0 0 6px rgba(0,255,159,.5)}
   #screen-hud .holo-pct{position:absolute;bottom:6px;right:10px;font-size:11px;color:var(--green-neon);z-index:5;font-weight:900;text-shadow:0 0 8px var(--green-neon)}
-  #screen-hud .gauge-z{position:absolute;right:6px;top:30px;width:54%;height:36%;display:flex;align-items:center;justify-content:center}
+  #screen-hud .gauge-z{position:absolute;right:6px;top:28px;width:55%;height:40%;display:flex;align-items:center;justify-content:center}
   #screen-hud .g-orbit{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(255,107,0,.5);animation:spin 10s linear infinite}
-  #screen-hud .g-core{width:min(36vmin,210px);height:min(36vmin,210px);border-radius:50%;border:5px solid var(--purple-eva);
+  #screen-hud .g-core{width:min(40vmin,230px);height:min(40vmin,230px);border-radius:50%;border:5px solid var(--purple-eva);
     background:conic-gradient(var(--orange) 0deg var(--sa,0deg),var(--purple-dark) var(--sa,0deg) 360deg);
     box-shadow:0 0 36px rgba(122,62,181,.55),0 0 16px rgba(255,107,0,.45);transition:background .05s;position:relative}
   #screen-hud .g-core.good{background:conic-gradient(var(--green-neon) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg)}
@@ -350,10 +350,10 @@
   @keyframes gp{50%{box-shadow:0 0 56px var(--green-neon),0 0 24px rgba(153,92,208,.4);transform:scale(1.02)}}
   @keyframes gw{50%{box-shadow:0 0 44px var(--red)}}
   #screen-hud .g-hole{position:absolute;inset:18%;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
-  #screen-hud .sync-n{font-size:clamp(42px,11vmin,64px);font-weight:900;color:var(--orange-bright);line-height:1;text-shadow:0 0 20px rgba(255,107,0,.5)}
+  #screen-hud .sync-n{font-size:clamp(46px,12vmin,72px);font-weight:900;color:var(--orange-bright);line-height:1;text-shadow:0 0 20px rgba(255,107,0,.5)}
   #screen-hud .sync-n.good{color:var(--green-neon);text-shadow:0 0 24px var(--green-neon)}
   #screen-hud .sync-l{font-size:9px;letter-spacing:5px;color:var(--purple);margin-top:2px}
-  #screen-hud .hud-deck{position:absolute;left:6px;right:6px;top:42.5%;height:26%;display:flex;gap:6px;z-index:12}
+  #screen-hud .hud-deck{position:absolute;left:6px;right:6px;top:40%;height:30%;display:flex;gap:7px;z-index:12}
   #screen-hud .hcard{flex:1;min-width:0;min-height:0;position:relative;border:3px solid rgba(122,62,181,.65);
     background:linear-gradient(160deg,rgba(12,12,24,.95),rgba(8,8,16,.9));cursor:pointer;overflow:visible;
     box-shadow:0 0 14px rgba(122,62,181,.18),inset 0 0 12px rgba(0,0,0,.75);transition:flex .15s,border-color .1s;
@@ -365,14 +365,14 @@
   #screen-hud .hcard.syncing{animation:cardSync .6s ease-in-out infinite}
   @keyframes cardWarn{50%{box-shadow:0 0 24px rgba(230,0,18,.35)}}
   @keyframes cardSync{50%{border-color:var(--green-neon);box-shadow:0 0 26px rgba(0,255,159,.4)}}
-  #screen-hud .hcard-hd{font-size:10px;letter-spacing:1.4px;color:var(--orange);padding:6px 6px 0;font-weight:900}
+  #screen-hud .hcard-hd{font-size:11px;letter-spacing:1.4px;color:var(--orange);padding:7px 7px 0;font-weight:900}
   #screen-hud .hcard-hd .jp{color:var(--purple);font-weight:400;font-size:9px}
-  #screen-hud .hcard-val{font-size:clamp(22px,6.5vmin,34px);font-weight:900;color:var(--orange-bright);padding:4px 6px 0;line-height:1;
+  #screen-hud .hcard-val{font-size:clamp(24px,7vmin,38px);font-weight:900;color:var(--orange-bright);padding:5px 7px 0;line-height:1;
     font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(255,107,0,.5)}
   #screen-hud .hcard-val.good{color:var(--green-neon);text-shadow:0 0 16px rgba(0,255,159,.6)}
   #screen-hud .hcard-val.bad{color:var(--red);text-shadow:0 0 16px rgba(230,0,18,.6)}
-  #screen-hud .hcard-sub{font-size:9px;color:rgba(142,223,95,.85);padding:3px 6px 6px;line-height:1.25;font-weight:700}
-  #screen-hud .hcard-cv{width:calc(100% - 8px);height:28px;display:block;margin:2px 4px 6px;opacity:.92}
+  #screen-hud .hcard-sub{font-size:10px;color:rgba(142,223,95,.85);padding:4px 7px 7px;line-height:1.25;font-weight:700}
+  #screen-hud .hcard-cv{width:calc(100% - 10px);height:32px;display:block;margin:3px 5px 7px;opacity:.92}
   #screen-hud .hcard-pulse{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--green-neon);opacity:0}
   #screen-hud .hcard.live .hcard-pulse{opacity:.9;box-shadow:0 0 8px var(--green-neon)}
   #screen-hud .hcard-detail{position:absolute;left:-3px;right:-3px;top:calc(100% + 4px);display:none;
@@ -384,16 +384,17 @@
   #screen-hud .hcard-detail input[type=range]{width:100%;accent-color:var(--orange);height:16px;margin:6px 0}
   #screen-hud .hcard-detail button{border:1px solid var(--orange);background:rgba(255,107,0,.15);color:var(--orange-bright);
     font:inherit;font-size:9px;padding:7px 12px;cursor:pointer;margin-top:5px;margin-right:6px;font-weight:900}
-  #screen-hud .wv{position:absolute;left:6px;right:6px;top:70.5%;height:11%;border:2px solid rgba(142,223,95,.35);overflow:hidden;
+  #screen-hud .wv-block{position:absolute;left:6px;right:6px;bottom:6px;height:19%;z-index:8;display:flex;flex-direction:column;gap:3px}
+  #screen-hud .wv-label{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+    font-size:10px;color:var(--orange);letter-spacing:2px;font-weight:900;text-shadow:0 0 6px var(--orange);padding:0 4px}
+  #screen-hud .wv-label .jp{color:var(--purple);font-weight:400;letter-spacing:1px}
+  #screen-hud .wv-stats{font-size:10px;color:var(--green-neon);letter-spacing:1px;font-weight:900;text-shadow:0 0 8px rgba(0,255,159,.45);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  #screen-hud .wv-stats.hit{color:var(--orange-bright);animation:ch .08s steps(2) 3}
+  #screen-hud .wv{flex:1;min-height:0;border:2px solid rgba(142,223,95,.35);overflow:hidden;
     background:rgba(0,0,0,.5);box-shadow:inset 0 0 24px rgba(122,62,181,.15)}
   #screen-hud .wv.overload{border-color:var(--red)}
   #screen-hud #hud-wv{width:100%;height:100%;display:block}
-  #screen-hud .wv-label{position:absolute;left:10px;top:69%;font-size:10px;color:var(--orange);letter-spacing:2px;z-index:6;font-weight:900;text-shadow:0 0 6px var(--orange)}
-  #screen-hud .log-p{position:absolute;left:6px;right:6px;bottom:1%;height:9%;border:2px solid var(--purple-eva);
-    background:rgba(12,12,24,.92);padding:8px 10px;font-size:11px;display:flex;flex-direction:column;justify-content:center;z-index:8}
-  #screen-hud .log-p .h{color:var(--purple);font-size:9px;letter-spacing:1.5px;font-weight:900}
-  #screen-hud .log-p .b{color:var(--orange-bright);font-size:13px;font-weight:900;text-shadow:0 0 8px rgba(255,107,0,.35);line-height:1.25}
-  #screen-hud .log-p .b.hit{animation:ch .08s steps(2) 3}
   #screen-hud .parts-p,#screen-hud .hud-ref,#screen-hud .hud-fringe,#screen-hud .hud-dna,
   #screen-hud #hud-scope,#screen-hud #hud-atfield,#screen-hud #hud-gauss,
   #screen-hud .sys-check-lbl{display:none!important}
@@ -593,9 +594,10 @@
       <div class="g-core" id="g-core"><div class="g-hole"><div class="sync-n" id="sync-n">72</div><div class="sync-l">SYNC %</div></div></div>
     </div>
 
-    <div class="wv-label">NEURAL SYNC TRACE • 神経同期</div>
-    <div class="wv"><canvas id="hud-wv" width="588" height="90"></canvas></div>
-    <div class="log-p"><div class="h">PILOT ACTIONS • <span id="log-t">--:--:--</span></div><div class="b" id="log-b">TAP ANY CARD FOR DETAIL · SYNC RING = +10g PROTEIN</div></div>
+    <div class="wv-block">
+      <div class="wv-label"><span>NEURAL SYNC TRACE <span class="jp">神経同期</span></span><span class="wv-stats" id="wv-stats">SYNC — · HRV — · RHR —</span></div>
+      <div class="wv"><canvas id="hud-wv" width="588" height="90"></canvas></div>
+    </div>
   </div>
 </div>
 
@@ -782,6 +784,19 @@ function applyHealthVisuals(v,t){
   refreshMotionLevels(t??dataFrame);
   applyHealthAnim();
 }
+function waveSyncNorm(){
+  const v=pilot.vitals;
+  return Math.max(0,Math.min(1,(v.readiness??displaySync)/100));
+}
+function updateWaveStats(msg){
+  const ws=$('wv-stats');if(!ws||ws.classList.contains('hit'))return;
+  const v=pilot.vitals,h=healthAnim;
+  if(msg){ws.textContent=msg;return}
+  const sync=Math.round(displaySync),hrv=v.hrvMs??'—',rhr=v.rhrBpm??'—';
+  ws.textContent=h.scanUrgent
+    ?`SYNC ${sync}% · STRESS ${v.stressScore??'—'} · HRV ${hrv}ms · RHR ${rhr}bpm`
+    :`SYNC ${sync}% · HRV ${hrv}ms · RHR ${rhr}bpm · SLEEP ${v.sleepScore??'—'}`;
+}
 function applyHealthAnim(){
   const h=healthAnim,el=$('screen-hud');if(!el)return;
   el.style.setProperty('--wave-speed',h.waveSpeed.toFixed(2));
@@ -792,12 +807,7 @@ function applyHealthAnim(){
   el.classList.toggle('stress-high',h.stressN>.45);
   el.classList.toggle('scan-urgent',h.scanUrgent);
   $('holo-sub').textContent=h.scanUrgent?'ELEVATED STRESS — MONITOR':'LIVE VISUAL FEED';
-  const lb=$('log-b');
-  if(lb&&!lb.classList.contains('hit')){
-    lb.textContent=h.scanUrgent
-      ?`SYNC ${Math.round(displaySync)}% · STRESS ${pilot.vitals.stressScore??'—'} · HRV ${pilot.vitals.hrvMs??'—'}`
-      :`SYNC ${Math.round(displaySync)}% · HRV ${pilot.vitals.hrvMs??'—'} · RHR ${pilot.vitals.rhrBpm??'—'}`;
-  }
+  updateWaveStats();
 }
 
 function isBootAnim(){return sysBoot||bootPhase||psychoBoot||neuralBoot||bootOn}
@@ -1226,14 +1236,10 @@ function tickLiveData(){
     if(ouraConnected)renderHudSub();
     else $('hud-sub').textContent=`PILOT: IKARI SHINJI • PLUG ${(4.15+Math.sin(t*.01)*.05).toFixed(1)}m • LCL ${state.lcl.toFixed(1)}`;
     if(frame%150===0){
-      const lb=$('log-b'),lt=$('log-t');
-      if(ouraConnected&&pilot.alerts?.length){
-        lb.textContent=pilot.alerts[0];
-        lt.textContent=pilot.lastSync?new Date(pilot.lastSync).toLocaleTimeString():new Date().toLocaleTimeString();
-      }else{
+      if(ouraConnected&&pilot.alerts?.length)updateWaveStats(pilot.alerts[0]);
+      else{
         const p=HOLO_PARTS[holoScanIdx()];
-        lb.textContent=`HEALTH SCAN: ${p.id} ${p.name} — ${p.bad?'FAULT DETECTED':'NOMINAL'}`;
-        lt.textContent=new Date().toLocaleTimeString();
+        updateWaveStats(`SCAN ${p.id} ${p.name} — ${p.bad?'FAULT':'NOMINAL'} · HRV ${v.hrvMs??'—'}ms`);
       }
     }
   }
@@ -1372,19 +1378,27 @@ function drawPsycho(ctx,w,h,intense){
 }
 
 function drawWave(ctx,w,h,syncNorm,fast){
-  const ft=fast?frame:animT(),ha=healthAnim;
+  const ft=fast?frame:animT(),ha=healthAnim,v=pilot.vitals;
+  const liveSync=waveSyncNorm();
+  const sn=liveSync*.65+syncNorm*.35;
   const wspd=(fast?0.22:0.07)*ha.waveSpeed;
-  const overload=syncNorm<.45||ha.stressN>.55;
+  const overload=sn<.45||ha.stressN>.55;
   const relaxed=ha.relaxed;
+  const hrvN=ha.hrvN;
   ctx.fillStyle='rgba(8,8,16,.75)';ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.03);
   if(overload){ctx.fillStyle='rgba(230,0,18,.08)';ctx.fillRect(0,0,w,h)}
   if(relaxed){ctx.fillStyle='rgba(0,255,159,.03)';ctx.fillRect(0,0,w,h)}
+  const rhr=v.rhrBpm??58;
+  ctx.fillStyle='rgba(122,62,181,.55)';ctx.font='9px monospace';
+  ctx.fillText(`RHR ${rhr}bpm`,8,h-6);
+  ctx.textAlign='right';ctx.fillStyle='rgba(0,255,159,.65)';
+  ctx.fillText(`HRV ${v.hrvMs??'—'}ms`,w-8,h-6);ctx.textAlign='left';
   [[NGE.purple,0],[NGE.greenS,1.5],[NGE.orange,3]].forEach(([col,off],li)=>{
-    const base=syncNorm*22+8,amp=overload&&li===2?base+ha.stressN*22:relaxed?base*.55:base*(.7+ha.waveAmp*.3);
-    const freq=relaxed?.85:1+ha.stressN*.4;
+    const base=sn*22+8+hrvN*6,amp=overload&&li===2?base+ha.stressN*22:relaxed?base*.55:base*(.7+ha.waveAmp*.3);
+    const freq=relaxed?.85:1+ha.stressN*.4+(1-hrvN)*.15;
     ctx.strokeStyle=col;ctx.lineWidth=overload?1.8:relaxed?1:1.4;ctx.shadowColor=col;ctx.shadowBlur=overload?6:relaxed?2:3;ctx.beginPath();
     for(let x=0;x<w;x+=1){const t=x*.05*freq+ft*wspd+off;
-      const y=h/2+Math.sin(t)*amp+Math.sin(t*5)*5*syncNorm*ha.stressN+Math.sin(t*11)*2*(1+ha.stressN);
+      const y=h/2+Math.sin(t)*amp+Math.sin(t*5)*5*sn*ha.stressN+Math.sin(t*11)*2*(1+ha.stressN)+Math.sin(t*2.3+rhr*.04)*hrvN*2;
       x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
     ctx.stroke();ctx.shadowBlur=0;
   });
@@ -1771,8 +1785,9 @@ function updateHud(jump){
 
 function logProtein(){
   state.protein+=10;state.sync=Math.min(100,state.sync+3);state.hydration=Math.min(100,state.hydration+1);
-  const lb=$('log-b');lb.classList.remove('hit');void lb.offsetWidth;lb.classList.add('hit');
-  lb.textContent='+10g PROTEIN • SYNC +3%';$('log-t').textContent=new Date().toLocaleTimeString();
+  const ws=$('wv-stats');
+  if(ws){ws.classList.remove('hit');void ws.offsetWidth;ws.classList.add('hit');ws.textContent='+10g PROTEIN · SYNC +3%';
+    setTimeout(()=>{ws.classList.remove('hit');updateWaveStats()},2400)}
   flash('#FF6B00');chroma();saveState();
 }
 
@@ -1816,15 +1831,9 @@ function tick(){
     const holoV=$('holo-video'),wvCv=$('hud-wv');
     maintainHudVideo();
     if(holoV&&!holoV.paused)markHoloPlaying();
-    if(wvCv){syncCanvas(wvCv);drawWave(wvCv.getContext('2d'),wvCv.width,wvCv.height,displaySync/100,false)}
+    if(wvCv){syncCanvas(wvCv);drawWave(wvCv.getContext('2d'),wvCv.width,wvCv.height,waveSyncNorm(),false)}
     ['readiness','sleep','activity','coretemp','trend'].forEach(c=>drawCardSpark('card-'+c+'-cv',animT()));
-    if(frame%60===0){
-      const lb=$('log-b');
-      if(lb&&!lb.classList.contains('hit')){
-        $('log-t').textContent=new Date().toLocaleTimeString();
-        lb.textContent=`SYNC ${Math.round(displaySync)}% · HRV ${pilot.vitals.hrvMs??'—'} · TAP CARD FOR DETAIL`;
-      }
-    }
+    if(frame%60===0)updateWaveStats();
     const wvEl=document.querySelector('.wv');
     if(wvEl)wvEl.classList.toggle('overload',displaySync<45||healthAnim.stressN>.55);
     $('scanlines').classList.remove('hot');
