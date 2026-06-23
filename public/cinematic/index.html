@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, height=600, initial-scale=1.0">
+<title>EVA SYNC HUD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black:#000; --bg:#080810; --panel:#0C0C18;
+    --purple:#995CD0; --purple-eva:#7A3EB5; --purple-deep:#3D2B6B; --purple-dark:#1A1528;
+    --orange:#FF6B00; --orange-bright:#FF9500; --amber:#FFB800;
+    --green:#8EDF5F; --green-neon:#00FF9F;
+    --red:#E60012; --blood:#8B0000;
+    --blue:#4A90D9; --rei:#9BB5CE;
+    --cyan:#00E5FF; --text:#E8E8F0; --muted:#5A5A6E;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--black);font-family:'Share Tech Mono',ui-monospace,Menlo,Consolas,monospace;width:600px;height:600px;margin:0 auto;overflow:hidden}
+  .nge-jp{font-family:'Noto Serif JP',serif;font-weight:900}
+  .nge-drama{font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 0 20px var(--green-neon),0 0 40px var(--purple)}
+  .nge-drama.red{color:#fff;text-shadow:0 0 24px var(--red),0 0 50px var(--orange)}
+  #app{width:600px;height:600px;position:relative;overflow:hidden;background:var(--bg);
+    border:2px solid var(--purple-eva);box-shadow:0 0 40px rgba(122,62,181,.25),inset 0 0 60px rgba(0,0,0,.9)}
+  #app::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:repeating-linear-gradient(-42deg,transparent 0 18px,rgba(122,62,181,.035) 18px 19px),
+      radial-gradient(ellipse 80% 50% at 50% 100%,rgba(230,0,18,.07),transparent),
+      radial-gradient(ellipse 60% 40% at 50% 0%,rgba(122,62,181,.1),transparent)}
+  #app::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 90px rgba(0,0,0,.75)}
+  .nge-type{font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+  .nge-flicker{animation:ngef .12s step-end infinite}
+  @keyframes ngef{50%{opacity:.55}}
+
+  .screen{position:absolute;inset:0;display:none;overflow:hidden}
+  .screen.active{display:block}
+  .screen.slam{animation:slam .14s cubic-bezier(.2,2.2,.35,1)}
+  @keyframes slam{0%{transform:scale(1.2) skewX(-3deg);filter:brightness(3.2) saturate(1.4)}40%{transform:scale(.94) skewX(1deg)}100%{transform:none;filter:none}}
+  .impact-bar{position:absolute;left:0;right:0;height:4px;z-index:97;pointer-events:none;background:var(--green-neon);
+    box-shadow:0 0 20px var(--green-neon);opacity:0}
+  .impact-bar.on{animation:ibar .12s ease-out}
+  @keyframes ibar{0%{opacity:1;top:50%}100%{opacity:0;top:var(--iy,10%)}}
+
+  .scanlines{position:absolute;inset:0;z-index:90;pointer-events:none;
+    background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(255,255,255,.12) 2px 3px);
+    animation:scan .12s linear infinite;mix-blend-mode:overlay}
+  .scanlines.hot{animation-duration:.06s}
+  @keyframes scan{to{transform:translateY(4px)}}
+  .noise{position:absolute;inset:0;z-index:89;pointer-events:none;opacity:.09;
+    background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.95' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:nf .07s steps(2) infinite}
+  @keyframes nf{50%{opacity:.18}}
+  #fx-cut{position:absolute;inset:0;z-index:95;pointer-events:none;overflow:hidden}
+  .tear{position:absolute;left:0;right:0;height:36px;opacity:0}
+  .tear.go{animation:tear .06s ease-out forwards}
+  @keyframes tear{0%{opacity:1;transform:translateX(0) scaleX(1.2)}100%{opacity:0;transform:translateX(var(--dx,40px)) scaleX(.8)}}
+  .flash{position:absolute;inset:0;z-index:96;pointer-events:none;opacity:0}
+  .flash.on{animation:fb .04s ease-out}
+  @keyframes fb{0%{opacity:1}100%{opacity:0}}
+  .chroma{position:absolute;inset:0;z-index:94;pointer-events:none}
+  .chroma.on{animation:ch .05s steps(3) 6}
+  @keyframes ch{33%{box-shadow:inset 14px 0 rgba(255,0,0,.85),inset -14px 0 rgba(0,255,159,.85)}
+    66%{box-shadow:inset -10px 0 rgba(153,92,208,.7),inset 10px 0 rgba(255,107,0,.7)}}
+  .vhs{position:absolute;inset:0;z-index:93;pointer-events:none;opacity:0}
+  .vhs.on{animation:vhs .05s steps(2) 4}
+  @keyframes vhs{25%{transform:translateX(3px) scaleY(1.02)}50%{transform:translateX(-4px);filter:saturate(2)}75%{transform:skewX(2deg)}}
+  #fui-global{position:absolute;inset:0;z-index:85;pointer-events:none;overflow:hidden}
+  #drama-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:98;opacity:0;pointer-events:none}
+  #drama-flash.on{animation:drama .18s ease-out}
+  #drama-flash .w{font-size:42px;line-height:1;opacity:0;transform:scale(1.4)}
+  #drama-flash.on .w{animation:dramw .18s ease-out forwards}
+  @keyframes drama{0%{opacity:1;background:rgba(0,0,0,.7)}100%{opacity:0;background:transparent}}
+  @keyframes dramw{0%{opacity:0;transform:scale(1.6) skewX(-6deg)}40%{opacity:1;transform:scale(1) skewX(2deg)}100%{opacity:0;transform:scale(.9)}}
+  #alert-cascade{position:absolute;top:36px;right:6px;width:148px;z-index:86;display:flex;flex-direction:column;gap:2px;align-items:flex-end}
+  .alert-chip{border:1px solid var(--red);background:rgba(230,0,18,.15);color:#fff;font-size:4px;letter-spacing:1.5px;
+    padding:2px 5px;max-width:148px;opacity:0;transform:translateX(20px);animation:chipIn .2s ease-out forwards}
+  .alert-chip.warn{border-color:var(--orange);background:rgba(255,107,0,.12);color:var(--orange-bright)}
+  .alert-chip.ok{border-color:var(--green-neon);background:rgba(0,255,159,.08);color:var(--green-neon)}
+  @keyframes chipIn{to{opacity:1;transform:none}}
+  #fui-micro{position:absolute;inset:0;width:600px;height:600px;opacity:.55}
+  .fui-micro-panel{position:absolute;border:1px solid rgba(122,62,181,.45);background:rgba(8,8,16,.72);
+    font-size:4px;letter-spacing:1px;color:rgba(142,223,95,.6);padding:2px 4px;line-height:1.45;overflow:hidden;z-index:7;pointer-events:none}
+  .fui-micro-panel .s{color:var(--orange-bright);font-weight:900}
+  .fui-micro-panel .scroll{animation:marquee 8s linear infinite;display:inline-block;padding-left:100%;white-space:nowrap}
+  .split-v{position:absolute;top:0;bottom:0;width:1px;background:rgba(122,62,181,.25);z-index:6;pointer-events:none}
+  .split-h{position:absolute;left:0;right:0;height:1px;background:rgba(122,62,181,.2);z-index:6;pointer-events:none}
+
+  .feed{border:1px solid rgba(122,62,181,.5);background:rgba(8,8,16,.82);position:absolute;overflow:hidden;
+    box-shadow:0 0 12px rgba(153,92,208,.15),inset 0 0 24px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.04);
+    opacity:0;filter:brightness(3);transform:scale(1.06)}
+  .feed.live{opacity:1;filter:none;transform:none;animation:feedIn .12s ease-out}
+  @keyframes feedIn{0%{filter:brightness(2.8);transform:scale(1.1);border-color:var(--green-neon)}100%{filter:none;transform:none}}
+  .feed.pulse{border-color:var(--green-neon);box-shadow:0 0 14px rgba(142,223,95,.5)}
+  .feed.glitch{animation:fgl .08s steps(2) 2}
+  @keyframes fgl{25%{transform:translateX(2px) skewX(1deg);filter:hue-rotate(20deg)}75%{transform:translateX(-2px);filter:brightness(1.4)}}
+  .feed-label{position:absolute;top:2px;left:4px;font-size:6px;letter-spacing:1.5px;color:var(--orange);z-index:2;
+    text-shadow:0 0 6px var(--orange)}
+  .feed-jp{position:absolute;top:2px;right:4px;font-size:4px;letter-spacing:1px;color:var(--purple);z-index:2;opacity:.85}
+  .feed-stat{position:absolute;bottom:2px;right:4px;font-size:5px;color:var(--green-neon);z-index:2;
+    font-variant-numeric:tabular-nums;text-shadow:0 0 4px var(--green-neon)}
+  .feed canvas{display:block;width:100%;height:100%}
+  .land-boot{position:absolute;inset:0;z-index:25;background:#000;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:8px}
+  .land-boot .t{font-size:11px;letter-spacing:5px;color:var(--orange-bright);text-shadow:0 0 12px var(--orange)}
+  .land-boot .s{font-size:7px;letter-spacing:3px;color:var(--green-neon);animation:live .2s step-end infinite}
+  .land-boot.hide{display:none}
+  #opening-canvas{position:absolute;inset:0;z-index:24;opacity:.85}
+  .opening-word{position:absolute;font-size:28px;font-weight:900;color:#fff;opacity:0;z-index:26;letter-spacing:.2em;
+    text-shadow:0 0 30px var(--purple);animation:ow .12s ease-out forwards}
+  @keyframes ow{0%{opacity:0;transform:scale(1.5)}30%{opacity:1}100%{opacity:0;transform:scale(.8)}}
+  #land-angel{position:absolute;right:6px;top:108px;width:72px;height:56px;z-index:9;border:1px solid rgba(230,0,18,.4);
+    background:rgba(0,0,0,.6)}
+
+  /* LANDING — NERV control center (cavernous, dense FUI) */
+  #screen-landing{background:linear-gradient(175deg,#050508,#0a0814 45%,#06060e);z-index:3}
+  .cc-header{position:absolute;top:0;left:0;right:0;height:38px;border-bottom:1px solid var(--purple-eva);z-index:10;
+    background:linear-gradient(90deg,rgba(26,21,40,.95),rgba(12,12,24,.92))}
+  .cc-row{display:flex;align-items:center;justify-content:space-between;padding:4px 10px 0}
+  .cc-header .brand{font-size:7px;letter-spacing:2px;color:var(--orange-bright);text-shadow:0 0 8px var(--orange)}
+  .cc-header .meta{font-size:5px;color:var(--purple);letter-spacing:1px}
+  .cc-header .live{font-size:7px;color:var(--green-neon);animation:live .15s step-end infinite}
+  @keyframes live{50%{opacity:.2}}
+  .cc-header .clock{font-size:8px;color:var(--green-neon);font-variant-numeric:tabular-nums;text-shadow:0 0 6px var(--green-neon)}
+  .cc-ticker{overflow:hidden;height:10px;margin-top:2px;border-top:1px solid rgba(153,92,208,.35)}
+  .cc-ticker .track{display:inline-block;white-space:nowrap;font-size:5px;letter-spacing:2px;color:rgba(142,223,95,.85);
+    animation:marquee 22s linear infinite;padding-left:100%}
+  @keyframes marquee{to{transform:translateX(-100%)}}
+  .land-fringe{position:absolute;font-size:4px;color:var(--muted);letter-spacing:2px;line-height:1.55;z-index:8;pointer-events:none}
+  .land-fringe.tl{top:44px;left:8px}.land-fringe.tr{top:44px;right:8px;text-align:right}
+  .land-fringe.bl{bottom:44px;left:8px;color:rgba(122,62,181,.55)}.land-fringe.br{bottom:44px;right:8px;text-align:right}
+
+  .feed-sys{left:6px;top:42px;width:148px;height:122px}
+  .feed-neural{left:158px;top:42px;width:284px;height:66px}
+  .feed-magi{right:6px;top:42px;width:148px;height:122px}
+  .feed-eva{left:6px;top:168px;width:200px;height:142px}
+  .feed-psycho{left:210px;top:168px;width:180px;height:84px}
+  .feed-tox{right:6px;top:168px;width:148px;height:84px}
+  .feed-wave{left:6px;right:6px;bottom:42px;height:52px}
+
+  .land-engage{
+    position:absolute;bottom:8px;left:6px;right:6px;height:30px;
+    border:2px solid var(--orange);background:rgba(255,107,0,.08);
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;letter-spacing:4px;color:var(--orange-bright);
+    cursor:pointer;z-index:30;animation:eng .4s step-end infinite;
+  }
+  @keyframes eng{50%{background:rgba(142,223,95,.22);color:var(--green-neon);box-shadow:0 0 28px rgba(142,223,95,.55);letter-spacing:5px}}
+  .land-engage.wait{opacity:.35;pointer-events:none;animation:none}
+
+  .tox-bars-land{display:flex;gap:2px;align-items:flex-end;height:calc(100% - 14px);padding:12px 6px 4px}
+  .tox-bars-land .b{width:14px;background:var(--green-neon);box-shadow:0 0 5px var(--green-neon);animation:tb .5s ease-in-out infinite}
+  .tox-bars-land .b:first-child{background:var(--red);box-shadow:0 0 5px var(--red)}
+  @keyframes tb{50%{transform:scaleY(1.1)}}
+
+  /* ACK — Battle Stations (ui2) */
+  #screen-ack{background:radial-gradient(ellipse at 50% 30%,#1a0000,#000);z-index:3}
+  #ack-bg{position:absolute;inset:0;z-index:0;opacity:.55}
+  .ack-stripe{position:absolute;top:0;bottom:0;width:18px;z-index:1;
+    background:repeating-linear-gradient(0deg,var(--red) 0 6px,#000 6px 12px);opacity:.35}
+  .ack-stripe.l{left:0}.ack-stripe.r{right:0}
+  .ack-hd{position:absolute;top:0;left:20px;right:20px;height:32px;z-index:5;
+    border-bottom:2px solid var(--red);display:flex;align-items:center;justify-content:space-between;padding:0 8px;
+    background:rgba(255,45,0,.12)}
+  .ack-hd .nerv{font-size:7px;letter-spacing:3px;color:var(--red);font-weight:900;text-shadow:0 0 8px var(--red)}
+  .ack-hd .lvl{font-size:6px;color:#000;background:var(--red);padding:2px 6px;font-weight:900}
+  .ack-cnt{font-size:9px;color:var(--red);letter-spacing:2px;font-variant-numeric:tabular-nums;
+    text-shadow:0 0 10px var(--red);animation:live .2s step-end infinite}
+  .ack-hex-wrap{position:absolute;left:50%;top:52px;transform:translateX(-50%);width:420px;height:100px;z-index:5}
+  .ack-hex-out{position:absolute;inset:0;border:2px solid var(--red);
+    clip-path:polygon(6% 0%,94% 0%,100% 50%,94% 100%,6% 100%,0% 50%);
+    animation:vx .04s linear infinite;box-shadow:0 0 30px rgba(255,45,0,.6)}
+  .ack-hex{position:absolute;inset:6px;background:var(--red);color:#000;
+    clip-path:polygon(6% 0%,94% 0%,100% 50%,94% 100%,6% 100%,0% 50%);
+    text-align:center;padding-top:18px;animation:vx .04s linear infinite}
+  @keyframes vx{50%{transform:translateX(3px) skewX(1deg)}}
+  .ack-hex .jp{font-size:18px;letter-spacing:6px;font-weight:900}
+  .ack-hex .en{font-size:8px;margin-top:4px;letter-spacing:2px}
+  .ack-hex .sub{font-size:6px;margin-top:3px;opacity:.75}
+  .ack-alert{position:absolute;left:24px;right:24px;top:162px;z-index:5;border:1px solid var(--red);
+    padding:6px 8px;font-size:6px;color:var(--red);line-height:1.5;background:rgba(255,45,0,.08)}
+  .ack-alert .big{font-size:8px;font-weight:900;letter-spacing:2px;color:#fff;text-shadow:0 0 8px var(--red)}
+  .ack-magi-panel{position:absolute;left:24px;right:24px;top:218px;z-index:5;
+    border:2px solid var(--red);background:rgba(0,0,0,.85);padding:8px}
+  .ack-magi-title{font-size:7px;color:var(--red);letter-spacing:2px;margin-bottom:8px;font-weight:900;
+    border-bottom:1px solid rgba(255,45,0,.4);padding-bottom:4px}
+  .ack-mrow{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:6px;color:#fff}
+  .ack-mrow .name{width:88px;color:var(--orange-bright);font-weight:900}
+  .ack-mrow .bar{flex:1;height:8px;border:1px solid var(--red);background:#1a0000}
+  .ack-mrow .bar i{display:block;height:100%;background:var(--red);box-shadow:0 0 6px var(--red)}
+  .ack-mrow .ver{width:52px;text-align:right;font-weight:900;color:var(--red)}
+  .ack-mrow:nth-child(3){margin-bottom:0}
+  .ack-deploy{position:absolute;left:24px;right:24px;top:340px;z-index:5;display:flex;gap:6px}
+  .ack-deploy .box{flex:1;border:1px solid var(--red);padding:6px;font-size:5px;color:rgba(255,255,255,.6);line-height:1.45}
+  .ack-deploy .box b{display:block;font-size:7px;color:var(--orange-bright);margin-bottom:2px}
+  .ack-deploy .box .v{color:var(--green-neon);font-weight:900;font-size:8px;animation:live .35s step-end infinite}
+  .ack-mrow .ver.flash-v{animation:vf .15s step-end 3}
+  @keyframes vf{50%{color:#fff;background:var(--red)}}
+  .ack-btn{position:absolute;bottom:46px;left:50%;transform:translateX(-50%);border:2px solid var(--red);
+    background:rgba(255,45,0,.35);color:#fff;padding:12px 28px;font-size:9px;letter-spacing:4px;
+    cursor:pointer;font-family:inherit;font-weight:900;z-index:10;animation:ab .18s ease-in-out infinite}
+  @keyframes ab{50%{box-shadow:0 0 32px var(--red);background:rgba(255,45,0,.55)}}
+  .ack-jp-bar{position:absolute;bottom:28px;left:24px;right:24px;text-align:center;font-size:6px;
+    color:var(--purple);letter-spacing:3px;z-index:5}
+  .hazard{position:absolute;left:0;right:0;height:10px;z-index:6;
+    background:repeating-linear-gradient(-45deg,#FFD700 0 8px,#000 8px 16px);background-size:22px;
+    animation:hz .15s linear infinite}
+  .hazard.top{top:32px}.hazard.bot{bottom:0}
+  @keyframes hz{to{background-position:22px 0}}
+
+  /* BOOT — fullscreen GIF phases */
+  #screen-boot{background:linear-gradient(180deg,#080810,#0d0a1a);z-index:3}
+  .boot-phase.on{animation:bootbreath 1.2s ease-in-out infinite}
+  @keyframes bootbreath{50%{filter:brightness(1.08)}}
+  .boot-phase{position:absolute;inset:0;display:none}
+  .boot-phase.on{display:block}
+  .boot-tag{position:absolute;top:10px;left:10px;font-size:8px;color:var(--orange);letter-spacing:2px;z-index:5}
+  .boot-timer{position:absolute;top:10px;right:10px;font-size:9px;color:var(--green-neon);z-index:5}
+  .boot-canvas{position:absolute;inset:28px 8px 8px 8px}
+  .boot-ui{position:absolute;inset:28px 8px 8px 8px;pointer-events:none}
+
+  .boot-sys .sys-row{display:flex;align-items:center;margin-bottom:10px;opacity:.12;transition:all .1s}
+  .boot-sys .sys-row.on{opacity:1}
+  .boot-sys .sys-row .box{background:var(--orange);color:#000;font-size:8px;font-weight:900;padding:4px 8px;min-width:170px}
+  .boot-sys .sys-row .bar{width:0;height:26px;margin-left:5px;background:var(--orange);transition:width .12s}
+  .boot-sys .sys-row.on .bar{width:8px;box-shadow:0 0 10px var(--orange)}
+  .boot-sys .seg{position:absolute;right:20px;font-size:8px;color:var(--orange);opacity:.1;transition:opacity .08s}
+  .boot-sys .seg.on{opacity:1}
+  .boot-sys .seg .sb{display:inline-block;width:0;height:5px;background:var(--red);vertical-align:middle;margin-right:6px;transition:width .1s}
+  .boot-sys .seg.on .sb{width:75px}
+  .boot-sys .border-line{position:absolute;left:10px;right:10px;bottom:120px;height:1px;background:var(--cyan)}
+  .boot-sys .border-line span{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--cyan);background:var(--black);padding:0 6px}
+  .boot-sys .reserve{position:absolute;right:14px;bottom:50px;border:2px solid var(--orange);padding:8px;font-size:8px;color:var(--orange);line-height:1.5}
+
+  .boot-magi .rings{position:absolute;top:50%;left:50%;width:340px;height:340px;transform:translate(-50%,-50%)}
+  .boot-magi .ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(142,223,95,.6);animation:spin .9s linear infinite}
+  .boot-magi .ring:nth-child(2){inset:24px;border-color:rgba(255,107,0,.6);animation-duration:.55s;animation-direction:reverse}
+  .boot-magi .ring:nth-child(3){inset:48px;border-color:rgba(153,92,208,.7);animation-duration:.35s;border-style:dashed}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .boot-magi .box{position:absolute;border:1px solid var(--orange);padding:5px 8px;font-size:7px;color:var(--orange);line-height:1.4}
+  .boot-magi .box.tl{top:36px;left:10px}.boot-magi .box.tr{top:36px;right:10px;text-align:right}
+  .boot-magi .box.bl{bottom:36px;left:10px}.boot-magi .box.br{bottom:36px;right:10px;text-align:right}
+  .boot-magi .cnt{font-size:15px;font-weight:900;color:var(--orange)}
+
+  .boot-cal .ring-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-55%);width:220px;height:220px}
+  .boot-cal .ring{width:220px;height:220px;border-radius:50%;border:5px solid var(--purple-dark);
+    background:conic-gradient(var(--orange) 0deg var(--ca,0deg),#1a1a1a var(--ca,0deg) 360deg);
+    box-shadow:0 0 35px var(--orange);animation:cp .2s ease-in-out infinite;position:relative}
+  @keyframes cp{50%{box-shadow:0 0 55px var(--green-neon)}}
+  .boot-cal .ring::before{content:'';position:absolute;inset:18px;border-radius:50%;background:var(--bg)}
+  .boot-cal .num{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;color:var(--orange-bright);z-index:2}
+  .boot-cal .msg{position:absolute;bottom:70px;left:0;right:0;text-align:center;font-size:9px;color:var(--green-neon);letter-spacing:2px}
+  #boot-cascade{position:absolute;left:8px;bottom:8px;right:8px;z-index:6;font-size:5px;color:var(--green-neon);line-height:1.6;
+    border-top:1px solid rgba(142,223,95,.3);padding-top:4px;max-height:48px;overflow:hidden}
+  #boot-cascade .line{opacity:0;animation:cline .3s ease-out forwards}
+  @keyframes cline{to{opacity:1}}
+  #boot-magi-cv{position:absolute;inset:28px 8px 8px 8px;z-index:4;opacity:.45}
+  .boot-confirm{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:8;
+    border:2px solid var(--orange);background:rgba(0,0,0,.9);padding:12px 20px;text-align:center;
+    font-size:8px;color:var(--orange-bright);letter-spacing:3px;opacity:0;pointer-events:none}
+  .boot-confirm.on{animation:conf .5s ease-out forwards}
+  @keyframes conf{0%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+
+  /* HUD — Present Status (clinical, melancholy, Eva-01 purple) */
+  #screen-hud{color:var(--green-neon);background:linear-gradient(160deg,#06060e,#0f0a1c 35%,#080810);z-index:3}
+  .hud-lcl{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.12;
+    background:radial-gradient(ellipse 80% 60% at 50% 80%,rgba(122,62,181,.35),transparent),
+      repeating-linear-gradient(0deg,transparent 0 18px,rgba(0,255,159,.03) 18px 19px);
+    animation:lcl 4s ease-in-out infinite}
+  @keyframes lcl{50%{opacity:.18;transform:scale(1.02)}}
+  #hud-scope{position:absolute;right:52px;top:72px;width:120px;height:120px;z-index:3;opacity:.35;pointer-events:none}
+  #hud-atfield{position:absolute;left:200px;top:88px;width:64px;height:64px;z-index:3;opacity:.5;pointer-events:none}
+  #hud-gauss{position:absolute;right:200px;top:218px;width:80px;height:36px;z-index:3;opacity:.6;pointer-events:none}
+  .hud-alert-strip{position:absolute;left:28px;top:218px;width:165px;font-size:4px;line-height:1.5;color:rgba(230,0,18,.7);
+    border-left:2px solid var(--red);padding-left:4px;z-index:4;max-height:28px;overflow:hidden}
+  .hud-side{position:absolute;left:0;top:0;bottom:0;width:22px;
+    background:linear-gradient(180deg,var(--purple-deep) 0%,var(--purple-eva) 40%,var(--blood) 100%);
+    box-shadow:4px 0 20px rgba(122,62,181,.3)}
+  .hud-side::after{content:'';position:absolute;bottom:20px;left:5px;width:12px;height:12px;
+    border-right:2px solid rgba(255,255,255,.2);border-bottom:2px solid rgba(255,255,255,.2);transform:rotate(45deg);opacity:.4}
+  .hud-hd{position:absolute;top:6px;left:28px;right:8px;display:flex;justify-content:space-between;font-size:7px}
+  .hud-hd .t{color:var(--text);text-shadow:0 0 8px var(--green-neon)}.hud-hd .m{color:var(--orange);font-weight:900}
+  .hud-dna{position:absolute;right:196px;top:32px;width:36px;height:36px;opacity:.7;z-index:4;pointer-events:none}
+  .hud-sub{position:absolute;top:16px;left:26px;right:8px;font-size:5px;color:var(--purple);letter-spacing:1px}
+  .hud-live{position:absolute;top:24px;left:26px;width:200px;font-size:5px;line-height:1.5;color:rgba(142,223,95,.5)}
+  .hud-live .v{color:var(--orange-bright);font-weight:900;font-variant-numeric:tabular-nums}
+  .hud-live .g{color:var(--green-neon)}
+  .gauge-z{position:absolute;right:8px;top:28px;width:188px;height:188px}
+  .g-orbit{position:absolute;inset:-5px;border-radius:50%;border:1px dashed rgba(255,107,0,.45);animation:spin 10s linear infinite}
+  .g-core{width:188px;height:188px;border-radius:50%;border:4px solid var(--purple-eva);
+    background:conic-gradient(var(--orange) 0deg var(--sa,0deg),var(--purple-dark) var(--sa,0deg) 360deg);
+    box-shadow:0 0 30px rgba(122,62,181,.5),0 0 12px rgba(255,107,0,.4);transition:background .05s;position:relative}
+  .g-core.good{background:conic-gradient(var(--green-neon) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gp .45s ease-in-out infinite}
+  .g-core.low{background:conic-gradient(var(--red) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gw .12s ease-in-out infinite}
+  @keyframes gp{50%{box-shadow:0 0 52px var(--green-neon),0 0 20px rgba(153,92,208,.4);transform:scale(1.02)}}
+  @keyframes gw{50%{box-shadow:0 0 40px var(--red)}}
+  .g-hole{position:absolute;inset:24px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .sync-n{font-size:48px;font-weight:900;color:var(--orange-bright);line-height:1}
+  .sync-n.good{color:var(--green-neon);text-shadow:0 0 16px var(--green-neon)}
+  .sync-l{font-size:7px;letter-spacing:4px;color:var(--purple)}
+  .holo-panel{position:absolute;left:28px;top:38px;width:168px;height:178px;
+    border:1px solid rgba(122,62,181,.65);background:var(--panel);overflow:hidden;
+    box-shadow:0 0 22px rgba(122,62,181,.25),inset 0 0 40px rgba(0,0,0,.92);
+    animation:holoPulse 2.4s ease-in-out infinite}
+  @keyframes holoPulse{50%{border-color:rgba(255,107,0,.7);box-shadow:0 0 28px rgba(255,107,0,.15),inset 0 0 40px rgba(0,0,0,.92)}}
+  .holo-panel::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:radial-gradient(ellipse 70% 55% at 50% 58%,rgba(122,62,181,.14),transparent)}
+  .holo-panel .ret{position:absolute;width:10px;height:10px;border-color:var(--orange);border-style:solid;z-index:4;pointer-events:none}
+  .holo-panel .ret.tl{top:2px;left:2px;border-width:2px 0 0 2px}
+  .holo-panel .ret.tr{top:2px;right:2px;border-width:2px 2px 0 0}
+  .holo-panel .ret.bl{bottom:26px;left:2px;border-width:0 0 2px 2px}
+  .holo-panel .ret.br{bottom:26px;right:2px;border-width:0 2px 2px 0}
+  .holo-lbl{position:absolute;top:3px;left:6px;z-index:4;font-size:7px;font-weight:900;color:var(--orange-bright);letter-spacing:1px;line-height:1.3;
+    text-shadow:0 0 6px var(--orange)}
+  .holo-lbl span{display:block;font-size:5px;color:var(--green-neon);font-weight:400;letter-spacing:.5px;animation:live .5s step-end infinite}
+  .holo-tag{position:absolute;top:3px;right:6px;z-index:4;font-size:5px;color:var(--purple);letter-spacing:1px}
+  #holo-canvas{position:absolute;inset:14px 2px 30px 2px;width:164px;height:134px;display:block;z-index:2}
+  .holo-bar{position:absolute;bottom:4px;left:6px;right:6px;height:14px;border:1px solid rgba(122,62,181,.6);background:#06060e;z-index:4}
+  .holo-fill{height:100%;background:linear-gradient(90deg,#8EDF5F,#00FF9F);box-shadow:0 0 10px var(--green-neon);
+    transition:width .6s ease;background-image:repeating-linear-gradient(90deg,transparent 0 3px,rgba(0,0,0,.15) 3px 6px)}
+  .holo-scan{position:absolute;bottom:20px;left:6px;font-size:4px;color:var(--green-neon);z-index:4;letter-spacing:1px}
+  .holo-pct{position:absolute;bottom:5px;right:8px;font-size:5px;color:var(--green-neon);z-index:5;font-weight:900;text-shadow:0 0 6px var(--green-neon)}
+  .parts-p{position:absolute;left:200px;top:42px;width:108px;font-size:6px;line-height:1.4;color:rgba(142,223,95,.35)}
+  .parts-p .scan{color:var(--orange-bright);text-shadow:0 0 8px var(--orange);animation:live .25s step-end infinite}
+  .hud-ref{position:absolute;left:200px;top:118px;width:108px;font-size:5px;line-height:1.45;color:rgba(153,92,208,.55);border-left:2px solid var(--purple);padding-left:4px}
+  .parts-p .on{color:var(--green-neon)}.parts-p .bad{color:var(--red)}
+  .stats-p{position:absolute;right:10px;top:222px;width:195px;font-size:7px;text-align:right}
+  .stats-p .v{color:var(--orange-bright);font-weight:900}
+  .tox-p{position:absolute;left:26px;top:222px;width:280px}
+  .tox-p h{font-size:7px;color:var(--orange);margin-bottom:2px}
+  .tox-p .bars{display:flex;gap:3px;align-items:flex-end;height:32px;border-left:2px solid var(--purple);padding-left:4px}
+  .tox-p .bars .b{width:16px;background:var(--green-neon);animation:tb .45s ease-in-out infinite}
+  .tox-p .bars .b.bad{background:var(--red)}
+  .wv{position:absolute;left:26px;right:8px;bottom:44px;height:58px;border:1px solid rgba(142,223,95,.3);overflow:hidden;
+    background:rgba(0,0,0,.4);box-shadow:inset 0 0 20px rgba(122,62,181,.12)}
+  .wv.overload{border-color:var(--red);animation:gw .2s ease-in-out infinite}
+  #hud-wv{width:100%;height:100%;display:block}
+  .wv-label{position:absolute;left:30px;bottom:46px;font-size:5px;color:var(--orange);letter-spacing:1.5px;z-index:2;pointer-events:none}
+  .log-p{position:absolute;left:28px;right:8px;bottom:6px;height:32px;border:1px solid var(--purple-eva);
+    background:rgba(12,12,24,.85);padding:3px 6px;font-size:7px}
+  .hud-fringe{position:absolute;top:34px;right:8px;font-size:4px;color:var(--muted);letter-spacing:2px;text-align:right;line-height:1.5;z-index:4}
+  .log-p .h{color:var(--purple)}.log-p .b{color:var(--orange-bright)}
+  .log-p .b.hit{animation:ch .08s steps(2) 3}
+  #ack-crosshair{position:absolute;inset:0;z-index:4;opacity:.2;pointer-events:none}
+  .ack-stack{position:absolute;left:24px;top:148px;width:120px;z-index:4;font-size:4px;color:var(--red);line-height:1.4;opacity:.85}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="noise"></div>
+  <div class="scanlines" id="scanlines"></div>
+  <div class="chroma" id="chroma"></div>
+  <div id="fx-cut"></div>
+  <div class="flash" id="flash"></div>
+  <div class="vhs" id="vhs"></div>
+  <div class="impact-bar" id="impact"></div>
+  <div id="fui-global">
+    <canvas id="fui-micro" width="600" height="600"></canvas>
+    <div id="alert-cascade"></div>
+    <div id="drama-flash"><div class="w nge-drama" id="drama-word"></div></div>
+  </div>
+
+  <!-- LANDING: multi live-feed control center -->
+  <div id="screen-landing" class="screen active">
+    <canvas id="opening-canvas" width="600" height="600"></canvas>
+    <div class="land-boot" id="land-boot">
+      <div class="t nge-type">NERV COMMAND</div>
+      <div class="s nge-flicker" id="land-boot-status">INITIALIZING LIVE FEEDS...</div>
+    </div>
+    <div class="cc-header" style="opacity:0">
+      <div class="cc-row">
+        <div><div class="brand">NERV COMMAND • EVA-01</div><div class="meta" id="cc-meta">第3新東京市 • 司令室</div></div>
+        <span class="live">● LIVE</span>
+        <span class="clock" id="cc-clock">000.000</span>
+      </div>
+      <div class="cc-ticker"><span class="track" id="cc-track"></span></div>
+    </div>
+    <div class="split-v" style="left:154px"></div><div class="split-v" style="left:308px"></div>
+    <div class="split-h" style="top:166px"></div><div class="split-h" style="top:254px"></div>
+    <canvas id="land-angel" width="72" height="56"></canvas>
+    <div class="fui-micro-panel" style="left:158px;top:112px;width:90px"><span class="s">ANGEL</span><br><span class="scroll" id="land-angel-txt">PATTERN BLUE — NO CONTACT</span></div>
+    <div class="fui-micro-panel" style="left:6px;top:314px;width:110px"><span class="s">MAGI</span><br><span id="land-magi-txt">CONSENSUS IDLE</span></div>
+    <div class="feed feed-sys"><span class="feed-label">SYSTEM CHECK</span><span class="feed-jp">システム</span><span class="feed-stat" id="st-sys">OK</span><canvas id="fc-sys" width="146" height="120"></canvas></div>
+    <div class="feed feed-neural"><span class="feed-label">NEURAL ACTIVITY</span><span class="feed-jp">神経活動</span><span class="feed-stat" id="st-neural">6CH</span><canvas id="fc-neural" width="282" height="64"></canvas></div>
+    <div class="feed feed-magi"><span class="feed-label">MAGI SCOPE</span><span class="feed-jp">マギ</span><span class="feed-stat" id="st-magi">01</span><canvas id="fc-magi" width="146" height="120"></canvas></div>
+    <div class="feed feed-eva"><span class="feed-label">EVA-01 SCAN</span><span class="feed-jp">初号機</span><span class="feed-stat" id="st-eva">SCAN</span><canvas id="fc-eva" width="198" height="140"></canvas></div>
+    <div class="feed feed-psycho"><span class="feed-label">PSYCHOGRAPHIC</span><span class="feed-jp">心象</span><span class="feed-stat" id="st-psycho">LINK-A</span><canvas id="fc-psycho" width="178" height="82"></canvas></div>
+    <div class="feed feed-tox"><span class="feed-label">MENTAL TOXICITY</span><span class="feed-jp">毒性</span><span class="feed-stat" id="st-tox">LOW</span><div class="tox-bars-land" id="land-tox"></div></div>
+    <div class="feed feed-wave"><span class="feed-label">SYNC WAVEFORM • IKARI SHINJI</span><span class="feed-jp">同期率</span><span class="feed-stat" id="st-sync">--%</span><canvas id="fc-wave" width="586" height="50"></canvas></div>
+    <div class="land-fringe tl">GEOFRONT<br>DEPTH 1200m</div>
+    <div class="land-fringe tr">A.T.FIELD<br>±0.03</div>
+    <div class="land-fringe bl">第3新東京市</div>
+    <div class="land-fringe br">NERV HQ<br>司令室</div>
+    <button type="button" class="land-engage wait" id="engage-btn">INITIALIZING FEEDS...</button>
+  </div>
+
+  <!-- ACK — Battle Stations -->
+  <div id="screen-ack" class="screen">
+    <canvas id="ack-bg" width="600" height="600"></canvas>
+    <canvas id="ack-crosshair" width="600" height="600"></canvas>
+    <div class="ack-stack" id="ack-stack"></div>
+    <div class="ack-stripe l"></div><div class="ack-stripe r"></div>
+    <div class="hazard top"></div>
+    <div class="ack-hd">
+      <span class="nerv">NERV HQ — 司令部</span>
+      <span class="lvl">ALERT LVL 1</span>
+      <span class="ack-cnt" id="ack-cnt">T-MINUS 030.000</span>
+    </div>
+    <div class="ack-hex-wrap">
+      <div class="ack-hex-out"></div>
+      <div class="ack-hex">
+        <div class="jp">第一種戦闘配置</div>
+        <div class="en">BATTLE STATIONS — CONDITIONS ONE</div>
+        <div class="sub">第3新東京市防衛命令 • EVA-01 出撃準備</div>
+      </div>
+    </div>
+    <div class="ack-alert">
+      <div class="big" id="ack-threat">⚠ ANGEL DETECTED — PATTERN BLUE UNCONFIRMED</div>
+      DIRECTIVE: ACTIVATE EVA UNIT-01 • PILOT IKARI SHINJI TO ENTRY PLUG<br>
+      <span id="ack-status">MAGI CONSENSUS PENDING • AT FIELD BARRIER STANDBY</span>
+    </div>
+    <div class="ack-magi-panel">
+      <div class="ack-magi-title">MAGI SYSTEM — マギ・システム • CONSENSUS VOTE</div>
+      <div class="ack-mrow"><span class="name">MELCHIOR</span><span class="bar"><i id="mb1"></i></span><span class="ver" id="mv1">---</span></div>
+      <div class="ack-mrow"><span class="name">BALTHASAR</span><span class="bar"><i id="mb2"></i></span><span class="ver" id="mv2">---</span></div>
+      <div class="ack-mrow"><span class="name">CASPER</span><span class="bar"><i id="mb3"></i></span><span class="ver" id="mv3">---</span></div>
+    </div>
+    <div class="ack-deploy">
+      <div class="box"><b>EVA-01</b>STATUS<br><span class="v" id="ack-eva">STANDBY</span></div>
+      <div class="box"><b>ENTRY PLUG</b>DEPTH<br><span class="v" id="ack-plug">4.2m</span></div>
+      <div class="box"><b>LCL</b>DENSITY<br><span class="v" id="ack-lcl">98.4</span></div>
+      <div class="box"><b>SYNC</b>BASELINE<br><span class="v" id="ack-sync">--%</span></div>
+    </div>
+    <button type="button" class="ack-btn" id="ack-btn">▶ ACKNOWLEDGE — BEGIN EVA STARTUP</button>
+    <div class="ack-jp-bar">初号機起動シーケンス待機中 • ENTER / CLICK TO PROCEED</div>
+    <div class="hazard bot"></div>
+  </div>
+
+  <!-- BOOT: fullscreen GIF-style phases -->
+  <div id="screen-boot" class="screen">
+    <div class="boot-tag" id="boot-tag">EVA STARTUP</div>
+    <div class="boot-timer" id="boot-timer">000.000</div>
+    <div id="boot-cascade"></div>
+    <div class="boot-confirm" id="boot-confirm">CONFIRM</div>
+
+    <div class="boot-phase on" id="bp-sys">
+      <canvas class="boot-canvas" id="bc-sys" width="584" height="560"></canvas>
+      <div class="boot-ui boot-sys" id="boot-sys-ui" style="opacity:0"></div>
+    </div>
+    <div class="boot-phase" id="bp-eva">
+      <canvas class="boot-canvas" id="bc-eva" width="584" height="560"></canvas>
+    </div>
+    <div class="boot-phase" id="bp-magi">
+      <canvas class="boot-canvas" id="boot-magi-cv" width="584" height="560"></canvas>
+      <div class="boot-ui boot-magi">
+        <div class="rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+        <div class="box tl">DAMAGE TYPE-B DEFENSE<br>MAGI-01 ORIGINAL</div>
+        <div class="box tr">TIME TO COLLAPSE<br><span class="cnt" id="b-collapse">223.231</span> sec</div>
+        <div class="box bl">PROTECT NO. 666<br>MAGI-01 ORIGINAL</div>
+        <div class="box br">SCREEN RAISED<br><span class="cnt" id="b-raised">000.000</span> sec</div>
+      </div>
+    </div>
+    <div class="boot-phase" id="bp-psycho">
+      <canvas class="boot-canvas" id="bc-psycho" width="584" height="560"></canvas>
+    </div>
+    <div class="boot-phase" id="bp-neural">
+      <canvas class="boot-canvas" id="bc-neural" width="584" height="560"></canvas>
+    </div>
+    <div class="boot-phase" id="bp-cal">
+      <div class="boot-ui boot-cal">
+        <div class="ring-wrap"><div class="ring" id="bc-ring"><div class="num" id="bc-num">00</div></div></div>
+        <div class="msg" id="bc-msg">NEURAL LINK INITIALIZING...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="screen-hud" class="screen">
+    <div class="hud-lcl"></div>
+    <div class="hud-side"></div>
+    <div class="hud-hd"><span class="t">PRESENT STATUS — 初号機 EVA-01</span><span class="m" id="hud-mode">FIELD OPS</span></div>
+    <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • ENTRY PLUG DEPTH 4.2m</div>
+    <div class="hud-live" id="hud-live"></div>
+    <div class="holo-panel">
+      <div class="ret tl"></div><div class="ret tr"></div><div class="ret bl"></div><div class="ret br"></div>
+      <div class="holo-lbl">SYSTEM CHECK<span id="holo-sub">STRUCTURAL INSPECTION</span></div>
+      <div class="holo-tag" id="holo-sector">SECT 0001</div>
+      <canvas id="holo-canvas" width="164" height="134"></canvas>
+      <div class="holo-scan" id="holo-scan">● LIVE HEALTH SCAN</div>
+      <div class="holo-bar"><div class="holo-fill" id="holo-fill"></div></div>
+      <div class="holo-pct" id="holo-pct">--%</div>
+    </div>
+    <div class="parts-p" id="parts-p"></div>
+    <div class="hud-ref" id="hud-ref">LINK: ACTIVE<br>LIFE SUPPORT: OK<br>AT FIELD: MONITOR</div>
+    <canvas class="hud-dna" id="hud-dna" width="36" height="36"></canvas>
+    <canvas id="hud-atfield" width="64" height="64"></canvas>
+    <canvas id="hud-scope" width="120" height="120"></canvas>
+    <canvas id="hud-gauss" width="80" height="36"></canvas>
+    <div class="hud-alert-strip" id="hud-alerts"></div>
+    <div class="hud-fringe">A.T.FIELD<br>第3新東京市<br>NERV-01</div>
+    <div class="gauge-z">
+      <div class="g-orbit"></div>
+      <div class="g-core" id="g-core"><div class="g-hole"><div class="sync-n" id="sync-n">72</div><div class="sync-l">SYNC %</div></div></div>
+    </div>
+    <div class="stats-p">
+      <div>PROTEIN <span class="v" id="s-prot">1240g</span></div>
+      <div>HYDRATION <span class="v" id="s-hyd">87%</span></div>
+      <div>LCL <span class="v" id="s-lcl">98.4</span></div>
+      <div class="v" id="s-st" style="color:var(--green-neon);margin-top:4px;font-weight:900">AT FIELD STABLE</div>
+    </div>
+    <div class="tox-p"><h>MENTAL TOXICITY</h><div class="bars" id="tox-p"></div></div>
+    <div class="wv-label">NEURAL SYNC TRACE • 神経同期</div>
+    <div class="wv"><canvas id="hud-wv" width="564" height="58"></canvas></div>
+    <div class="log-p"><div class="h">NEURAL LOG • <span id="log-t">--:--:--</span></div><div class="b" id="log-b">SYSTEM ONLINE</div></div>
+  </div>
+</div>
+
+<script>
+const SYSTEMS=['LIFE SUPPORT SYSTEM','LINK CONTROL SYSTEM','EXTERNAL COMMUNICATIONS'];
+const SEGS=['seg.6','seg.5','seg.4','seg.3','seg.2','seg.1'];
+const PARTS=[['0001 HEAD','ok'],['0002 ARM','bad'],['0003 TORSO','ok'],['0004 AT FIELD','ok'],['0005 SYNC','ok']];
+const REGIONS=['00 TEMPORAL','01 AMYGDALA','02 HIPPOCAMPUS','03 PARIETAL','04 MOTOR','05 SENSORY'];
+const TOX=[16,18,19,20,21,22,23];
+const TICKER=['MAGI ARRAY NOMINAL','AT FIELD STABLE ±0.03','LCL pH 7.0 • DENSITY OK','EVA-01 STANDBY MODE',
+  'ENTRY PLUG DEPTH 4.2m','PILOT IKARI SHINJI','PATTERN BLUE NOT DETECTED','N² REACTOR IDLE',
+  'SYNC CABLE DISCONNECTED','BERSERK MODE LOCKED','SECOND IMPACT SCAR ZONE','GEOFRONT DEPTH 1200m',
+  'HUMAN INSTRUMENTALITY — LOCKED','PROTEIN INTAKE TRACKING','第3新東京市 — 司令部'];
+const MAGI_VERDICTS=['APPROVE','APPROVE','DENY','APPROVE','HOLD'];
+const DRAMA_WORDS=['SYNC','LINK','ALERT','MAGI','初号機','ANGEL','AT FIELD','LCL','NERV','第3新東京市'];
+const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY NOMINAL','MAGI ARRAY ONLINE',
+  'BERSERK LOCKED','GEOFRONT DEPTH 1200m','ENTRY PLUG STANDBY','NEURAL LINK ACTIVE','SYNC CABLE OFF'];
+const OPENING_FLASH=['DNA','ANGEL','SYNC','MAGI','AT FIELD','初号機','CROSS','LCL','NERV','LINK'];
+const NGE={bg:'#080810',panel:'#0C0C18',purple:'#995CD0',eva:'#7A3EB5',green:'#00FF9F',greenS:'#8EDF5F',
+  red:'#E60012',orange:'#FF6B00',amber:'#FF9500',cyan:'#00E5FF',blue:'#4A90D9',text:'#E8E8F0'};
+
+let state={sync:72,hydration:87,protein:1240,lcl:98.4};
+let screen='landing',frame=0,displaySync=72,transitioning=false;
+let landReady=false,landBooting=true,landT0=performance.now(),ackT0=0;
+let bootOn=false,bootPhase='',psychoBoot=false,neuralBoot=false,sysBoot=false;
+const FEED_ORDER=['feed-sys','feed-neural','feed-magi','feed-eva','feed-psycho','feed-tox','feed-wave'];
+let segLevels=[0,0,0,0,0,0],sysLevels=[0,0,0];
+let dataFrame=0;
+const DATA_RATE=0.18;
+const live={at:1.02,pulse:72,reserve:87.3,border:.12,magi:[94,91,88],collapse:223.2};
+const holoImg=new Image();holoImg.src='/assets/mainmenuEVAholo.jpg';
+const HOLO_PARTS=[
+  {id:'0001',name:'HEAD',x:0,y:-38,bad:false},
+  {id:'0002',name:'ARM',x:-18,y:-8,bad:true},
+  {id:'0003',name:'TORSO',x:0,y:-2,bad:false},
+  {id:'0004',name:'AT FIELD',x:0,y:14,bad:false},
+  {id:'0005',name:'SYNC',x:0,y:-18,bad:false}
+];
+function holoScanIdx(){return Math.floor(animT()/32)%HOLO_PARTS.length}
+
+function isBootAnim(){return sysBoot||bootPhase||psychoBoot||neuralBoot||bootOn}
+function isAnimFast(){return transitioning||bootOn||landBooting||isBootAnim()}
+function animT(){return isAnimFast()?frame:dataFrame}
+
+const $=id=>document.getElementById(id);
+function loadState(){try{const s=localStorage.getItem('evaSyncState');if(s)state={...state,...JSON.parse(s)}}catch(_){}displaySync=state.sync}
+function saveState(){localStorage.setItem('evaSyncState',JSON.stringify(state))}
+function wait(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function enableEngage(){
+  if(landReady)return;
+  landReady=true;
+  const btn=$('engage-btn');
+  btn.classList.remove('wait');
+  btn.textContent='▶ ENGAGE PILOT INTERFACE — ENTER / CLICK';
+}
+
+function goToAck(){
+  if(!landReady||transitioning||screen!=='landing')return;
+  cascadeAlert('PILOT INTERFACE ENGAGED','ok');
+  hardTo('ack','#E60012');
+}
+
+function flash(c='#fff'){const f=$('flash');f.style.background=c;f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
+function chroma(){$('chroma').classList.remove('on');void $('chroma').offsetWidth;$('chroma').classList.add('on')}
+function vhs(){const v=$('vhs');v.classList.remove('on');void v.offsetWidth;v.classList.add('on')}
+function impact(y=50){const b=$('impact');b.style.setProperty('--iy',y+'%');b.classList.remove('on');void b.offsetWidth;b.classList.add('on')}
+function tears(){
+  const o=$('fx-cut');o.innerHTML='';
+  for(let i=0;i<12;i++){const t=document.createElement('div');t.className='tear';
+    t.style.top=(i*52)+'px';t.style.height=(18+Math.random()*28)+'px';
+    t.style.background=i%3?'#000':i%2?'rgba(153,92,208,.55)':'rgba(255,107,0,.35)';
+    t.style.setProperty('--dx',(Math.random()*80-40)+'px');o.appendChild(t);requestAnimationFrame(()=>t.classList.add('go'))}
+}
+function cascadeAlert(msg,type='warn'){
+  const o=$('alert-cascade');if(!o)return;
+  const c=document.createElement('div');c.className='alert-chip '+type;c.textContent=msg;
+  o.prepend(c);while(o.children.length>5)o.lastChild.remove();
+  setTimeout(()=>c.remove(),2800);
+}
+function dramaFlash(word,red=false){
+  const d=$('drama-flash'),w=$('drama-word');if(!d||!w)return;
+  w.textContent=word;w.classList.toggle('red',red);w.classList.toggle('nge-jp',/[\u3000-\u9fff]/.test(word));
+  d.classList.remove('on');void d.offsetWidth;d.classList.add('on');
+}
+function bootCascadeLine(txt){
+  const o=$('boot-cascade');if(!o)return;
+  const l=document.createElement('div');l.className='line';l.textContent='▶ '+txt;
+  o.prepend(l);while(o.children.length>4)o.lastChild.remove();
+}
+async function bootConfirm(txt){
+  const el=$('boot-confirm');if(!el)return;
+  el.textContent=txt;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');
+  flash('#FF6B00');await wait(420);
+}
+
+async function hardTo(name,color='#fff'){
+  if(transitioning)return;transitioning=true;
+  $('scanlines').classList.add('hot');
+  const dramas=name==='ack'?['ALERT','第1種','BATTLE']:name==='boot'?['LINK','初号機','SYNC']:name==='hud'?['SYNC','LINK','READY']:['NERV','MAGI'];
+  for(let i=0;i<10;i++){
+    flash(i%2?color:'#fff');chroma();vhs();tears();impact(6+i*9);
+    if(i%3===0)dramaFlash(dramas[i%dramas.length],name==='ack');
+    if(i%2===0)cascadeAlert(CASCADE_ALERTS[(frame+i)%CASCADE_ALERTS.length],i%4?'warn':'ok');
+    await wait(14);
+  }
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active','slam');s.style.display='none'});
+  const el=$('screen-'+name);el.style.display='block';el.classList.add('active','slam');
+  screen=name;
+  if(name==='ack'){ackT0=performance.now();$('ack-stack').innerHTML=CASCADE_ALERTS.slice(0,4).map(a=>'▶ '+a+'<br>').join('')}
+  $('scanlines').classList.toggle('hot',name!=='hud');
+  flash(color);dramaFlash(dramas[0],name==='ack');impact(50);await wait(24);transitioning=false;
+}
+
+function fmt7(n,d=3){const s=n.toFixed(d).split('.');return s[0].padStart(3,'0')+'.'+s[1].padStart(d,'0')}
+
+function drawNgeGrid(ctx,w,h,alpha=.06){
+  ctx.strokeStyle=`rgba(122,62,181,${alpha})`;ctx.lineWidth=.5;
+  for(let x=0;x<w;x+=14){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  for(let y=0;y<h;y+=14){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+}
+function drawGaussCurve(ctx,w,h,ft){
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle=NGE.purple;ctx.lineWidth=1;ctx.beginPath();
+  for(let x=0;x<w;x++){const t=(x/w-0.5)*4+Math.sin(ft*.02)*.3;const y=h/2+Math.exp(-t*t*2)*(h*.38)*Math.cos(ft*.04+x*.05);
+    x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+  ctx.stroke();
+  ctx.strokeStyle=NGE.greenS;ctx.setLineDash([2,3]);ctx.beginPath();
+  for(let x=0;x<w;x++){const t=(x/w-0.5)*3;const y=h/2+Math.exp(-t*t)*(h*.25);
+    x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+  ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=NGE.orange;ctx.font='4px monospace';ctx.fillText('GAUSS κ',2,8);
+}
+function drawCrosshair(ctx,w,h,ft,pulse=1){
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2,r=Math.min(w,h)*.38;
+  ctx.strokeStyle=`rgba(255,255,255,${.15+.08*Math.sin(ft*.06)})`;ctx.lineWidth=.8;
+  ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r*.55+Math.sin(ft*.08)*3*pulse,ft*.02,ft*.02+Math.PI*1.5);ctx.strokeStyle=NGE.red;ctx.stroke();
+  for(let i=0;i<4;i++){const a=ft*.015+i*Math.PI/2;ctx.strokeStyle=NGE.orange;
+    ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*r*.3,cy+Math.sin(a)*r*.3);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.stroke()}
+}
+function drawAtField(ctx,w,h,ft,strength){
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2;
+  ctx.strokeStyle=NGE.orange;ctx.lineWidth=1;
+  for(let i=0;i<6;i++){const a=Math.PI/3*i+ft*.01;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*w*.42,cy+Math.sin(a)*h*.42);ctx.stroke()}
+  ctx.strokeStyle=`rgba(0,255,159,${.3+.2*strength})`;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(cx,cy,w*.2+Math.sin(ft*.05)*2,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle=NGE.greenS;ctx.font='4px monospace';ctx.fillText('A.T.',2,h-4);
+}
+function drawAngelMap(ctx,w,h,ft){
+  ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.08);
+  const cx=w/2,cy=h/2;
+  ctx.strokeStyle='rgba(230,0,18,.4)';ctx.lineWidth=.8;
+  for(let r=8;r<Math.min(w,h)/2;r+=7){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke()}
+  const ax=cx+Math.sin(ft*.02)*12,ay=cy+Math.cos(ft*.015)*8;
+  ctx.strokeStyle=NGE.red;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ax,ay);ctx.stroke();
+  ctx.fillStyle=NGE.red;ctx.beginPath();ctx.arc(ax,ay,3,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=NGE.orange;ctx.font='4px monospace';ctx.fillText('ANGEL',2,8);
+  ctx.fillStyle=NGE.greenS;ctx.fillText('NO SIG',2,14);
+}
+function drawFuiMicro(ctx,w,h,ft,scr){
+  ctx.clearRect(0,0,w,h);
+  const streams=[
+    {x:4,y:h-18,txt:'HEX 0x'+((ft*17|0)%65536).toString(16).toUpperCase()},
+    {x:w-88,y:4,txt:'T-'+fmt7(ft*.01%30)},
+    {x:w-72,y:h-10,txt:'CH-'+(ft%99|0)}
+  ];
+  ctx.font='4px monospace';
+  streams.forEach(s=>{ctx.fillStyle='rgba(142,223,95,.35)';ctx.fillText(s.txt,s.x,s.y)});
+  if(scr==='hud'){ctx.save();ctx.translate(w-52,4);drawDnaHelix(ctx,48,16,ft);ctx.restore()}
+  if(scr==='ack'){ctx.fillStyle='rgba(230,0,18,.25)';for(let i=0;i<6;i++)ctx.fillRect(0,(ft*2+i*90)%h,w,1)}
+}
+async function runOpeningMontage(){
+  const cv=$('opening-canvas'),ctx=cv?.getContext('2d');
+  $('land-boot-status').textContent='EMOTIONAL ONBOARDING...';
+  for(let i=0;i<14;i++){
+    if(ctx){
+      ctx.fillStyle='#000';ctx.fillRect(0,0,600,600);
+      drawNgeGrid(ctx,600,600,.04);
+      if(i%3===0)drawDnaHelix(ctx,120,40,frame+i*3);
+      if(i%4===1){ctx.strokeStyle=NGE.red;ctx.lineWidth=2;ctx.beginPath();
+        ctx.moveTo(300,200);ctx.lineTo(300,400);ctx.moveTo(200,300);ctx.lineTo(400,300);ctx.stroke()}
+      if(i%4===2)drawGaussCurve(ctx,200,60,frame+i);
+      drawCrosshair(ctx,600,600,frame+i*.5,.5);
+    }
+    const w=OPENING_FLASH[i%OPENING_FLASH.length];
+    dramaFlash(w,i%3===0);flash(i%2?NGE.purple:NGE.orange);chroma();vhs();
+    await wait(55);
+  }
+  if(ctx){ctx.fillStyle='#000';ctx.fillRect(0,0,600,600)}
+  $('opening-canvas').style.opacity='0';
+}
+
+function drawDnaHelix(ctx,w,h,ft){
+  ctx.clearRect(0,0,w,h);
+  const mid=h/2;
+  for(let i=0;i<w;i+=2){
+    const t=i*.22+ft*.06;
+    const y1=mid+Math.sin(t)*10,y2=mid+Math.sin(t+Math.PI)*10;
+    ctx.fillStyle=NGE.green;ctx.fillRect(i,y1,2,2);
+    ctx.fillStyle=NGE.purple;ctx.fillRect(i,y2,2,2);
+    if(i%8===0){ctx.strokeStyle='rgba(0,255,159,.25)';ctx.beginPath();ctx.moveTo(i,y1);ctx.lineTo(i,y2);ctx.stroke()}
+  }
+}
+
+function drawEvaWireframe(ctx,cx,cy,ft,opts={}){
+  const scale=opts.scale||1,highlight=opts.highlight??-1,ghost=opts.ghost??false;
+  const ang=ft*0.022,raw=Math.cos(ang),facing=Math.abs(raw),back=raw<0;
+  const sx=(0.28+facing*0.72)*scale,sy=0.86*scale;
+  ctx.save();ctx.translate(cx,cy);ctx.scale(sx,sy);
+  const col=back?NGE.purple+(ghost?'55':'cc'):NGE.orange+(ghost?'44':'');
+  ctx.strokeStyle=col;ctx.lineWidth=back?0.75:1.15;
+  if(back)ctx.setLineDash([3,4]);else ctx.setLineDash([]);
+  if(!ghost){ctx.shadowColor=NGE.orange;ctx.shadowBlur=back?2:6}
+  const seg=(pts)=>{ctx.beginPath();pts.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke()};
+  seg([[0,-46],[0,-56],[-7,-50],[7,-50]]);
+  seg([[-16,-36],[16,-36],[-20,-24],[20,-24],[-18,-10],[18,-10],[-14,2],[14,2]]);
+  seg([[-20,-28],[-30,-48],[-22,-56]]);seg([[20,-28],[30,-48],[22,-56]]);
+  seg([[-14,2],[-20,30],[-12,50],[-5,56]]);seg([[14,2],[20,30],[12,50],[5,56]]);
+  seg([[0,-8],[0,20],[-7,16],[7,16]]);
+  ctx.setLineDash([]);ctx.shadowBlur=0;
+  HOLO_PARTS.forEach((p,i)=>{
+    const on=i===highlight;
+    ctx.fillStyle=on?(p.bad?NGE.red:NGE.green):'rgba(142,223,95,.15)';
+    if(on){ctx.shadowColor=p.bad?NGE.red:NGE.green;ctx.shadowBlur=10}
+    ctx.beginPath();ctx.arc(p.x,p.y,on?5:2.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+    if(on&&!ghost){ctx.strokeStyle=p.bad?NGE.red:NGE.green;ctx.lineWidth=1;ctx.setLineDash([2,2]);
+      ctx.beginPath();ctx.arc(p.x,p.y,10+Math.sin(ft*.2)*2,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
+  });
+  ctx.restore();
+  return{facing,back,sx,sy};
+}
+
+function drawHealthScanOverlay(ctx,w,h,ft,highlight){
+  const scanY=(ft*1.1)%h,sweepX=(ft*1.8)%w;
+  ctx.strokeStyle='rgba(0,229,255,.45)';ctx.lineWidth=1.5;ctx.shadowColor=NGE.cyan;ctx.shadowBlur=4;
+  ctx.beginPath();ctx.moveTo(0,scanY);ctx.lineTo(w,scanY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sweepX,0);ctx.lineTo(sweepX,h);ctx.stroke();ctx.shadowBlur=0;
+  const cx=w/2,cy=h*.52,ringR=38+Math.sin(ft*.04)*3;
+  ctx.strokeStyle='rgba(255,107,0,.35)';ctx.lineWidth=.8;
+  ctx.beginPath();ctx.arc(cx,cy,ringR,ft*.018,ft*.018+Math.PI*1.2);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,ringR-10,-ft*.014,-ft*.014-Math.PI*.9);ctx.stroke();
+  const p=HOLO_PARTS[highlight];
+  if(p){ctx.fillStyle='rgba(142,223,95,.85)';ctx.font='4px monospace';
+    ctx.fillText(p.id+' '+p.name,4,10);ctx.fillText(p.bad?'⚠ FAULT':'NOMINAL',4,16)}
+  ctx.fillStyle='rgba(153,92,208,.5)';ctx.font='4px monospace';
+  ctx.fillText('ROT '+((ft*0.35)%360|0)+'°',w-36,10);
+  ctx.fillText('Z'+Math.floor(ft/20%9),w-18,h-4);
+}
+function tickLiveData(){
+  const t=dataFrame;
+  live.at=1+Math.sin(t*.03)*.05;live.pulse=70+Math.sin(t*.025)*6;
+  live.reserve=86+Math.sin(t*.02)*3;live.border=.1+Math.abs(Math.sin(t*.018))*.06;
+  live.collapse=221-Math.sin(t*.012)*2;
+  live.magi=live.magi.map((v,i)=>Math.round(90+i*2+Math.sin(t*.015+i*1.5)*4));
+  const uiTick=isAnimFast()||frame%14===0;
+  if(screen==='landing'&&landReady&&uiTick){
+    $('st-sys').textContent=sysLevels.every(v=>v>.7)?'OK':'CHK';
+    $('st-neural').textContent=Math.round(live.pulse)+'bpm';
+    $('st-magi').textContent=live.magi[0]+'%';
+    $('st-eva').textContent='Z'+Math.floor(t/18%9);
+    $('st-psycho').textContent=Math.floor(t/40)%2?'LINK-A':'LINK-B';
+    $('st-tox').textContent=state.sync>70?'LOW':'MID';
+    $('st-sync').textContent=Math.round(state.sync+Math.sin(t*.06)*1.5)+'%';
+  }
+  if(screen==='ack'&&uiTick){
+    const e=(performance.now()-ackT0)/1000;
+    $('ack-cnt').textContent='T-MINUS '+fmt7(Math.max(0,30-e));
+    const vi=Math.floor(t/28);
+    [1,2,3].forEach((n,i)=>{
+      $('mb'+n).style.width=(72+Math.sin(t*.012+i)*18)+'%';
+      const v=$('mv'+n),ver=MAGI_VERDICTS[(vi+i)%MAGI_VERDICTS.length];
+      if(v.textContent!==ver){v.classList.remove('flash-v');void v.offsetWidth;v.classList.add('flash-v')}
+      v.textContent=ver;
+    });
+    $('ack-plug').textContent=(4.15+Math.sin(t*.01)*.06).toFixed(1)+'m';
+    $('ack-lcl').textContent=state.lcl.toFixed(1);
+    $('ack-sync').textContent=Math.round(state.sync)+'%';
+    $('ack-eva').textContent=['STANDBY','ARMED','READY'][Math.floor(t/45)%3];
+    $('ack-status').textContent='MAGI VOTE '+Math.floor(t/28)%3+'/3 • BARRIER '+live.at.toFixed(2);
+    $('ack-threat').textContent=Math.floor(t/22)%2
+      ?'⚠ ANGEL DETECTED — PATTERN BLUE UNCONFIRMED'
+      :'⚠ ALL PERSONNEL — BATTLE STATIONS IMMEDIATE';
+  }
+  if(screen==='hud'&&uiTick){
+    $('hud-live').innerHTML=
+      `AT FIELD <span class="g">${live.at.toFixed(2)}</span> • PULSE <span class="v">${Math.round(live.pulse)}</span> • RESERVE <span class="v">${live.reserve.toFixed(1)}%</span><br>`+
+      `BORDER <span class="v">${live.border.toFixed(3)}</span> • MAGI <span class="g">${live.magi.join('/')}</span>`;
+    $('hud-sub').textContent=`PILOT: IKARI SHINJI • PLUG ${(4.15+Math.sin(t*.01)*.05).toFixed(1)}m • LCL ${state.lcl.toFixed(1)}`;
+    if(frame%150===0){
+      const p=HOLO_PARTS[holoScanIdx()];
+      $('log-b').textContent=`HEALTH SCAN: ${p.id} ${p.name} — ${p.bad?'FAULT DETECTED':'NOMINAL'}`;
+      $('log-t').textContent=new Date().toLocaleTimeString();
+    }
+  }
+}
+
+function drawAckBg(ctx){
+  const t=dataFrame;
+  ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,600,600);drawNgeGrid(ctx,600,600,.03);
+  ctx.strokeStyle='rgba(230,0,18,.14)';ctx.lineWidth=1;
+  const off=t*.35;
+  for(let i=-600;i<1200;i+=28){
+    ctx.beginPath();ctx.moveTo(i+off,0);ctx.lineTo(i+off+500,600);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(600-i-off,0);ctx.lineTo(100-i-off,600);ctx.stroke();
+  }
+  ctx.fillStyle='rgba(122,62,181,.08)';ctx.font='5px monospace';
+  ['ANGEL','BATTLE STATIONS','EVA-01','MAGI','ALERT','第1種','PATTERN BLUE','AT FIELD'].forEach((s,i)=>{
+    ctx.fillText(s,((t*.3+i*72)%540),24+i*68);
+  });
+  ctx.strokeStyle='rgba(230,0,18,.3)';ctx.strokeRect(20,20,560,560);
+  ctx.strokeStyle='rgba(122,62,181,.15)';ctx.strokeRect(32,32,536,536);
+}
+
+/* ===== LIVE FEED DRAW FUNCTIONS (landing + boot) ===== */
+function drawSysCheck(ctx,w,h,full){
+  ctx.fillStyle=NGE.panel;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.05);
+  const systems=SYSTEMS;
+  systems.forEach((name,i)=>{
+    const y=full?40+i*36:14+i*28;
+    const lvl=sysLevels[i];
+    ctx.fillStyle='#FF6B00';ctx.fillRect(full?10:4,y,full?180:100,full?18:12);
+    ctx.fillStyle='#000';ctx.font=(full?'9px':'6px')+' monospace';ctx.fillText(name,full?14:6,y+(full?13:9));
+    const barW=full?Math.floor(lvl*120):Math.floor(lvl*36);
+    ctx.fillStyle=lvl>.85?'#8EDF5F':'#FF6B00';
+    if(barW>0)ctx.fillRect(full?195:108,y+2,barW,full?14:8);
+    const ft=animT();
+    if(!full&&Math.floor(ft/20)%2){ctx.fillStyle='#8EDF5F';ctx.font='5px monospace';ctx.fillText(lvl>.7?'OK':'..',full?14:6,y+(full?13:9)+10)}
+  });
+  if(full){
+    SEGS.forEach((s,i)=>{const y=50+i*32;const on=segLevels[i]>0.3;
+      ctx.fillStyle=on?'#FF2D00':'#333';ctx.fillRect(w-100,y,segLevels[i]*70,5);
+      ctx.fillStyle='#FF9500';ctx.font='8px monospace';ctx.fillText(s,w-90,y+14)});
+    ctx.strokeStyle='#00E5FF';ctx.beginPath();ctx.moveTo(10,h-100);ctx.lineTo(w-10,h-100);ctx.stroke();
+    ctx.fillStyle='#00E5FF';ctx.font='7px monospace';ctx.fillText('BORDER LINE',w/2-30,h-105);
+    ctx.strokeStyle='#FF6B00';ctx.strokeRect(w-150,h-70,130,40);
+    ctx.fillStyle='#FF6B00';ctx.font='8px monospace';ctx.fillText('RESERVE ENERGY',w-145,h-58);
+    ctx.fillText('EVA-01 : ENTRY PLUG',w-145,h-44);
+    ctx.fillStyle='#8EDF5F';ctx.fillText(live.reserve.toFixed(1)+'%',w-80,h-58);
+  }
+}
+
+function drawNeural(ctx,w,h,fast){
+  const ft=fast?frame:animT();
+  const spd=fast?0.48:0.14;
+  ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.04);
+  const cols=6,cw=w/cols;
+  for(let c=0;c<cols;c++){
+    const x0=c*cw;if(c){ctx.fillStyle='#FF2D00';ctx.fillRect(x0,0,2,h)}
+    ctx.fillStyle='#FF9500';ctx.font='6px monospace';ctx.fillText(REGIONS[c],x0+2,h>40?10:4);
+    ctx.strokeStyle='#8EDF5F';ctx.lineWidth=1.2;ctx.beginPath();
+    const mid=h/2;
+    for(let x=x0+1;x<x0+cw-1;x+=1){
+      const t=(x-x0)*.12+ft*spd+c*1.4;
+      const y=mid+Math.sin(t)*(10+c*4)+Math.sin(t*4.2)*5+Math.sin(t*9)*2;
+      x===x0+1?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  ctx.strokeStyle='#FF2D00';ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+}
+
+function drawMagi(ctx,w,h,fast){
+  const ft=fast?frame:animT();
+  const rspd=fast?0.045:0.012;
+  ctx.fillStyle=NGE.panel;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.04);
+  const cx=w/2,cy=h*.42;
+  [h*.38,h*.3,h*.22,h*.14].forEach((r,i)=>{
+    const spd=ft*rspd*(i%2?-1:1);
+    ctx.beginPath();ctx.arc(cx,cy,r,spd,spd+Math.PI*1.35);
+    ctx.strokeStyle=[NGE.greenS+'b3',NGE.orange+'99',NGE.purple+'a6',NGE.red+'66'][i];
+    ctx.lineWidth=i?1:1.5;ctx.stroke();
+    for(let k=0;k<8;k++){const a=spd+k*Math.PI/4;ctx.fillStyle=ctx.strokeStyle;
+      ctx.fillRect(cx+Math.cos(a)*r-1,cy+Math.sin(a)*r-1,2,2)}
+  });
+  const vy=h*.78,vr=h*.1;
+  [['MELCHIOR',cx-vr*.55,NGE.greenS],['BALTHASAR',cx,NGE.orange],['CASPER',cx+vr*.55,NGE.purple]].forEach(([lbl,x,col])=>{
+    ctx.globalAlpha=.35;ctx.beginPath();ctx.arc(x,vy,vr,0,Math.PI*2);
+    ctx.strokeStyle=col;ctx.lineWidth=1;ctx.stroke();ctx.globalAlpha=1;
+    ctx.fillStyle=col;ctx.font='4px monospace';ctx.fillText(lbl,x-14,vy+vr+6);
+  });
+  ctx.fillStyle=NGE.orange;ctx.font='7px monospace';ctx.fillText('MAGI 01',cx-18,cy+4);
+  ctx.fillStyle=NGE.greenS;ctx.font='6px monospace';ctx.fillText(live.magi[0]+'%',cx-12,cy+16);
+  if(h>80){ctx.fillStyle=NGE.purple;ctx.fillText('DEFENSE',cx-16,cy+26);
+    ctx.save();ctx.translate(0,h-20);drawGaussCurve(ctx,w,18,ft);ctx.restore()}
+}
+
+function drawEvaScan(ctx,w,h,fast){
+  const ft=fast?frame:animT();
+  ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.04);
+  if(holoImg.complete){ctx.globalAlpha=.18;ctx.drawImage(holoImg,0,0,w,h*.85);ctx.globalAlpha=1}
+  const hi=Math.floor(ft/28)%HOLO_PARTS.length;
+  drawEvaWireframe(ctx,w/2,h*.54,ft,{scale:h/130,highlight:hi});
+  drawHealthScanOverlay(ctx,w,h,ft*(fast?2.2:1),hi);
+  ctx.fillStyle=NGE.orange;ctx.font='7px monospace';ctx.fillText('初号機 EVA-01',4,12);
+  ctx.fillStyle=NGE.purple;ctx.font='5px monospace';ctx.fillText('PILOT: IKARI',4,20);
+  const bw=w-8,fill=.5+.35*Math.sin(ft*(fast?.14:.04));
+  ctx.strokeStyle=NGE.orange;ctx.strokeRect(4,h-16,bw,10);
+  ctx.fillStyle=NGE.greenS;ctx.fillRect(4,h-16,bw*fill,10);
+}
+
+function drawPsycho(ctx,w,h,intense){
+  const ft=intense?frame:animT();
+  const pspd=intense?0.38:0.1;
+  ctx.fillStyle=NGE.panel;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.05);
+  ctx.strokeStyle='rgba(142,223,95,.3)';ctx.lineWidth=.5;
+  const step=intense?16:12;
+  for(let x=0;x<w;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  for(let y=0;y<h;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+  const cx=w*.45,cy=h/2;
+  ctx.strokeStyle='#FF6B00';ctx.lineWidth=intense?2:1;
+  const n=intense?120:45;
+  for(let i=0;i<n;i++){
+    ctx.beginPath();const a=ft*pspd+i*.4,r=15+Math.sin(ft*(intense?.28:.08)+i)*(intense?70:18);
+    for(let j=0;j<(intense?12:6);j++){const t=a+j*.6;
+      ctx.lineTo(cx+Math.cos(t)*r+(Math.random()-.5)*(intense?20:8),cy+Math.sin(t)*r+(Math.random()-.5)*(intense?20:8))}
+    ctx.stroke();
+  }
+  if(intense){
+    ctx.fillStyle='#FF9500';ctx.font='9px monospace';ctx.fillText('PSYCHOGRAPHIC DISPLAY — Phase 4 "LINK A"',10,18);
+    ctx.fillText('EVA-01 PILOT : SYNC USER',w-160,18);
+    ctx.strokeStyle='#995CD0';ctx.lineWidth=2;ctx.strokeRect(w*.28,30,w*.44,h-50);
+  }
+}
+
+function drawWave(ctx,w,h,stress,fast){
+  const ft=fast?frame:animT();
+  const wspd=fast?0.22:0.07,overload=stress<.45&&Math.sin(ft*.08)>.92;
+  ctx.fillStyle='rgba(8,8,16,.75)';ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.03);
+  if(overload){ctx.fillStyle='rgba(230,0,18,.08)';ctx.fillRect(0,0,w,h)}
+  [[NGE.purple,0],[NGE.greenS,1.5],[NGE.orange,3]].forEach(([col,off],li)=>{
+    const amp=overload&&li===2?stress*32+18:stress*22+8;
+    ctx.strokeStyle=col;ctx.lineWidth=overload?1.8:1.4;ctx.shadowColor=col;ctx.shadowBlur=overload?6:3;ctx.beginPath();
+    for(let x=0;x<w;x+=1){const t=x*.05+ft*wspd+off;const y=h/2+Math.sin(t)*amp+Math.sin(t*5)*5*stress+Math.sin(t*11)*2;
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
+    ctx.stroke();ctx.shadowBlur=0;
+  });
+}
+
+/* HUD holo panel — continuous turntable rotation + live structural health scan */
+function drawHoloPanel(ctx,w,h,syncPct){
+  const ft=animT(),hi=holoScanIdx();
+  const health=Math.min(100,Math.max(0,syncPct*88+10+Math.sin(ft*.05)*3));
+
+  ctx.fillStyle=NGE.panel;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.05);
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(2,2,w-4,h-4);
+  if(holoImg.complete){
+    const ang=ft*0.022,ghostA=.12+.08*Math.abs(Math.cos(ang));
+    ctx.globalAlpha=ghostA;ctx.drawImage(holoImg,w*.04,h*.02,w*.92,h*.88);ctx.globalAlpha=1;
+  }
+  const ecx=w/2,ecy=h*.54;
+  drawEvaWireframe(ctx,ecx,ecy,ft,{scale:1.05,highlight:hi});
+  [h*.3,h*.5,h*.68].forEach((ry,i)=>{
+    const pulse=Math.sin(ft*.06+i)*4;
+    ctx.strokeStyle='rgba(230,0,18,.35)';ctx.lineWidth=.8;ctx.setLineDash([3,5]);
+    ctx.beginPath();ctx.ellipse(ecx,ry,28+i*5+pulse,6+i,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  });
+  drawHealthScanOverlay(ctx,w,h,ft,hi);
+  ctx.strokeStyle='rgba(255,107,0,.25)';ctx.lineWidth=.6;
+  ctx.strokeRect(3,3,w-6,h-6);
+}
+
+function updateHoloBar(sync){
+  const ft=animT(),hi=holoScanIdx(),p=HOLO_PARTS[hi];
+  const health=Math.min(100,Math.max(0,sync*.85+10+Math.sin(ft*.05)*2));
+  const el=$('holo-fill');if(el)el.style.width=health+'%';
+  $('holo-pct').textContent=health.toFixed(0)+'%';
+  $('holo-sector').textContent='SECT '+p.id;
+  $('holo-sub').textContent='SCANNING '+p.name+(p.bad?' — FAULT':'');
+  $('holo-scan').textContent='● '+['HEALTH CHECK','STRUCTURAL OK','DIAG RUN'][Math.floor(ft/40)%3];
+  const ref=$('hud-ref');if(ref)ref.innerHTML=
+    `LINK: ${sync>50?'ACTIVE':'STANDBY'}<br>LIFE SUPPORT: ${sync>40?'OK':'WARN'}<br>AT FIELD: ${sync>70?'STABLE':'CALIB'}`;
+  document.querySelectorAll('.parts-p div').forEach((el,i)=>el.classList.toggle('scan',i===hi));
+}
+
+function tickLandingFeeds(){
+  const t=animT();
+  sysLevels=sysLevels.map((v,i)=>Math.min(1,v+.006+Math.sin(t*.08+i)*.004));
+  segLevels=segLevels.map((v,i)=>Math.min(1,v+.005+Math.sin(t*.06+i*1.2)*.004));
+
+  document.querySelectorAll('.feed.live canvas').forEach(c=>{
+    const id=c.id;
+    if(id==='fc-sys')drawSysCheck(c.getContext('2d'),146,120,false);
+    else if(id==='fc-neural')drawNeural(c.getContext('2d'),282,64,false);
+    else if(id==='fc-magi')drawMagi(c.getContext('2d'),146,120,false);
+    else if(id==='fc-eva')drawEvaScan(c.getContext('2d'),198,140,false);
+    else if(id==='fc-psycho')drawPsycho(c.getContext('2d'),178,82,false);
+    else if(id==='fc-wave')drawWave(c.getContext('2d'),586,50,state.sync/100,false);
+  });
+  if(frame%8===0)document.querySelectorAll('.tox-bars-land .b').forEach((b,i)=>{
+    b.style.height=(14+i*2+Math.sin(t*.08+i)*2)+'px';
+  });
+
+  const elapsed=(performance.now()-landT0)/1000;
+  $('cc-clock').textContent=fmt7(elapsed);
+  tickLiveData();
+  if(frame%90===0&&landReady)chroma();
+  if(frame%140===0&&landReady){
+    const feeds=[...document.querySelectorAll('.feed.live')];
+    if(feeds.length){const f=feeds[Math.floor(t/30)%feeds.length];f.classList.add('pulse');setTimeout(()=>f.classList.remove('pulse'),80)}
+  }
+  if(frame%200===0&&landReady){
+    const feeds=[...document.querySelectorAll('.feed.live')];
+    if(feeds.length){const f=feeds[Math.floor(t/22)%feeds.length];f.classList.add('glitch');setTimeout(()=>f.classList.remove('glitch'),120)}
+  }
+  if(frame%14===0){
+    $('cc-meta').textContent=['第3新東京市 • 司令室','GEOFRONT • DEPTH 1200m','NERV-01 • MAGI ARRAY'][Math.floor(t/55)%3];
+    $('land-magi-txt').textContent='VOTE '+live.magi.join('/')+'%';
+    $('land-angel-txt').textContent=['PATTERN BLUE — NO CONTACT','ANGEL SIG NULL','RADAR SWEEP ACTIVE'][Math.floor(t/40)%3];
+  }
+  drawAngelMap($('land-angel').getContext('2d'),72,56,t);
+  if(frame%180===0&&landReady)cascadeAlert(CASCADE_ALERTS[Math.floor(t/20)%CASCADE_ALERTS.length],'warn');
+}
+
+async function bootLandingFeeds(){
+  landBooting=true;landReady=false;
+  const status=$('land-boot-status');
+  const msgs=['SCANNING MAGI ARRAY...','LINKING NEURAL FEEDS...','EVA-01 STRUCTURAL ONLINE...','PSYCHOGRAPHIC ACTIVE...','ALL FEEDS NOMINAL'];
+  try{
+    for(let i=0;i<FEED_ORDER.length;i++){
+      flash(i%2?'#995CD0':'#FF6B00');chroma();vhs();tears();
+      if(i%2===0)dramaFlash(['MAGI','LINK','SYNC','FEED','初号機'][i%5]);
+      cascadeAlert(msgs[Math.min(i,msgs.length-1)],'ok');
+      status.textContent=msgs[Math.min(i,msgs.length-1)];
+      const el=document.querySelector('.'+FEED_ORDER[i]);
+      if(el)el.classList.add('live');
+      await wait(65);
+    }
+    flash('#8EDF5F');$('cc-header').style.opacity='1';
+    status.textContent='CONTROL CENTER ONLINE';
+    await wait(280);
+  }finally{
+    $('land-boot').classList.add('hide');
+    landBooting=false;landT0=performance.now();
+    // Do not gate on requestAnimationFrame — embedded browsers may throttle rAF
+    setTimeout(enableEngage,400);
+  }
+}
+
+function buildBootSysUi(){
+  $('boot-sys-ui').innerHTML=
+    SYSTEMS.map(n=>`<div class="sys-row"><div class="box">${n}</div><div class="bar"></div></div>`).join('')+
+    SEGS.map((s,i)=>`<div class="seg" style="top:${50+i*32}px"><span class="sb"></span>${s}</div>`).join('')+
+    `<div class="border-line"><span>BORDER LINE</span></div><div class="reserve">RESERVE ENERGY REMAINING<br>EVA-01 : ENTRY PLUG</div>`;
+}
+
+function buildDom(){
+  $('cc-track').textContent=TICKER.concat(TICKER).join('  ///  ')+'  ///  ';
+  $('land-tox').innerHTML=TOX.map((n,i)=>`<div class="b" style="height:${14+i*2}px"></div>`).join('');
+  $('parts-p').innerHTML=PARTS.map(([t,s])=>`<div class="${s==='bad'?'bad':''}">${t}</div>`).join('');
+  $('tox-p').innerHTML=TOX.map((n,i)=>`<div class="b ${i===0?'bad':''}" style="height:${16+i*2}px"></div>`).join('');
+  buildBootSysUi();
+}
+
+async function setBootPhase(id,tag,confirm){
+  for(let i=0;i<4;i++){flash(i%2?'#fff':'#995CD0');chroma();vhs();tears();impact(18+i*22);await wait(10)}
+  document.querySelectorAll('.boot-phase').forEach(p=>p.classList.remove('on'));
+  $(id).classList.add('on');
+  $('boot-tag').textContent=tag;
+  bootCascadeLine(tag);
+  if(confirm)await bootConfirm(confirm);
+  flash('#FF6B00');dramaFlash(tag.split('—')[0].trim().split(' ')[0]);impact(60);
+}
+
+async function runBootSequence(){
+  bootOn=true;
+  await hardTo('boot','#FF6B00');
+  const t0=performance.now();
+  const clk=setInterval(()=>{if(!bootOn){clearInterval(clk);return}$('boot-timer').textContent=fmt7((performance.now()-t0)/1000)},33);
+
+  // Phase 1: System check (gif8) — fullscreen canvas + DOM slam
+  await setBootPhase('bp-sys','SYSTEM CHECK — ENTRY PLUG','CONFIRM: LIFE SUPPORT');
+  sysBoot=true;sysLevels=[0,0,0];segLevels=[0,0,0,0,0,0];
+  await wait(320);
+  $('boot-sys-ui').style.opacity='1';
+  for(const row of document.querySelectorAll('.boot-sys .sys-row')){if(!bootOn)break;row.classList.add('on');flash('#FF6B00');bootCascadeLine(row.querySelector('.box')?.textContent||'SYS');await wait(38)}
+  for(const seg of document.querySelectorAll('.boot-sys .seg')){if(!bootOn)break;seg.classList.add('on');await wait(22)}
+  await wait(50);sysBoot=false;
+
+  await setBootPhase('bp-eva','STRUCTURAL INSPECTION — 初号機','CONFIRM: EVA-01 ARMED');
+  bootPhase='eva';await wait(520);bootPhase='';
+
+  await setBootPhase('bp-magi','MAGI DEFENSE SCREEN','CONFIRM: MAGI CONSENSUS');
+  const c0=223.231,tM=performance.now();
+  await new Promise(res=>{
+    function tm(now){if(!bootOn){res();return}
+      $('b-raised').textContent=fmt7((now-tM)/1000);
+      $('b-collapse').textContent=fmt7(Math.max(0,c0-(now-tM)*0.18));
+      if(now-tM<480)requestAnimationFrame(tm);else res()}
+    requestAnimationFrame(tm);
+  });
+
+  await setBootPhase('bp-psycho','PSYCHOGRAPHIC — LINK A','CONFIRM: PILOT LINK');
+  psychoBoot=true;await wait(480);psychoBoot=false;
+
+  await setBootPhase('bp-neural','NEURAL ACTIVITY — 神経活動','CONFIRM: NEURAL BRIDGE');
+  neuralBoot=true;await wait(420);neuralBoot=false;
+
+  await setBootPhase('bp-cal','SYNCHRONIZATION — 同期率','CONFIRM: SYNC RATE');
+  await new Promise(res=>{
+    const s0=performance.now(),dur=750;
+    function cal(now){if(!bootOn){res();return}
+      const p=Math.min(100,(now-s0)/dur*100);
+      $('bc-ring').style.setProperty('--ca',p*3.6+'deg');
+      $('bc-num').textContent=Math.floor(p).toString().padStart(2,'0');
+      const msgs=['NEURAL LINK...','AT FIELD CALIB...','LCL STABLE','初号機 SYNC COMPLETE'];
+      $('bc-msg').textContent=msgs[Math.min(3,Math.floor(p/25))];
+      if(p<100)requestAnimationFrame(cal);else setTimeout(res,100)}
+    requestAnimationFrame(cal);
+  });
+
+  clearInterval(clk);bootOn=false;psychoBoot=neuralBoot=sysBoot=false;
+  await hardTo('hud','#8EDF5F');
+  updateHud(true);
+}
+
+async function skipBoot(){
+  if(!bootOn)return;
+  bootOn=false;bootPhase='';psychoBoot=neuralBoot=sysBoot=false;
+  flash('#8EDF5F');await wait(80);
+  await hardTo('hud','#8EDF5F');
+  updateHud(true);
+}
+
+function updateHud(jump){
+  const t=Math.max(0,Math.min(100,state.sync));
+  if(jump)displaySync=t;
+  const g=$('g-core');
+  g.style.setProperty('--sa',displaySync*3.6+'deg');
+  g.classList.remove('good','low');
+  const sn=$('sync-n');sn.classList.remove('good');
+  sn.textContent=Math.round(displaySync);
+  $('s-prot').textContent=state.protein+'g';$('s-hyd').textContent=state.hydration+'%';$('s-lcl').textContent=state.lcl.toFixed(1);
+  const st=$('s-st');
+  if(displaySync>=75){g.classList.add('good');sn.classList.add('good');st.textContent='AT FIELD STABLE';st.style.color='var(--green-neon)';$('hud-mode').textContent=displaySync>=90?'MAX SYNC':'FIELD OPS'}
+  else if(displaySync<45){g.classList.add('low');st.textContent='⚠ SYNC LOW';st.style.color='var(--red)';$('hud-mode').textContent='WARNING'}
+  else{st.textContent='FIELD OPS';st.style.color='var(--orange-bright)';$('hud-mode').textContent='FIELD OPS'}
+  const si=holoScanIdx();
+  document.querySelectorAll('.parts-p div').forEach((el,i)=>{
+    el.classList.toggle('on',i>0&&i<=Math.floor(displaySync/15));
+    el.classList.toggle('scan',i===si);
+  });
+  document.querySelectorAll('.tox-p .b').forEach((el,i)=>{el.style.height=(i<=Math.floor(displaySync/14)?16+i*2:8)+'px'});
+  updateHoloBar(displaySync);
+}
+
+function logProtein(){
+  state.protein+=10;state.sync=Math.min(100,state.sync+3);state.hydration=Math.min(100,state.hydration+1);
+  const lb=$('log-b');lb.classList.remove('hit');void lb.offsetWidth;lb.classList.add('hit');
+  lb.textContent='+10g PROTEIN • SYNC +3%';$('log-t').textContent=new Date().toLocaleTimeString();
+  flash('#FF6B00');chroma();saveState();
+}
+
+function tick(){
+  frame++;
+  dataFrame+=isAnimFast()?1:DATA_RATE;
+  if(screen==='landing')tickLandingFeeds();
+  if(sysBoot){
+    sysLevels=sysLevels.map((v,i)=>Math.min(1,v+.04+Math.sin(frame*.08+i)*.02));
+    segLevels=segLevels.map((v,i)=>Math.min(1,v+.03+Math.sin(frame*.07+i)*.03));
+    drawSysCheck($('bc-sys').getContext('2d'),584,560,true);
+  }
+  if(bootPhase==='eva'){
+    const c=$('bc-eva').getContext('2d'),bw=584,bh=560;
+    drawEvaScan(c,bw,bh,true);
+    c.fillStyle=NGE.orange;c.font='11px monospace';c.fillText('STRUCTURAL INSPECTION — 初号機 EVA-01',14,24);
+    c.fillStyle=NGE.greenS;c.font='9px monospace';c.fillText('TURNTABLE SCAN ACTIVE • ENTRY PLUG LINKED',14,38);
+  }
+  if(psychoBoot)drawPsycho($('bc-psycho').getContext('2d'),584,560,true);
+  if(neuralBoot)drawNeural($('bc-neural').getContext('2d'),584,560,true);
+  if(screen==='ack'){
+    drawAckBg($('ack-bg').getContext('2d'));
+    drawCrosshair($('ack-crosshair').getContext('2d'),600,600,animT(),1.2);
+    tickLiveData();
+    if(frame%120===0)cascadeAlert(CASCADE_ALERTS[Math.floor(animT()/25)%CASCADE_ALERTS.length],'warn');
+  }
+  const magiOn=$('bp-magi')?.classList.contains('on');
+  if(magiOn&&bootOn){
+    const mc=$('boot-magi-cv').getContext('2d');
+    mc.fillStyle=NGE.bg;mc.fillRect(0,0,584,560);drawNgeGrid(mc,584,560,.04);
+    drawGaussCurve(mc,584,140,frame);drawCrosshair(mc,584,560,frame,.9);
+  }
+  drawFuiMicro($('fui-micro').getContext('2d'),600,600,animT(),screen);
+  if(screen==='hud'){
+    const d=state.sync-displaySync;
+    if(Math.abs(d)>.2)displaySync+=d*.45;else displaySync=state.sync;
+    updateHud();tickLiveData();
+    drawHoloPanel($('holo-canvas').getContext('2d'),164,134,displaySync/100);
+    drawDnaHelix($('hud-dna').getContext('2d'),36,36,animT());
+    drawCrosshair($('hud-scope').getContext('2d'),120,120,animT(),displaySync/100);
+    drawAtField($('hud-atfield').getContext('2d'),64,64,animT(),displaySync/100);
+    drawGaussCurve($('hud-gauss').getContext('2d'),80,36,animT());
+    drawWave($('hud-wv').getContext('2d'),564,58,displaySync/100,false);
+    if(frame%14===0){
+      const alerts=['PAIN IND: LOW','LCL pH 7.0','PLUG DEPTH OK','NEURAL FEED ACTIVE'];
+      $('hud-alerts').innerHTML=alerts.map((a,i)=>'▶ '+a).join('<br>');
+    }
+    const wvEl=document.querySelector('.wv');
+    if(wvEl)wvEl.classList.toggle('overload',displaySync<45);
+    if(frame%90===0)chroma();
+    if(displaySync<45&&frame%24===0)flash('rgba(230,0,18,.3)');
+    $('sync-n').style.textShadow=displaySync>=75?'0 0 20px '+NGE.green:'none';
+  }
+  requestAnimationFrame(tick);
+}
+
+$('engage-btn').addEventListener('click',goToAck);
+$('engage-btn').addEventListener('touchend',e=>{e.preventDefault();goToAck()});
+$('ack-btn').addEventListener('click',()=>runBootSequence());
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&bootOn){e.preventDefault();skipBoot();return}
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  if(screen==='landing'){e.preventDefault();goToAck()}
+  else if(screen==='ack'){e.preventDefault();runBootSequence()}
+  else if(screen==='hud'){e.preventDefault();logProtein()}
+});
+$('g-core').onclick=()=>{if(screen==='hud')logProtein()};
+
+buildDom();loadState();requestAnimationFrame(tick);
+runOpeningMontage().then(()=>bootLandingFeeds());
+</script>
+</body>
+</html>
