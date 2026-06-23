@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>EVA SYNC HUD</title>
+<link rel="preload" as="video" href="/assets/motion/startup.mp4" type="video/mp4">
 <link rel="preload" as="video" href="/assets/motion/eva01-visuals.mp4" type="video/mp4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -112,10 +113,22 @@
   .land-boot .t{font-size:clamp(14px,4vmin,18px);letter-spacing:6px;color:var(--orange-bright);text-shadow:0 0 16px var(--orange)}
   .land-boot .s{font-size:clamp(9px,2.5vmin,11px);letter-spacing:4px;color:var(--green-neon);opacity:.9}
   .land-boot.hide{display:none}
-  #opening-canvas{position:absolute;inset:0;z-index:24;opacity:0;width:100%;height:100%;transition:opacity .45s ease}
-  #screen-landing.montage-active #opening-canvas{z-index:28;opacity:1!important}
-  #screen-landing.montage-active .land-boot{background:rgba(0,0,0,.12);z-index:26}
-  #screen-landing.montage-active .land-boot .t,#screen-landing.montage-active .land-boot .s{opacity:.4}
+  #opening-canvas{display:none}
+  #screen-landing .startup-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    z-index:29;background:#000;pointer-events:none;opacity:1;transition:opacity .5s ease;
+    -webkit-tap-highlight-color:transparent}
+  #screen-landing .startup-video.xfade-out{opacity:0!important}
+  #screen-landing .startup-video::-webkit-media-controls{display:none!important}
+  #screen-landing .startup-video::-webkit-media-controls-enclosure{display:none!important}
+  #screen-landing .startup-video::-webkit-media-controls-start-playback-button{display:none!important}
+  #screen-landing .startup-video::-webkit-media-controls-overlay-play-button{display:none!important}
+  #screen-landing.startup-active .cc-header,#screen-landing.startup-active .land-feed-grid,
+  #screen-landing.startup-active .feed-wave,#screen-landing.startup-active .land-engage,
+  #screen-landing.startup-active .land-fringe,#screen-landing.startup-active .fui-micro-panel,
+  #screen-landing.startup-active #land-angel,#screen-landing.startup-active .split-v,
+  #screen-landing.startup-active .split-h{display:none!important}
+  #screen-landing.startup-active .land-boot{background:transparent;z-index:30;pointer-events:none}
+  #screen-landing.startup-active .land-boot .t,#screen-landing.startup-active .land-boot .s{display:none}
   .opening-word{position:absolute;font-size:clamp(24px,7vmin,36px);font-weight:900;color:#fff;opacity:0;z-index:26;letter-spacing:.2em;
     text-shadow:0 0 30px var(--purple);animation:ow .12s ease-out forwards}
   @keyframes ow{0%{opacity:0;transform:scale(1.5)}30%{opacity:1}100%{opacity:0;transform:scale(.8)}}
@@ -420,8 +433,12 @@
   </div>
 
   <!-- LANDING: multi live-feed control center -->
-  <div id="screen-landing" class="screen active">
+  <div id="screen-landing" class="screen active startup-active">
     <canvas id="opening-canvas" width="600" height="600"></canvas>
+    <video id="startup-video" class="startup-video" playsinline webkit-playsinline muted preload="auto"
+      disablepictureinpicture disableremoteplayback
+      controlslist="nodownload noplaybackrate noremoteplayback nofullscreen"
+      src="/assets/motion/startup.mp4"></video>
     <div class="land-boot" id="land-boot">
       <div class="t nge-type">NERV COMMAND</div>
       <div class="s nge-flicker" id="land-boot-status">INITIALIZING LIVE FEEDS...</div>
@@ -601,14 +618,11 @@ const MAGI_VERDICTS=['APPROVE','APPROVE','DENY','APPROVE','HOLD'];
 const DRAMA_WORDS=['SYNC','LINK','ALERT','MAGI','初号機','ANGEL','AT FIELD','LCL','NERV','第3新東京市'];
 const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY NOMINAL','MAGI ARRAY ONLINE',
   'BERSERK LOCKED','GEOFRONT DEPTH 1200m','ENTRY PLUG STANDBY','NEURAL LINK ACTIVE','SYNC CABLE OFF'];
-const OPENING_FLASH=['DNA','ANGEL','SYNC','MAGI','AT FIELD','初号機','CROSS','LCL','NERV','LINK'];
-const MONTAGE_BEATS=9;
-const MONTAGE_BEAT_MS=100;
+const STARTUP_DURATION_MS=3000;
+const STARTUP_FADE_MS=500;
+const STARTUP_PLAYBACK_RATE=2.014;
 const BOOT_DURATION_MS=3000;
 const BOOT_PLAYBACK_RATE=2.38;
-const ACK_OPEN_IN_MS=260;
-const ACK_OPEN_HOLD_MS=920;
-const ACK_OPEN_OUT_MS=380;
 const BOOT_HUD_GLITCH_MS=260;
 const BOOT_HUD_FADE_MS=520;
 const HOLO_VIDEO_SRC='/assets/motion/eva01-visuals.mp4';
@@ -875,36 +889,36 @@ async function showBoot(){
   await wait(40);transitioning=false;
 }
 
-async function runOpeningAckTransition(){
-  if(transitioning)return;transitioning=true;
-  const landEl=$('screen-landing'),ackEl=$('screen-ack'),cv=$('opening-canvas');
-  landEl?.classList.remove('montage-active');
-  if(cv)cv.style.opacity='0';
-  ackEl.style.display='block';
-  ackEl.classList.remove('slam','ack-fade-out');
-  ackEl.classList.add('active','ack-transition-active','ack-opening');
-  ackEl.style.opacity='0';
-  screen='ack';
-  ackT0=performance.now();
-  $('ack-threat').textContent='⚠ ANGEL DETECTED — PATTERN BLUE UNCONFIRMED';
-  $('ack-status').textContent='AUTO-ACK • BATTLE STATIONS ENGAGED';
+async function runStartupSequence(){
   syncAllCanvases();
-  await wait(16);
-  flash('rgba(230,0,18,.22)');
-  dramaFlash('第1種',true);
-  ackEl.style.opacity='1';
-  await wait(ACK_OPEN_IN_MS);
-  await wait(ACK_OPEN_HOLD_MS);
-  ackEl.classList.add('ack-fade-out');
-  landEl.style.display='block';
-  landEl.classList.add('active');
-  screen='landing';
-  $('land-boot-status').textContent='BATTLE STATIONS ACK — LINKING FEEDS...';
-  await wait(ACK_OPEN_OUT_MS);
-  ackEl.classList.remove('active','ack-transition-active','ack-opening','ack-fade-out');
-  ackEl.style.display='none';
-  ackEl.style.opacity='';
-  transitioning=false;
+  const land=$('screen-landing'),video=$('startup-video');
+  land?.classList.add('startup-active');
+  $('land-boot-status').textContent='EVA SYNC — STARTUP';
+  EvaAudio.playIntro();
+  if(video){
+    video.classList.remove('xfade-out');
+    video.playbackRate=STARTUP_PLAYBACK_RATE;
+    video.currentTime=0;
+    video.muted=true;
+    try{await video.play()}catch(_){}
+  }
+  const end=performance.now()+STARTUP_DURATION_MS;
+  await new Promise(res=>{
+    const poll=setInterval(()=>{
+      if(performance.now()>=end){clearInterval(poll);res()}
+    },40);
+  });
+  if(video){
+    video.classList.add('xfade-out');
+    await wait(STARTUP_FADE_MS);
+    video.pause();
+    video.currentTime=0;
+    video.playbackRate=1;
+    video.classList.remove('xfade-out');
+  }
+  land?.classList.remove('startup-active');
+  $('land-boot')?.classList.add('hide');
+  EvaAudio.startAmbient();
 }
 
 async function runBootToHudTransition(){
@@ -1034,37 +1048,6 @@ function drawFuiMicro(ctx,w,h,ft,scr){
   if(scr==='hud'){ctx.save();ctx.translate(w-52,4);drawDnaHelix(ctx,48,16,ft);ctx.restore()}
   if(scr==='ack'){ctx.fillStyle='rgba(230,0,18,.25)';for(let i=0;i<6;i++)ctx.fillRect(0,(ft*2+i*90)%h,w,1)}
 }
-async function runOpeningMontage(){
-  syncAllCanvases();
-  const land=$('screen-landing'),cv=$('opening-canvas'),ctx=cv?.getContext('2d');
-  const ow=cv?.width||600,oh=cv?.height||600;
-  $('land-boot-status').textContent='EMOTIONAL ONBOARDING...';
-  land?.classList.add('montage-active');
-  if(cv)cv.style.opacity='1';
-  EvaAudio.playIntro();
-  for(let i=0;i<MONTAGE_BEATS;i++){
-    EvaAudio.stingAt(EvaAudio.MONTAGE_CUES[Math.min(i,EvaAudio.MONTAGE_CUES.length-1)]||i*.35);
-    if(ctx){
-      ctx.fillStyle='#000';ctx.fillRect(0,0,ow,oh);
-      drawNgeGrid(ctx,ow,oh,.05);
-      if(i%3===0)drawDnaHelix(ctx,ow*.22,oh*.08,frame+i*4);
-      if(i%4===1){ctx.strokeStyle=NGE.red;ctx.lineWidth=1.5;ctx.beginPath();
-        ctx.moveTo(ow/2,oh*.3);ctx.lineTo(ow/2,oh*.7);ctx.moveTo(ow*.3,oh/2);ctx.lineTo(ow*.7,oh/2);ctx.stroke()}
-      if(i%4===2)drawGaussCurve(ctx,ow*.35,oh*.12,frame+i*2);
-      drawCrosshair(ctx,ow,oh,frame+i*.55,.45);
-      const w=OPENING_FLASH[i%OPENING_FLASH.length];
-      ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 20px monospace';ctx.textAlign='center';
-      ctx.shadowColor=NGE.purple;ctx.shadowBlur=12;
-      ctx.fillText(w,ow/2,oh*.46);ctx.shadowBlur=0;ctx.textAlign='left';
-    }
-    const w=OPENING_FLASH[i%OPENING_FLASH.length];
-    if(i%3===0)dramaFlash(w,false);
-    if(i%4===0)flash(i%2?'rgba(153,92,208,.22)':'rgba(255,107,0,.18)');
-    await wait(MONTAGE_BEAT_MS);
-  }
-  if(ctx){ctx.fillStyle='#000';ctx.fillRect(0,0,ow,oh)}
-}
-
 function drawDnaHelix(ctx,w,h,ft){
   ctx.clearRect(0,0,w,h);
   const mid=h/2;
@@ -1732,9 +1715,8 @@ applyHealthAnim();updateHealthCards();renderHudLive();updateOuraBadge();
 fetchHoloAsset();syncAllCanvases();
 let resizeT;window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(syncAllCanvases,80)});
 requestAnimationFrame(tick);
-runOpeningMontage().then(async()=>{
+runStartupSequence().then(()=>{
   syncAllCanvases();
-  await runOpeningAckTransition();
   bootLandingFeeds();
   fetchHoloAsset().then(()=>ensureHudVideoPlaying());
 });
