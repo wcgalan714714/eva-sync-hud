@@ -26,6 +26,7 @@ export interface PilotVitals {
   rhrBpm: number | null;
   tempDeviation: number | null;
   stressScore: number | null;
+  recoveryHigh: number | null;
   sleepScore: number | null;
   sleepHours: number | null;
   strainScore: number | null;
@@ -54,6 +55,7 @@ export const DEFAULT_PILOT_STATE: PilotState = {
     rhrBpm: 58,
     tempDeviation: 0.1,
     stressScore: 28,
+    recoveryHigh: 42,
     sleepScore: 78,
     sleepHours: 7.2,
     strainScore: 45,

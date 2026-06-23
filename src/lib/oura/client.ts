@@ -7,6 +7,7 @@ import type {
   OuraDailyStress,
   OuraHeartRateSample,
   OuraPersonalInfo,
+  OuraSleepSession,
 } from './types';
 
 export class OuraApiError extends Error {
@@ -49,6 +50,7 @@ export interface OuraSnapshot {
   personal: OuraPersonalInfo | null;
   readiness: OuraDailyReadiness[];
   sleep: OuraDailySleep[];
+  sleepSessions: OuraSleepSession[];
   activity: OuraDailyActivity[];
   stress: OuraDailyStress[];
   heartrate: OuraHeartRateSample[];
@@ -58,10 +60,11 @@ export interface OuraSnapshot {
 /** Pull latest Oura collections for dashboard mapping */
 export async function fetchOuraSnapshot(token: string, days = 7): Promise<OuraSnapshot> {
   const range = dateRange(days);
-  const [personal, readiness, sleep, activity, stress, heartrate] = await Promise.all([
+  const [personal, readiness, sleep, sleepSessions, activity, stress, heartrate] = await Promise.all([
     ouraFetch<OuraPersonalInfo>('/personal_info', token).catch(() => null),
     ouraFetch<OuraCollectionResponse<OuraDailyReadiness>>('/daily_readiness', token, range),
     ouraFetch<OuraCollectionResponse<OuraDailySleep>>('/daily_sleep', token, range),
+    ouraFetch<OuraCollectionResponse<OuraSleepSession>>('/sleep', token, range).catch(() => ({ data: [], next_token: null })),
     ouraFetch<OuraCollectionResponse<OuraDailyActivity>>('/daily_activity', token, range),
     ouraFetch<OuraCollectionResponse<OuraDailyStress>>('/daily_stress', token, range).catch(() => ({ data: [], next_token: null })),
     ouraFetch<OuraCollectionResponse<OuraHeartRateSample>>('/heartrate', token, {
@@ -74,6 +77,7 @@ export async function fetchOuraSnapshot(token: string, days = 7): Promise<OuraSn
     personal,
     readiness: readiness.data,
     sleep: sleep.data,
+    sleepSessions: sleepSessions.data,
     activity: activity.data,
     stress: stress.data,
     heartrate: heartrate.data,

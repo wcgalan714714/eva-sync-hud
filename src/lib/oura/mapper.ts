@@ -37,21 +37,31 @@ function buildAlerts(v: PilotVitals): string[] {
 export function mapOuraToPilot(snapshot: OuraSnapshot, extras?: Partial<PilotState>): PilotState {
   const r = latest(snapshot.readiness);
   const s = latest(snapshot.sleep);
+  const ss = latest(snapshot.sleepSessions);
   const a = latest(snapshot.activity);
   const st = latest(snapshot.stress);
 
   const readiness = r?.score ?? 0;
   const hrvContributor = r?.contributors?.hrv_balance ?? null;
-  const hrvMs = hrvContributor != null ? Math.round(20 + hrvContributor * 0.8) : null;
+  const hrvFromSleep = ss?.average_hrv != null ? Math.round(ss.average_hrv) : null;
+  const hrvMs =
+    hrvFromSleep ??
+    (hrvContributor != null ? Math.round(20 + hrvContributor * 0.8) : null);
+
+  const sleepHours =
+    ss?.total_sleep_duration != null
+      ? Math.round((ss.total_sleep_duration / 3600) * 10) / 10
+      : null;
 
   const vitals: PilotVitals = {
     readiness,
     hrvMs,
-    rhrBpm: avgRestingBpm(snapshot.heartrate),
+    rhrBpm: ss?.average_heart_rate ?? avgRestingBpm(snapshot.heartrate),
     tempDeviation: r?.temperature_deviation ?? null,
     stressScore: st?.stress_high ?? null,
+    recoveryHigh: st?.recovery_high ?? null,
     sleepScore: s?.score ?? null,
-    sleepHours: null, // filled from sleep contributors / session later
+    sleepHours,
     strainScore: a?.score ?? null,
     steps: a?.steps ?? null,
     activeCalories: a?.active_calories ?? null,

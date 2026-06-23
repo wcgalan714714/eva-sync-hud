@@ -15,6 +15,15 @@ export interface OuraDailySleep {
   contributors?: Record<string, number | null>;
 }
 
+/** Detailed sleep period — total duration + average HRV */
+export interface OuraSleepSession {
+  id: string;
+  day: string;
+  total_sleep_duration: number | null;
+  average_hrv: number | null;
+  average_heart_rate: number | null;
+}
+
 export interface OuraDailyActivity {
   id: string;
   day: string;
