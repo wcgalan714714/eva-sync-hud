@@ -235,8 +235,11 @@
     55%{opacity:.88;filter:none;transform:none}
     100%{opacity:1;filter:none;transform:none}
   }
+  #screen-hud .holo-fallback{position:absolute;left:4px;right:4px;top:22px;bottom:32px;width:calc(100% - 8px);height:calc(100% - 54px);
+    object-fit:contain;z-index:2;background:#000;pointer-events:none;opacity:1;transition:opacity .25s ease}
+  #screen-hud .holo-video.is-playing~.holo-fallback{opacity:.15}
+  #screen-hud .holo-video{opacity:0;transition:opacity .25s ease}
   #screen-hud .holo-video.is-playing{opacity:1}
-  #screen-hud .holo-video{opacity:1;transition:opacity .2s ease}
   #app.boot-hud-glitch{animation:bhg .24s steps(3) 3}
   @keyframes bhg{
     33%{transform:translateX(2px) skewX(.4deg);filter:saturate(1.35) contrast(1.08)}
@@ -331,7 +334,8 @@
   #screen-hud .holo-lbl span{display:block;font-size:9px;color:var(--green-neon);font-weight:400;opacity:.9}
   #screen-hud .holo-tag{position:absolute;top:4px;right:8px;z-index:4;font-size:9px;color:var(--purple);letter-spacing:1px}
   #screen-hud .holo-video{position:absolute;left:4px;right:4px;top:22px;bottom:32px;width:calc(100% - 8px);height:calc(100% - 54px);
-    object-fit:cover;z-index:2;background:#000;pointer-events:none;-webkit-tap-highlight-color:transparent}
+    object-fit:contain;z-index:3;background:#000;pointer-events:none;-webkit-tap-highlight-color:transparent}
+  #screen-hud .holo-panel{cursor:pointer}
   #screen-hud .holo-video::-webkit-media-controls{display:none!important}
   #screen-hud .holo-video::-webkit-media-controls-enclosure{display:none!important}
   #screen-hud .holo-video::-webkit-media-controls-start-playback-button{display:none!important}
@@ -576,7 +580,9 @@
       <video id="holo-video" class="holo-video" autoplay playsinline webkit-playsinline loop muted preload="auto"
         disablepictureinpicture disableremoteplayback
         controlslist="nodownload noplaybackrate noremoteplayback nofullscreen"
+        poster="/assets/mainmenuEVAholo.jpg"
         src="/assets/motion/eva01-visuals.mp4"></video>
+      <img class="holo-fallback" src="/assets/mainmenuEVAholo.jpg" alt="" aria-hidden="true">
       <div class="holo-scan" id="holo-scan">● LIVE FEED</div>
       <div class="holo-bar"><div class="holo-fill" id="holo-fill"></div></div>
       <div class="holo-pct" id="holo-pct">--%</div>
@@ -698,7 +704,7 @@ let pilot={
   knee:null,nutrition:{date:new Date().toISOString().slice(0,10),proteinG:1240,fastingHours:14,hydrationPct:87}
 };
 let expandedCard=null,ouraConnected=false,syncing=false,lastSyncPulse=0,trendMetric='readiness';
-let holoBlobUrl=null,holoFetchPromise=null,holoVideoPrimed=false,holoPlayPromise=null;
+let holoFetchPromise=null,holoVideoPrimed=false,holoPlayPromise=null,holoVideoBound=false;
 let healthAnim=computeHealthAnim(pilot.vitals);
 const HOLO_PARTS=[
   {id:'0001',name:'HEAD',x:0,y:-38,bad:false},
@@ -829,17 +835,23 @@ function syncAllCanvases(){
 }
 function fetchHoloAsset(){
   if(holoFetchPromise)return holoFetchPromise;
-  holoFetchPromise=fetch(HOLO_VIDEO_SRC,{cache:'force-cache'}).then(r=>{
-    if(!r.ok)throw new Error('holo fetch failed');
-    return r.blob();
-  }).then(blob=>{
-    if(holoBlobUrl)URL.revokeObjectURL(holoBlobUrl);
-    holoBlobUrl=URL.createObjectURL(blob);
-    const v=$('holo-video');
-    if(v&&v.getAttribute('src')!==holoBlobUrl)v.src=holoBlobUrl;
-    return holoBlobUrl;
-  }).catch(()=>null);
+  holoFetchPromise=fetch(HOLO_VIDEO_SRC,{cache:'force-cache'}).then(r=>r.ok).catch(()=>false);
   return holoFetchPromise;
+}
+function bindHoloVideoEvents(){
+  const v=$('holo-video');if(!v||holoVideoBound)return;
+  holoVideoBound=true;
+  v.addEventListener('playing',()=>{
+    markHoloPlaying();
+    const s=$('holo-scan');if(s)s.textContent='● LIVE FEED';
+  });
+  v.addEventListener('waiting',()=>{
+    const s=$('holo-scan');if(s&&!v.classList.contains('is-playing'))s.textContent='● BUFFERING…';
+  });
+  v.addEventListener('error',()=>{
+    v.classList.remove('is-playing');
+    const s=$('holo-scan');if(s)s.textContent='● TAP TO RESTORE FEED';
+  });
 }
 function primeHudScreen(){
   const hud=$('screen-hud');if(!hud)return;
@@ -866,22 +878,25 @@ function waitForHoloReady(v,ms=2500){
 }
 async function ensureHudVideoPlaying(){
   const v=$('holo-video');if(!v)return false;
+  bindHoloVideoEvents();
   if(holoPlayPromise)return holoPlayPromise;
   holoPlayPromise=(async()=>{
     primeHudScreen();
     await fetchHoloAsset();
+    if(!v.src||!v.src.includes('eva01-visuals'))v.src=HOLO_VIDEO_SRC;
     v.loop=true;v.muted=true;v.defaultMuted=true;v.playsInline=true;
     v.setAttribute('playsinline','');v.setAttribute('webkit-playsinline','');
     v.autoplay=true;
     if(v.networkState===HTMLMediaElement.NETWORK_EMPTY||v.readyState<1)v.load();
-    await waitForHoloReady(v);
-    for(let i=0;i<16;i++){
+    await waitForHoloReady(v,4000);
+    for(let i=0;i<20;i++){
       try{
         await v.play();
         if(!v.paused){markHoloPlaying();return true}
-      }catch(_){await wait(90)}
+      }catch(_){await wait(120)}
       if(v.readyState<2)v.load();
     }
+    const s=$('holo-scan');if(s)s.textContent='● TAP TO RESTORE FEED';
     return !v.paused;
   })().finally(()=>{holoPlayPromise=null});
   return holoPlayPromise;
@@ -1873,7 +1888,11 @@ runStartupSequence().then(async ()=>{
   setInterval(syncOura,REFRESH_MS);
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)maintainHudVideo()});
-document.addEventListener('pointerdown',()=>{fetchHoloAsset();primeHudScreen();ensureHudVideoPlaying()},{once:true,passive:true});
+document.addEventListener('pointerdown',()=>{
+  if(screen==='hud'||bootOn||holoVideoPrimed){fetchHoloAsset();ensureHudVideoPlaying()}
+},{passive:true});
+document.querySelector('.holo-panel')?.addEventListener('click',()=>ensureHudVideoPlaying());
+bindHoloVideoEvents();
 </script>
 </body>
 </html>
