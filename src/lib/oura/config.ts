@@ -20,3 +20,12 @@ export function ouraConfigured(): { oauth: boolean; pat: boolean } {
     pat: Boolean(ouraConfig.personalAccessToken),
   };
 }
+
+/** Canonical app origin for post-OAuth redirects (matches registered redirect URI host). */
+export function ouraAppOrigin(): string {
+  try {
+    return new URL(ouraConfig.redirectUri).origin;
+  } catch {
+    return 'http://localhost:3000';
+  }
+}

@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import type { NextResponse } from 'next/server';
 import { refreshAccessToken } from './oauth';
 
 const TOKEN_COOKIE = 'oura_access_token';
@@ -13,6 +14,23 @@ function cookieOpts(maxAge: number) {
     path: '/',
     maxAge,
   };
+}
+
+/** Attach Oura tokens to a Route Handler response (preferred for OAuth callback). */
+export function attachOuraTokens(
+  res: NextResponse,
+  access: string,
+  refresh?: string,
+  expiresIn?: number,
+): void {
+  res.cookies.set(TOKEN_COOKIE, access, cookieOpts(60 * 60 * 24 * 30));
+  if (refresh) {
+    res.cookies.set(REFRESH_COOKIE, refresh, cookieOpts(60 * 60 * 24 * 90));
+  }
+  if (expiresIn) {
+    const expiresAt = Math.floor(Date.now() / 1000) + expiresIn - 120;
+    res.cookies.set(EXPIRES_COOKIE, String(expiresAt), cookieOpts(60 * 60 * 24 * 90));
+  }
 }
 
 export async function getOuraToken(): Promise<string | null> {

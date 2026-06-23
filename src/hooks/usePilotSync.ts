@@ -5,7 +5,7 @@ import { DEFAULT_PILOT_STATE, type PilotState } from '@/types/pilot';
 import { loadKneeLog, loadNutritionLog } from '@/lib/fallbacks/manual';
 import { appendHistory, loadHistory, type HistoryPoint } from '@/lib/trends/history';
 
-const REFRESH_MS = 5 * 60 * 1000; // 5 min near-real-time
+const REFRESH_MS = 60 * 1000; // 60s — matches cinematic HUD auto-sync
 
 function mergeManual(base: PilotState): PilotState {
   return {
@@ -26,7 +26,7 @@ export function usePilotSync() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/oura/sync', { cache: 'no-store' });
+      const res = await fetch('/api/oura/sync', { cache: 'no-store', credentials: 'same-origin' });
       const data = await res.json();
       if (data.pilot) {
         const merged = mergeManual(data.pilot as PilotState);

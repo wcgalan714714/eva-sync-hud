@@ -1622,7 +1622,10 @@ function handleOAuthReturn(){
   url.searchParams.delete('oura');
   history.replaceState({},'',url.pathname+(url.search||''));
   if(status==='connected'){cascadeAlert('OURA LINK ESTABLISHED','ok');syncOura()}
-  else if(status==='error')cascadeAlert('OURA AUTH FAILED','warn');
+  else if(status==='error'){
+    const reason=p.get('reason');
+    cascadeAlert(reason?`OURA AUTH FAILED: ${decodeURIComponent(reason).slice(0,36)}`:'OURA AUTH FAILED','warn');
+  }
 }
 async function handleOuraBadge(){
   if(syncing)return;
@@ -1747,7 +1750,7 @@ function toggleCard(id){
 async function syncOura(){
   if(syncing)return;syncing=true;updateOuraBadge();document.querySelectorAll('.hcard').forEach(c=>c.classList.add('syncing'));
   try{
-    const res=await fetch('/api/oura/sync',{cache:'no-store'});
+    const res=await fetch('/api/oura/sync',{cache:'no-store',credentials:'same-origin'});
     const data=await res.json();
     if(data.trend)mergeOuraTrend(data.trend);
     if(data.pilot){pilot={...pilot,...data.pilot};loadManualLogs();applyPilotToState();appendHistory(pilot.vitals)}

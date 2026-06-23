@@ -32,7 +32,8 @@ export async function exchangeCodeForToken(code: string): Promise<{
   });
 
   if (!res.ok) {
-    throw new Error(`Oura token exchange failed: ${res.status}`);
+    const detail = await res.text().catch(() => '');
+    throw new Error(`Oura token exchange failed: ${res.status}${detail ? ` — ${detail.slice(0, 120)}` : ''}`);
   }
   return res.json();
 }
@@ -57,7 +58,8 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
   });
 
   if (!res.ok) {
-    throw new Error(`Oura token refresh failed: ${res.status}`);
+    const detail = await res.text().catch(() => '');
+    throw new Error(`Oura token refresh failed: ${res.status}${detail ? ` — ${detail.slice(0, 120)}` : ''}`);
   }
   return res.json();
 }

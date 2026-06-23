@@ -16,7 +16,7 @@ export async function GET() {
     return NextResponse.json({
       pilot: DEFAULT_PILOT_STATE,
       connected: false,
-      message: 'No Oura token. Connect via /api/oura/auth or set OURA_PERSONAL_ACCESS_TOKEN.',
+      message: 'No Oura session. Tap ○ CONNECT on the HUD or visit /api/oura/auth.',
     });
   }
 
