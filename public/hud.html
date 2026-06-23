@@ -74,6 +74,9 @@
   @keyframes dramw{0%{opacity:0;transform:scale(1.6) skewX(-6deg)}40%{opacity:1;transform:scale(1) skewX(2deg)}100%{opacity:0;transform:scale(.9)}}
   #app:has(.screen.active) .noise{opacity:.02}
   #app:has(.screen.active) .scanlines{opacity:.05}
+  #app.startup-mode .noise,#app.startup-mode .scanlines,#app.startup-mode #fui-global,
+  #app.startup-mode #fx-cut,#app.startup-mode .impact-bar{display:none!important}
+  #app.startup-mode .flash,#app.startup-mode .chroma,#app.startup-mode .vhs{opacity:0!important;visibility:hidden;pointer-events:none}
   #app:has(#screen-hud.active) .scanlines{animation:none;opacity:.035}
   #app:has(#screen-hud.active) .noise{animation:none;opacity:.015}
   #alert-cascade{position:absolute;top:8%;right:1%;width:28%;z-index:86;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
@@ -108,10 +111,8 @@
   .land-boot .t{font-size:clamp(14px,4vmin,18px);letter-spacing:6px;color:var(--orange-bright);text-shadow:0 0 16px var(--orange)}
   .land-boot .s{font-size:clamp(9px,2.5vmin,11px);letter-spacing:4px;color:var(--green-neon);opacity:.9}
   .land-boot.hide{display:none}
-  #opening-canvas{display:none}
-
-  /* PART 1 — StartUp MP4 fullscreen */
-  #screen-startup{background:#000;z-index:4}
+  /* PART 1 — StartUp MP4 only */
+  #screen-startup{background:#000;z-index:95}
   #screen-startup .startup-video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;background:#000;
     pointer-events:none;-webkit-tap-highlight-color:transparent}
   #screen-startup .startup-video::-webkit-media-controls{display:none!important}
@@ -119,9 +120,6 @@
   #screen-startup .startup-video::-webkit-media-controls-start-playback-button{display:none!important}
   #screen-startup .startup-video::-webkit-media-controls-overlay-play-button{display:none!important}
   #screen-startup.xfade-out{opacity:0!important;transition:opacity .5s ease}
-  .opening-word{position:absolute;font-size:clamp(24px,7vmin,36px);font-weight:900;color:#fff;opacity:0;z-index:26;letter-spacing:.2em;
-    text-shadow:0 0 30px var(--purple);animation:ow .12s ease-out forwards}
-  @keyframes ow{0%{opacity:0;transform:scale(1.5)}30%{opacity:1}100%{opacity:0;transform:scale(.8)}}
   #land-angel{display:none}
 
   /* LANDING — Meta Display Glasses full canvas */
@@ -403,7 +401,7 @@
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" class="startup-mode">
   <div class="noise"></div>
   <div class="scanlines" id="scanlines"></div>
   <div class="chroma" id="chroma"></div>
@@ -432,8 +430,7 @@
 
   <!-- PART 2: Engage pilot interface / feed grid -->
   <div id="screen-landing" class="screen" style="display:none">
-    <canvas id="opening-canvas" width="600" height="600"></canvas>
-    <div class="land-boot" id="land-boot">
+    <div class="land-boot hide" id="land-boot">
       <div class="t nge-type">NERV COMMAND</div>
       <div class="s nge-flicker" id="land-boot-status">INITIALIZING LIVE FEEDS...</div>
     </div>
@@ -755,7 +752,6 @@ function syncCanvas(cv){
 }
 function syncAllCanvases(){
   syncCanvas($('fui-micro'));
-  syncCanvas($('opening-canvas'));
   syncCanvas($('ack-bg'));
   syncCanvas($('ack-crosshair'));
   document.querySelectorAll('.feed canvas,.boot-canvas,#boot-magi-cv,#hud-wv,.hcard-cv').forEach(syncCanvas);
@@ -908,9 +904,12 @@ async function playStartupVideo(video){
   return !video.paused;
 }
 async function runStartupSequence(){
-  syncAllCanvases();
   EvaAudio.stopIntro();
-  const startupEl=$('screen-startup'),landEl=$('screen-landing'),video=$('startup-video');
+  const app=$('app'),startupEl=$('screen-startup'),landEl=$('screen-landing'),video=$('startup-video');
+  app?.classList.add('startup-mode');
+  document.querySelectorAll('.screen').forEach(s=>{
+    if(s!==startupEl){s.classList.remove('active');s.style.display='none'}
+  });
   startupEl.style.display='block';
   startupEl.classList.add('active');
   startupEl.classList.remove('xfade-out');
@@ -930,9 +929,11 @@ async function runStartupSequence(){
   }
   startupEl.classList.remove('active','xfade-out');
   startupEl.style.display='none';
+  app?.classList.remove('startup-mode');
   landEl.style.display='block';
   landEl.classList.add('active');
   screen='landing';
+  syncAllCanvases();
 }
 
 async function runBootToHudTransition(){
@@ -1685,7 +1686,7 @@ function tick(){
     mc.fillStyle=NGE.bg;mc.fillRect(0,0,mw,mh);drawNgeGrid(mc,mw,mh,.04);
     drawGaussCurve(mc,mw,mh*.25,frame);drawCrosshair(mc,mw,mh,frame,.9)}
   }
-  const fui=$('fui-micro');if(fui)drawFuiMicro(fui.getContext('2d'),fui.width,fui.height,animT(),screen);
+  const fui=$('fui-micro');if(fui&&screen!=='startup')drawFuiMicro(fui.getContext('2d'),fui.width,fui.height,animT(),screen);
   if(screen==='hud'){
     const d=state.sync-displaySync;
     if(Math.abs(d)>.2)displaySync+=d*.45;else displaySync=state.sync;
