@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>EVA SYNC HUD</title>
+<link rel="preload" as="video" href="/assets/motion/eva01-visuals.mp4" type="video/mp4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
@@ -209,6 +210,9 @@
     animation:hz 1.2s linear infinite}
   #screen-ack .hazard.top{top:8%}.hazard.bot{bottom:0}
   @keyframes hz{to{background-position:22px 0}}
+  #screen-ack .ack-btn,#screen-ack .ack-jp-bar{display:none!important}
+  #screen-ack.ack-transition-active{z-index:5}
+  #screen-ack.ack-xfade-out{opacity:0!important;transition:opacity .4s ease;pointer-events:none}
 
   /* BOOT — reference MP4 only */
   #screen-boot{background:#000;z-index:3}
@@ -584,6 +588,7 @@ const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY 
 const OPENING_FLASH=['DNA','ANGEL','SYNC','MAGI','AT FIELD','初号機','CROSS','LCL','NERV','LINK'];
 const BOOT_DURATION_MS=3000;
 const BOOT_PLAYBACK_RATE=2.38;
+const ACK_TRANSITION_MS=1000;
 const HUD_XFADE_MS=500;
 const EvaAudio=(()=>{
   const intro=document.getElementById('eva-intro-audio')||new Audio('/assets/sound/eva-ui-sound.mp3');
@@ -723,12 +728,21 @@ function syncAllCanvases(){
   syncCanvas($('ack-crosshair'));
   document.querySelectorAll('.feed canvas,.boot-canvas,#boot-magi-cv,#hud-wv,.hcard-cv').forEach(syncCanvas);
 }
+function preloadHudVideo(){
+  const v=$('holo-video');if(!v)return;
+  v.preload='auto';
+  if(v.readyState<1)v.load();
+}
 function startHudVideo(){
   const v=$('holo-video');if(!v)return;
   v.loop=true;v.muted=true;v.playbackRate=1;
   const play=()=>v.play().catch(()=>{v.muted=true;v.play().catch(()=>{})});
   if(v.readyState>=2)play();
-  else v.addEventListener('loadeddata',play,{once:true});
+  else{
+    v.addEventListener('canplay',play,{once:true});
+    v.addEventListener('loadeddata',play,{once:true});
+    if(v.networkState===HTMLMediaElement.NETWORK_EMPTY)v.load();
+  }
 }
 function stopHudVideo(){
   const v=$('holo-video');if(v){v.pause();v.currentTime=0}
@@ -746,13 +760,14 @@ function enableEngage(){
   btn.textContent='▶ ENGAGE PILOT INTERFACE — ENTER / CLICK';
 }
 
-function goToAck(){
+function engagePilot(){
   if(!landReady||transitioning||screen!=='landing')return;
   EvaAudio.unlock();
-  EvaAudio.maintainAmbient();
   EvaAudio.pingAmbient();
   cascadeAlert('PILOT INTERFACE ENGAGED','ok');
-  hardTo('ack','#E60012');
+  flash('rgba(255,107,0,.28)');
+  preloadHudVideo();
+  runBootSequence();
 }
 
 function flash(c='#fff'){const f=$('flash');f.style.background=c;f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
@@ -785,23 +800,40 @@ async function showBoot(){
   await wait(40);transitioning=false;
 }
 
-async function transitionBootToHud(){
+async function runAckTransition(){
   if(transitioning)return;transitioning=true;
-  const bootEl=$('screen-boot'),hudEl=$('screen-hud');
+  preloadHudVideo();
+  const bootEl=$('screen-boot'),ackEl=$('screen-ack'),hudEl=$('screen-hud');
+  bootEl.classList.remove('active','xfade-out');bootEl.style.display='none';
+  document.querySelectorAll('.screen').forEach(s=>{
+    if(s!==ackEl&&s!==hudEl){s.classList.remove('active','slam','xfade-out','xfade-in','xfade-prep');s.style.display='none'}
+  });
   hudEl.style.display='block';
   hudEl.classList.add('active','xfade-prep');
   hudEl.classList.remove('xfade-in','slam');
-  screen='hud';
-  requestAnimationFrame(()=>{syncAllCanvases();void hudEl.offsetWidth});
-  await wait(16);
-  bootEl.classList.add('xfade-out');
+  startHudVideo();
+  ackEl.style.display='block';
+  ackEl.classList.remove('ack-xfade-out');
+  ackEl.classList.add('active','slam','ack-transition-active');
+  screen='ack';
+  ackT0=performance.now();
+  $('scanlines').classList.add('hot');
+  flash('rgba(230,0,18,.38)');
+  impact(42);
+  dramaFlash('BATTLE',true);
+  cascadeAlert('BATTLE STATIONS — CONDITIONS ONE','warn');
+  requestAnimationFrame(syncAllCanvases);
+  await wait(ACK_TRANSITION_MS);
+  ackEl.classList.add('ack-xfade-out');
   hudEl.classList.remove('xfade-prep');
   hudEl.classList.add('xfade-in');
+  screen='hud';
+  startHudVideo();
   await wait(HUD_XFADE_MS);
-  bootEl.classList.remove('active','xfade-out');bootEl.style.display='none';
-  document.querySelectorAll('.screen').forEach(s=>{if(s!==hudEl){s.classList.remove('active','slam');s.style.display='none'}});
+  ackEl.classList.remove('active','slam','ack-transition-active','ack-xfade-out');
+  ackEl.style.display='none';
   hudEl.classList.remove('xfade-in','xfade-prep');
-  bootEl.classList.remove('xfade-out');
+  $('scanlines').classList.remove('hot');
   startHudVideo();
   transitioning=false;
 }
@@ -1285,8 +1317,10 @@ function buildDom(){
 }
 
 async function runBootSequence(){
+  if(transitioning||bootOn)return;
   bootOn=true;
   EvaAudio.unlock();
+  preloadHudVideo();
   await EvaAudio.fadeOutAmbient();
   await showBoot();
   const video=$('boot-video');
@@ -1315,7 +1349,7 @@ async function runBootSequence(){
   EvaAudio.stopBoot();
   EvaAudio.resetBootAudioRate();
   if(video){video.pause();video.currentTime=0;video.playbackRate=1}
-  await transitionBootToHud();
+  await runAckTransition();
   updateHud(true);
 }
 
@@ -1326,7 +1360,7 @@ async function skipBoot(){
   if(video){video.pause();video.currentTime=0;video.playbackRate=1}
   EvaAudio.stopBoot();
   EvaAudio.resetBootAudioRate();
-  await transitionBootToHud();
+  await runAckTransition();
   updateHud(true);
 }
 
@@ -1518,7 +1552,6 @@ function tick(){
   frame++;
   dataFrame+=isAnimFast()?1:DATA_RATE;
   if(screen==='landing'){tickLandingFeeds();if(landReady)EvaAudio.maintainAmbient()}
-  if(screen==='ack')EvaAudio.maintainAmbient();
   if(sysBoot){
     sysLevels=sysLevels.map((v,i)=>Math.min(1,v+.04+Math.sin(frame*.08+i)*.02));
     segLevels=segLevels.map((v,i)=>Math.min(1,v+.03+Math.sin(frame*.07+i)*.03));
@@ -1570,14 +1603,12 @@ function tick(){
   requestAnimationFrame(tick);
 }
 
-$('engage-btn').addEventListener('click',()=>{EvaAudio.unlock();goToAck()});
-$('engage-btn').addEventListener('touchend',e=>{e.preventDefault();goToAck()});
-$('ack-btn').addEventListener('click',()=>{EvaAudio.unlock();runBootSequence()});
+$('engage-btn').addEventListener('click',()=>{EvaAudio.unlock();engagePilot()});
+$('engage-btn').addEventListener('touchend',e=>{e.preventDefault();engagePilot()});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&bootOn){e.preventDefault();skipBoot();return}
   if(e.key!=='Enter'&&e.key!==' ')return;
-  if(screen==='landing'){e.preventDefault();goToAck()}
-  else if(screen==='ack'){e.preventDefault();runBootSequence()}
+  if(screen==='landing'&&landReady){e.preventDefault();engagePilot()}
   else if(screen==='hud'){e.preventDefault();logProtein()}
 });
 $('g-core').onclick=()=>{if(screen==='hud')logProtein()};
@@ -1589,7 +1620,7 @@ $('hud-deck')?.addEventListener('click',e=>{
 
 buildDom();loadState();loadManualLogs();applyPilotToState();healthAnim=computeHealthAnim(pilot.vitals);
 applyHealthAnim();updateHealthCards();renderHudLive();updateOuraBadge();
-syncAllCanvases();
+preloadHudVideo();syncAllCanvases();
 let resizeT;window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(syncAllCanvases,80)});
 requestAnimationFrame(tick);
 runOpeningMontage().then(()=>{syncAllCanvases();bootLandingFeeds()});
