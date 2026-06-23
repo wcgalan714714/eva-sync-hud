@@ -36,3 +36,28 @@ export async function exchangeCodeForToken(code: string): Promise<{
   }
   return res.json();
 }
+
+export async function refreshAccessToken(refreshToken: string): Promise<{
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  token_type: string;
+}> {
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: ouraConfig.clientId,
+    client_secret: ouraConfig.clientSecret,
+  });
+
+  const res = await fetch(ouraConfig.tokenUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+
+  if (!res.ok) {
+    throw new Error(`Oura token refresh failed: ${res.status}`);
+  }
+  return res.json();
+}

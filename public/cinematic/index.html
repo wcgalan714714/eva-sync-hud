@@ -529,37 +529,37 @@
     <div class="oura-badge mock" id="oura-badge" title="Tap to connect Oura or sync">○ CONNECT</div>
     <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • LIVE SYSTEM CHECK ACTIVE</div>
     <div class="hud-deck" id="hud-deck">
-      <div class="hcard live ok" data-card="neural">
-        <div class="hcard-hd">NEURAL<span class="jp">神経</span></div>
-        <div class="hcard-val good" id="card-neural-val">72</div>
-        <div class="hcard-sub" id="card-neural-sub">HRV — · RHR —</div>
-        <canvas class="hcard-cv" id="card-neural-cv" width="112" height="28"></canvas>
+      <div class="hcard live ok" data-card="readiness">
+        <div class="hcard-hd">READY<span class="jp">準備</span></div>
+        <div class="hcard-val good" id="card-readiness-val">72</div>
+        <div class="hcard-sub" id="card-readiness-sub">HRV — · RHR — · TEMP —</div>
+        <canvas class="hcard-cv" id="card-readiness-cv" width="112" height="28"></canvas>
         <div class="hcard-pulse"></div>
-        <div class="hcard-detail" id="card-neural-detail"></div>
+        <div class="hcard-detail" id="card-readiness-detail"></div>
       </div>
       <div class="hcard live" data-card="sleep">
         <div class="hcard-hd">SLEEP<span class="jp">睡眠</span></div>
         <div class="hcard-val" id="card-sleep-val">—</div>
-        <div class="hcard-sub" id="card-sleep-sub">RECOVERY —</div>
+        <div class="hcard-sub" id="card-sleep-sub">—h · SCORE —</div>
         <canvas class="hcard-cv" id="card-sleep-cv" width="112" height="28"></canvas>
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-sleep-detail"></div>
       </div>
-      <div class="hcard live" data-card="strain">
-        <div class="hcard-hd">STRAIN<span class="jp">負荷</span></div>
-        <div class="hcard-val" id="card-strain-val">—</div>
-        <div class="hcard-sub" id="card-strain-sub">STEPS —</div>
-        <canvas class="hcard-cv" id="card-strain-cv" width="112" height="28"></canvas>
+      <div class="hcard live" data-card="activity">
+        <div class="hcard-hd">LOAD<span class="jp">活動</span></div>
+        <div class="hcard-val" id="card-activity-val">—</div>
+        <div class="hcard-sub" id="card-activity-sub">— steps · —m active</div>
+        <canvas class="hcard-cv" id="card-activity-cv" width="112" height="28"></canvas>
         <div class="hcard-pulse"></div>
-        <div class="hcard-detail" id="card-strain-detail"></div>
+        <div class="hcard-detail" id="card-activity-detail"></div>
       </div>
-      <div class="hcard live" data-card="nutr">
-        <div class="hcard-hd">NUTR<span class="jp">栄養</span></div>
-        <div class="hcard-val" id="card-nutr-val">—</div>
-        <div class="hcard-sub" id="card-nutr-sub">HYD —%</div>
-        <canvas class="hcard-cv" id="card-nutr-cv" width="112" height="28"></canvas>
+      <div class="hcard live" data-card="coretemp">
+        <div class="hcard-hd">TEMP<span class="jp">体温</span></div>
+        <div class="hcard-val" id="card-coretemp-val">—</div>
+        <div class="hcard-sub" id="card-coretemp-sub">CORE DEVIATION</div>
+        <canvas class="hcard-cv" id="card-coretemp-cv" width="112" height="28"></canvas>
         <div class="hcard-pulse"></div>
-        <div class="hcard-detail" id="card-nutr-detail"></div>
+        <div class="hcard-detail" id="card-coretemp-detail"></div>
       </div>
       <div class="hcard live" data-card="trend">
         <div class="hcard-hd">TREND<span class="jp">推移</span></div>
@@ -695,13 +695,13 @@ const DATA_RATE=0.18;
 const live={at:1.02,pulse:72,reserve:87.3,border:.12,magi:[94,91,88],collapse:223.2};
 const holoImg=new Image();holoImg.src='/assets/mainmenuEVAholo.jpg';
 const KNEE_KEY='eva_knee_log',NUTRITION_KEY='eva_nutrition_log',HISTORY_KEY='eva_pilot_history';
-const REFRESH_MS=90*1000;
+const REFRESH_MS=60*1000;
 let pilot={
   source:'mock',status:'nominal',lastSync:null,ouraConnected:false,alerts:[],
-  vitals:{readiness:72,hrvMs:42,rhrBpm:58,tempDeviation:.1,stressScore:28,recoveryHigh:42,sleepScore:78,sleepHours:7.2,strainScore:45,steps:6200,activeCalories:320},
+  vitals:{readiness:72,hrvMs:42,hrvBalance:72,rhrBpm:58,tempDeviation:.1,stressScore:28,recoveryHigh:42,sleepScore:78,sleepHours:7.2,strainScore:45,steps:6200,activeMinutes:48,activeCalories:320},
   knee:null,nutrition:{date:new Date().toISOString().slice(0,10),proteinG:1240,fastingHours:14,hydrationPct:87}
 };
-let expandedCard=null,ouraConnected=false,syncing=false,lastSyncPulse=0;
+let expandedCard=null,ouraConnected=false,syncing=false,lastSyncPulse=0,trendMetric='readiness';
 let holoBlobUrl=null,holoFetchPromise=null,holoVideoPrimed=false,holoPlayPromise=null;
 let healthAnim=computeHealthAnim(pilot.vitals);
 const HOLO_PARTS=[
@@ -1500,12 +1500,13 @@ function appendHistory(v){
 function mergeOuraTrend(trend){
   if(!trend?.readiness?.length)return;
   const sleepByDay=Object.fromEntries((trend.sleep||[]).map(s=>[s.day,s.score]));
+  const hrvByDay=Object.fromEntries((trend.hrv||[]).filter(h=>h.hrvMs!=null).map(h=>[h.day,h.hrvMs]));
   const rows=trend.readiness.filter(r=>r.score!=null).sort((a,b)=>b.day.localeCompare(a.day)).slice(0,14);
   if(!rows.length)return;
   const hist=rows.map(r=>({
     at:r.day+'T12:00:00.000Z',
     readiness:r.score,
-    hrvMs:null,
+    hrvMs:hrvByDay[r.day]??null,
     sleepScore:sleepByDay[r.day]??null,
     strainScore:null
   }));
@@ -1527,7 +1528,7 @@ function renderHudSub(){
   const el=$('hud-sub'),v=pilot.vitals;if(!el)return;
   if(ouraConnected){
     const syncTxt=pilot.lastSync?new Date(pilot.lastSync).toLocaleTimeString():'—';
-    el.textContent=`OURA LIVE · HRV ${v.hrvMs??'—'}ms · RHR ${v.rhrBpm??'—'} · STRESS ${v.stressScore??'—'} · SYNC ${syncTxt}`;
+    el.textContent=`OURA LIVE · READY ${v.readiness??'—'}% · HRV ${v.hrvMs??'—'} · TEMP ${fmtTemp(v.tempDeviation)} · ${syncTxt}`;
     el.style.color='rgba(0,255,159,.85)';
   }else{
     el.textContent='PILOT: IKARI SHINJI · TAP ○ CONNECT FOR OURA TELEMETRY';
@@ -1569,12 +1570,19 @@ async function handleOuraBadge(){
 }
 function setShellGlitch(on){$('app').classList.toggle('shell-glitch',on)}
 function valClass(n,good=70,warn=55){return n>=good?'good':n<warn?'bad':''}
+function fmtTemp(dev){if(dev==null||dev===undefined)return'—';return(dev>=0?'+':'')+Number(dev).toFixed(2)+'°'}
+function tempClass(dev){if(dev==null)return'';const a=Math.abs(dev);return a<=.2?'good':a>=.5?'bad':''}
 function drawTrendChart(ctx,w,h,metric='readiness'){
   if(!ctx)return;ctx.clearRect(0,0,w,h);ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);
   let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
   if(!hist.length){ctx.fillStyle='#5A5A6E';ctx.font='5px monospace';ctx.fillText('SYNC…',4,h/2);return}
   const pts=hist.slice(0,7).reverse(),n=pts.length,pad=2;
-  const vals=pts.map(p=>p[metric]??p.readiness??0),max=100,min=0;
+  const vals=pts.map(p=>{
+    const raw=p[metric]??p.readiness??0;
+    return metric==='hrvMs'?(raw??0):raw;
+  });
+  const max=metric==='hrvMs'?(vals.length?Math.max(60,...vals)+5:80):100;
+  const min=metric==='hrvMs'?(vals.length?Math.max(0,Math.min(...vals)-5):0):0;
   ctx.strokeStyle=NGE.green;ctx.lineWidth=1;ctx.beginPath();
   pts.forEach((p,i)=>{const v=vals[i],x=pad+i*((w-pad*2)/Math.max(1,n-1)),y=h-2-((v-min)/(max-min))*(h-4);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
   ctx.stroke();
@@ -1584,7 +1592,7 @@ function drawCardSpark(id,ft){
   const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
   ctx.clearRect(0,0,w,h);ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(0,0,w,h);
   const card=id.replace('card-','').replace('-cv','');
-  if(card==='neural'){
+  if(card==='readiness'){
     const spd=.12*ha.waveSpeed;
     ctx.strokeStyle=ha.stressN>.5?NGE.red:NGE.greenS;ctx.lineWidth=1;ctx.beginPath();
     for(let x=0;x<w;x++){const t=x*.2+ft*spd;const y=h/2+Math.sin(t)*(3+ha.stressN*4);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
@@ -1594,79 +1602,72 @@ function drawCardSpark(id,ft){
     ctx.strokeStyle=NGE.purple;ctx.beginPath();
     for(let x=0;x<w;x++){const t=x*.15+ft*spd;const y=h/2+Math.sin(t)*2.5*(ha.sleepN+.3);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
     ctx.stroke();
-  }else if(card==='strain'){
+  }else if(card==='activity'){
     ctx.fillStyle=NGE.orange;
     for(let i=0;i<5;i++){const bh=(v.strainScore??40)/100*(h-2)*(.4+i*.12);ctx.fillRect(2+i*13,h-bh-1,8,bh)}
-  }else if(card==='nutr'){
-    const fill=(pilot.nutrition?.hydrationPct??state.hydration)/100;
-    ctx.fillStyle=NGE.cyan;ctx.fillRect(2,h-3,w-4,2);
-    ctx.fillStyle=NGE.greenS;ctx.fillRect(2,h-3,(w-4)*fill,2);
+  }else if(card==='coretemp'){
+    const dev=v.tempDeviation??0,norm=Math.min(1,Math.abs(dev)/.8);
+    const cx=w/2,cy=h/2,r=Math.min(w,h)*.35;
+    ctx.strokeStyle=norm>=.5?NGE.red:NGE.cyan;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle=norm>=.5?'rgba(230,0,18,.35)':'rgba(0,229,255,.25)';ctx.beginPath();ctx.arc(cx,cy,r*norm*.85,0,Math.PI*2);ctx.fill();
   }else if(card==='trend'){
-    drawTrendChart(ctx,w,h,'readiness');
+    drawTrendChart(ctx,w,h,trendMetric);
   }
 }
 function fillCardDetails(){
   const v=pilot.vitals;
   const D={
-    neural:`<div class="row"><span>READINESS (SYNC)</span><span class="v">${v.readiness??'—'}%</span></div>
+    readiness:`<div class="row"><span>READINESS</span><span class="v">${v.readiness??'—'}%</span></div>
       <div class="row"><span>HRV</span><span class="v">${v.hrvMs??'—'}ms</span></div>
+      <div class="row"><span>HRV BALANCE</span><span class="v">${v.hrvBalance??'—'}</span></div>
       <div class="row"><span>RHR</span><span class="v">${v.rhrBpm??'—'}bpm</span></div>
-      <div class="row"><span>STRESS</span><span class="v">${v.stressScore??'—'}</span></div>
-      <div class="row"><span>TEMP Δ</span><span class="v">${v.tempDeviation??'—'}</span></div>`,
+      <div class="row"><span>TEMP Δ</span><span class="v">${fmtTemp(v.tempDeviation)}</span></div>`,
     sleep:`<div class="row"><span>SLEEP SCORE</span><span class="v">${v.sleepScore??'—'}</span></div>
-      <div class="row"><span>HOURS</span><span class="v">${v.sleepHours??'—'}h</span></div>
+      <div class="row"><span>DURATION</span><span class="v">${v.sleepHours??'—'}h</span></div>
       <div class="row"><span>RECOVERY HIGH</span><span class="v">${v.recoveryHigh??'—'}</span></div>
-      <div class="row"><span>LCL DENSITY</span><span class="v">${state.lcl.toFixed(1)}</span></div>
-      <div class="row"><span>STATUS</span><span class="v">${(v.readiness??0)>=70?'NOMINAL':'RECOVER'}</span></div>`,
-    strain:`<div class="row"><span>STRAIN</span><span class="v">${v.strainScore??'—'}</span></div>
+      <div class="row"><span>LCL DENSITY</span><span class="v">${state.lcl.toFixed(1)}</span></div>`,
+    activity:`<div class="row"><span>ACTIVITY LOAD</span><span class="v">${v.strainScore??'—'}</span></div>
       <div class="row"><span>STEPS</span><span class="v">${v.steps?.toLocaleString?.()??'—'}</span></div>
-      <div class="row"><span>ACTIVE CAL</span><span class="v">${v.activeCalories??'—'}</span></div>
-      <div class="row"><span>KNEE</span><span class="v">${pilot.knee?`P${pilot.knee.pain}/10 M${pilot.knee.mobility}%`:'—'}</span></div>
-      PAIN <input type="range" id="knee-pain" min="0" max="10" value="${pilot.knee?.pain??3}">
-      MOB <input type="range" id="knee-mob" min="0" max="100" value="${pilot.knee?.mobility??80}">
-      <button type="button" id="knee-log-btn">LOG KNEE</button>`,
-    nutr:`<div class="row"><span>PROTEIN</span><span class="v">${pilot.nutrition?.proteinG??state.protein}g</span></div>
-      <div class="row"><span>HYDRATION</span><span class="v">${pilot.nutrition?.hydrationPct??state.hydration}%</span></div>
-      <div class="row"><span>FASTING</span><span class="v">${pilot.nutrition?.fastingHours??'—'}h</span></div>
-      PROTEIN <input type="range" id="nutr-prot" min="0" max="3000" step="10" value="${pilot.nutrition?.proteinG??state.protein}">
-      HYD <input type="range" id="nutr-hyd" min="0" max="100" value="${pilot.nutrition?.hydrationPct??state.hydration}">
-      <button type="button" id="nutr-log-btn">SAVE</button><button type="button" id="nutr-boost-btn">+10g</button>`,
-    trend:`<div class="row"><span>7-DAY READINESS</span><span class="v">${v.readiness??'—'}% now</span></div>
+      <div class="row"><span>ACTIVE TIME</span><span class="v">${v.activeMinutes??'—'}m</span></div>
+      <div class="row"><span>ACTIVE CAL</span><span class="v">${v.activeCalories??'—'}</span></div>`,
+    coretemp:`<div class="row"><span>BODY TEMP Δ</span><span class="v">${fmtTemp(v.tempDeviation)}</span></div>
+      <div class="row"><span>STATUS</span><span class="v">${Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':Math.abs(v.tempDeviation??0)>=.5?'ALERT':'WATCH'}</span></div>
+      <div style="color:var(--muted);margin-top:4px">Oura core temperature deviation from baseline</div>`,
+    trend:`<div class="row"><span>METRIC</span><span class="v">${trendMetric==='hrvMs'?'HRV':'READINESS'}</span></div>
+      <div class="row"><span>CURRENT</span><span class="v">${trendMetric==='hrvMs'?(v.hrvMs??'—')+'ms':(v.readiness??'—')+'%'}</span></div>
       <canvas id="card-trend-detail-cv" width="200" height="36" style="width:100%;margin-top:3px;border:1px solid rgba(142,223,95,.2)"></canvas>
-      <div style="color:var(--muted);margin-top:2px">HRV · SLEEP · STRAIN logged each sync</div>`
+      <button type="button" id="trend-toggle-btn">SWITCH READINESS / HRV</button>`
   };
   Object.keys(D).forEach(k=>{const el=$('card-'+k+'-detail');if(el)el.innerHTML=D[k]});
-  drawTrendChart($('card-trend-detail-cv')?.getContext('2d'),200,36);
+  drawTrendChart($('card-trend-detail-cv')?.getContext('2d'),200,36,trendMetric);
 }
 function handleCardAction(e){
   const t=e.target;if(!t||!t.id)return;
-  if(t.id==='knee-log-btn'){
-    pilot.knee={date:new Date().toISOString().slice(0,10),pain:+$('knee-pain').value,mobility:+$('knee-mob').value};
-    localStorage.setItem(KNEE_KEY,JSON.stringify(pilot.knee));updateHealthCards();flash('#FF6B00');
-  }else if(t.id==='nutr-log-btn'){
-    pilot.nutrition={date:new Date().toISOString().slice(0,10),proteinG:+$('nutr-prot').value,hydrationPct:+$('nutr-hyd').value,fastingHours:pilot.nutrition?.fastingHours??14};
-    localStorage.setItem(NUTRITION_KEY,JSON.stringify(pilot.nutrition));applyPilotToState();updateHud(true);updateHealthCards();
-  }else if(t.id==='nutr-boost-btn'){logProtein();updateHealthCards()}
+  if(t.id==='trend-toggle-btn'){
+    trendMetric=trendMetric==='readiness'?'hrvMs':'readiness';
+    fillCardDetails();updateHealthCards();
+  }
 }
 function updateHealthCards(){
   const v=pilot.vitals;
   healthAnim=computeHealthAnim(v);applyHealthAnim();
-  const n=$('card-neural-val');if(n){n.textContent=Math.round(v.readiness??displaySync);n.className='hcard-val '+valClass(v.readiness??72,75,55)}
-  $('card-neural-sub').textContent=`HRV ${v.hrvMs??'—'}ms · RHR ${v.rhrBpm??'—'}`;
+  const n=$('card-readiness-val');if(n){n.textContent=Math.round(v.readiness??displaySync);n.className='hcard-val '+valClass(v.readiness??72,75,55)}
+  $('card-readiness-sub').textContent=`HRV ${v.hrvMs??'—'} · RHR ${v.rhrBpm??'—'} · ${fmtTemp(v.tempDeviation)}`;
   const sl=$('card-sleep-val');if(sl){sl.textContent=v.sleepScore??'—';sl.className='hcard-val '+valClass(v.sleepScore??0,75,55)}
-  $('card-sleep-sub').textContent=`${v.sleepHours??'—'}h · REC ${v.recoveryHigh??'—'}`;
-  const st=$('card-strain-val');if(st){st.textContent=v.strainScore??'—';st.className='hcard-val'}
-  $('card-strain-sub').textContent=`${v.steps?.toLocaleString?.()??'—'} steps`;
-  const nu=$('card-nutr-val');if(nu){nu.textContent=(pilot.nutrition?.proteinG??state.protein)+'g';nu.className='hcard-val'}
-  $('card-nutr-sub').textContent=`HYD ${pilot.nutrition?.hydrationPct??state.hydration}% · LCL ${state.lcl.toFixed(1)}`;
+  $('card-sleep-sub').textContent=`${v.sleepHours??'—'}h · SCORE ${v.sleepScore??'—'}`;
+  const ac=$('card-activity-val');if(ac){ac.textContent=v.strainScore??'—';ac.className='hcard-val '+valClass(v.strainScore??0,70,45)}
+  $('card-activity-sub').textContent=`${v.steps?.toLocaleString?.()??'—'} steps · ${v.activeMinutes??'—'}m active`;
+  const ct=$('card-coretemp-val');if(ct){ct.textContent=fmtTemp(v.tempDeviation);ct.className='hcard-val '+tempClass(v.tempDeviation)}
+  $('card-coretemp-sub').textContent=Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':'PATTERN CHECK';
   let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
-  const delta=hist.length>=2?hist[0].readiness-hist[1].readiness:0;
-  $('card-trend-val').textContent=(delta>=0?'+':'')+Math.round(delta)||'7D';
-  $('card-trend-sub').textContent=`${hist.length||0} samples`;
+  const metric=trendMetric;
+  const delta=hist.length>=2?(hist[0][metric]??hist[0].readiness)-(hist[1][metric]??hist[1].readiness):0;
+  $('card-trend-val').textContent=hist.length>=2?((delta>=0?'+':'')+Math.round(delta)):'7D';
+  $('card-trend-sub').textContent=metric==='hrvMs'?'HRV 7D':'READY 7D';
   document.querySelectorAll('.hcard').forEach(c=>{
     const k=c.dataset.card;
-    c.classList.toggle('ok',k==='neural'&&(v.readiness??72)>=70||k==='sleep'&&(v.sleepScore??0)>=70);
-    c.classList.toggle('warn',k==='neural'&&(v.readiness??72)<55||k==='sleep'&&(v.sleepScore??0)<55||(k==='strain'&&pilot.knee&&pilot.knee.pain>5));
+    c.classList.toggle('ok',k==='readiness'&&(v.readiness??72)>=70||k==='sleep'&&(v.sleepScore??0)>=70||k==='coretemp'&&Math.abs(v.tempDeviation??0)<=.2);
+    c.classList.toggle('warn',k==='readiness'&&(v.readiness??72)<55||k==='sleep'&&(v.sleepScore??0)<55||k==='coretemp'&&Math.abs(v.tempDeviation??0)>=.5);
     c.classList.toggle('syncing',syncing);
   });
   fillCardDetails();
@@ -1717,7 +1718,7 @@ function updateHud(jump){
   });
   updateHoloBar(displaySync);
   $('hud-ref').innerHTML=`LINK: ${ouraConnected?'OURA LIVE':'MOCK'}<br>LCL: ${state.lcl.toFixed(1)}<br>STRESS: ${pilot.vitals.stressScore??'—'}`;
-  const nv=$('card-neural-val');if(nv)nv.textContent=Math.round(displaySync);
+  const nv=$('card-readiness-val');if(nv)nv.textContent=Math.round(displaySync);
 }
 
 function logProtein(){
@@ -1768,7 +1769,7 @@ function tick(){
     maintainHudVideo();
     if(holoV&&!holoV.paused)markHoloPlaying();
     if(wvCv){syncCanvas(wvCv);drawWave(wvCv.getContext('2d'),wvCv.width,wvCv.height,displaySync/100,false)}
-    ['neural','sleep','strain','nutr','trend'].forEach(c=>drawCardSpark('card-'+c+'-cv',animT()));
+    ['readiness','sleep','activity','coretemp','trend'].forEach(c=>drawCardSpark('card-'+c+'-cv',animT()));
     if(frame%60===0){
       const lb=$('log-b');
       if(lb&&!lb.classList.contains('hit')){

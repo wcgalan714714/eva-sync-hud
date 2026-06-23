@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const tokens = await exchangeCodeForToken(code);
-    await setOuraTokens(tokens.access_token, tokens.refresh_token);
+    await setOuraTokens(tokens.access_token, tokens.refresh_token, tokens.expires_in);
     const res = NextResponse.redirect(new URL('/?oura=connected', req.url));
     res.cookies.delete('oura_oauth_state');
     return res;

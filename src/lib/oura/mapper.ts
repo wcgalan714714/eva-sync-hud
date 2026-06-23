@@ -53,9 +53,15 @@ export function mapOuraToPilot(snapshot: OuraSnapshot, extras?: Partial<PilotSta
       ? Math.round((ss.total_sleep_duration / 3600) * 10) / 10
       : null;
 
+  const activeSeconds =
+    (a?.high_activity_time ?? 0) + (a?.medium_activity_time ?? 0);
+  const activeMinutes =
+    activeSeconds > 0 ? Math.round(activeSeconds / 60) : null;
+
   const vitals: PilotVitals = {
     readiness,
     hrvMs,
+    hrvBalance: hrvContributor,
     rhrBpm: ss?.average_heart_rate ?? avgRestingBpm(snapshot.heartrate),
     tempDeviation: r?.temperature_deviation ?? null,
     stressScore: st?.stress_high ?? null,
@@ -64,6 +70,7 @@ export function mapOuraToPilot(snapshot: OuraSnapshot, extras?: Partial<PilotSta
     sleepHours,
     strainScore: a?.score ?? null,
     steps: a?.steps ?? null,
+    activeMinutes,
     activeCalories: a?.active_calories ?? null,
   };
 

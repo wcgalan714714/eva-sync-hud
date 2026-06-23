@@ -31,6 +31,7 @@ export interface OuraDailyActivity {
   steps: number | null;
   active_calories: number | null;
   high_activity_time?: number | null;
+  medium_activity_time?: number | null;
 }
 
 export interface OuraDailyStress {

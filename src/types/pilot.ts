@@ -23,14 +23,16 @@ export interface NutritionLog {
 export interface PilotVitals {
   readiness: number; // 0–100 → SYNC gauge
   hrvMs: number | null;
+  hrvBalance: number | null; // Oura readiness contributor 0–100
   rhrBpm: number | null;
   tempDeviation: number | null;
   stressScore: number | null;
   recoveryHigh: number | null;
   sleepScore: number | null;
   sleepHours: number | null;
-  strainScore: number | null;
+  strainScore: number | null; // Oura activity score
   steps: number | null;
+  activeMinutes: number | null;
   activeCalories: number | null;
 }
 
@@ -52,6 +54,7 @@ export const DEFAULT_PILOT_STATE: PilotState = {
   vitals: {
     readiness: 72,
     hrvMs: 42,
+    hrvBalance: 72,
     rhrBpm: 58,
     tempDeviation: 0.1,
     stressScore: 28,
@@ -60,6 +63,7 @@ export const DEFAULT_PILOT_STATE: PilotState = {
     sleepHours: 7.2,
     strainScore: 45,
     steps: 6200,
+    activeMinutes: 48,
     activeCalories: 320,
   },
   knee: null,
