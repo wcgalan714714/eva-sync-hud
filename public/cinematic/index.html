@@ -114,22 +114,16 @@
   .land-boot .s{font-size:clamp(9px,2.5vmin,11px);letter-spacing:4px;color:var(--green-neon);opacity:.9}
   .land-boot.hide{display:none}
   #opening-canvas{display:none}
-  #screen-landing .startup-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-    z-index:29;background:#000;pointer-events:none;opacity:1;transition:opacity .5s ease;
-    -webkit-tap-highlight-color:transparent}
-  #screen-landing .startup-video.xfade-out{opacity:0!important}
-  #screen-landing .startup-video::-webkit-media-controls{display:none!important}
-  #screen-landing .startup-video::-webkit-media-controls-enclosure{display:none!important}
-  #screen-landing .startup-video::-webkit-media-controls-start-playback-button{display:none!important}
-  #screen-landing .startup-video::-webkit-media-controls-overlay-play-button{display:none!important}
-  #screen-landing.startup-active .cc-header,#screen-landing.startup-active .land-feed-grid,
-  #screen-landing.startup-active .feed-wave,#screen-landing.startup-active .land-engage,
-  #screen-landing.startup-active .land-fringe,#screen-landing.startup-active .fui-micro-panel,
-  #screen-landing.startup-active #land-angel,#screen-landing.startup-active .split-v,
-  #screen-landing.startup-active .split-h{display:none!important}
-  #screen-landing.startup-active .land-boot{background:transparent;z-index:30;pointer-events:none}
-  #screen-landing.startup-active .land-boot .t,#screen-landing.startup-active .land-boot .s{display:none}
-  #screen-landing:not(.startup-active) .startup-video{display:none!important;visibility:hidden;pointer-events:none}
+
+  /* PART 1 — StartUp MP4 fullscreen */
+  #screen-startup{background:#000;z-index:4}
+  #screen-startup .startup-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;
+    pointer-events:none;-webkit-tap-highlight-color:transparent}
+  #screen-startup .startup-video::-webkit-media-controls{display:none!important}
+  #screen-startup .startup-video::-webkit-media-controls-enclosure{display:none!important}
+  #screen-startup .startup-video::-webkit-media-controls-start-playback-button{display:none!important}
+  #screen-startup .startup-video::-webkit-media-controls-overlay-play-button{display:none!important}
+  #screen-startup.xfade-out{opacity:0!important;transition:opacity .5s ease}
   .opening-word{position:absolute;font-size:clamp(24px,7vmin,36px);font-weight:900;color:#fff;opacity:0;z-index:26;letter-spacing:.2em;
     text-shadow:0 0 30px var(--purple);animation:ow .12s ease-out forwards}
   @keyframes ow{0%{opacity:0;transform:scale(1.5)}30%{opacity:1}100%{opacity:0;transform:scale(.8)}}
@@ -433,13 +427,17 @@
     <div class="sh-label">SYNC LINK ESTABLISHED — PILOT HUD ONLINE</div>
   </div>
 
-  <!-- LANDING: multi live-feed control center -->
-  <div id="screen-landing" class="screen active startup-active">
-    <canvas id="opening-canvas" width="600" height="600"></canvas>
+  <!-- PART 1: StartUp MP4 -->
+  <div id="screen-startup" class="screen active">
     <video id="startup-video" class="startup-video" playsinline webkit-playsinline preload="auto"
       disablepictureinpicture disableremoteplayback
       controlslist="nodownload noplaybackrate noremoteplayback nofullscreen"
       src="/assets/motion/startup.mp4"></video>
+  </div>
+
+  <!-- PART 2: Engage pilot interface / feed grid -->
+  <div id="screen-landing" class="screen" style="display:none">
+    <canvas id="opening-canvas" width="600" height="600"></canvas>
     <div class="land-boot" id="land-boot">
       <div class="t nge-type">NERV COMMAND</div>
       <div class="s nge-flicker" id="land-boot-status">INITIALIZING LIVE FEEDS...</div>
@@ -619,6 +617,7 @@ const MAGI_VERDICTS=['APPROVE','APPROVE','DENY','APPROVE','HOLD'];
 const DRAMA_WORDS=['SYNC','LINK','ALERT','MAGI','初号機','ANGEL','AT FIELD','LCL','NERV','第3新東京市'];
 const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY NOMINAL','MAGI ARRAY ONLINE',
   'BERSERK LOCKED','GEOFRONT DEPTH 1200m','ENTRY PLUG STANDBY','NEURAL LINK ACTIVE','SYNC CABLE OFF'];
+const STARTUP_VIDEO_SRC='/assets/motion/startup.mp4';
 const STARTUP_DURATION_MS=3000;
 const STARTUP_FADE_MS=500;
 const STARTUP_PLAYBACK_RATE=2.014;
@@ -686,7 +685,7 @@ const NGE={bg:'#080810',panel:'#0C0C18',purple:'#995CD0',eva:'#7A3EB5',green:'#0
   red:'#E60012',orange:'#FF6B00',amber:'#FF9500',cyan:'#00E5FF',blue:'#4A90D9',text:'#E8E8F0'};
 
 let state={sync:72,hydration:87,protein:1240,lcl:98.4};
-let screen='landing',frame=0,displaySync=72,transitioning=false;
+let screen='startup',frame=0,displaySync=72,transitioning=false;
 let landReady=false,landBooting=true,landT0=performance.now(),ackT0=0;
 let bootOn=false,bootPhase='',psychoBoot=false,neuralBoot=false,sysBoot=false;
 const FEED_ORDER=['feed-sys','feed-neural','feed-magi','feed-eva','feed-psycho','feed-tox','feed-wave'];
@@ -890,43 +889,55 @@ async function showBoot(){
   await wait(40);transitioning=false;
 }
 
+function waitForStartupReady(v,ms=3500){
+  if(!v||v.readyState>=2)return Promise.resolve();
+  return new Promise(res=>{
+    const done=()=>{v.removeEventListener('canplay',done);v.removeEventListener('loadeddata',done);res()};
+    v.addEventListener('canplay',done,{once:true});
+    v.addEventListener('loadeddata',done,{once:true});
+    setTimeout(done,ms);
+  });
+}
+async function playStartupVideo(video){
+  if(!video)return false;
+  video.src=video.src||STARTUP_VIDEO_SRC;
+  video.loop=false;
+  video.playbackRate=STARTUP_PLAYBACK_RATE;
+  video.currentTime=0;
+  video.volume=1;
+  if(video.readyState<2)video.load();
+  await waitForStartupReady(video);
+  video.muted=true;
+  try{await video.play()}catch(_){}
+  try{video.muted=false;await video.play()}catch(_){video.muted=true;await video.play().catch(()=>{})}
+  return !video.paused;
+}
 async function runStartupSequence(){
   syncAllCanvases();
-  const land=$('screen-landing'),video=$('startup-video');
   EvaAudio.stopIntro();
-  land?.classList.add('startup-active');
+  const startupEl=$('screen-startup'),landEl=$('screen-landing'),video=$('startup-video');
+  startupEl.style.display='block';
+  startupEl.classList.add('active');
+  startupEl.classList.remove('xfade-out');
+  screen='startup';
+  const t0=performance.now();
+  await playStartupVideo(video);
+  const remain=STARTUP_DURATION_MS-(performance.now()-t0);
+  if(remain>0)await wait(remain);
+  startupEl.classList.add('xfade-out');
+  await wait(STARTUP_FADE_MS);
   if(video){
-    video.style.display='block';
-    video.classList.remove('xfade-out');
-    video.playbackRate=STARTUP_PLAYBACK_RATE;
-    video.currentTime=0;
-    video.muted=false;
-    video.volume=1;
-    try{
-      await video.play();
-    }catch(_){
-      video.muted=true;
-      try{await video.play();video.muted=false}catch(_){}
-    }
-  }
-  const end=performance.now()+STARTUP_DURATION_MS;
-  await new Promise(res=>{
-    const poll=setInterval(()=>{
-      if(performance.now()>=end){clearInterval(poll);res()}
-    },40);
-  });
-  if(video){
-    video.classList.add('xfade-out');
-    await wait(STARTUP_FADE_MS);
     video.pause();
     video.currentTime=0;
     video.playbackRate=1;
-    video.volume=0;
     video.muted=true;
-    video.classList.remove('xfade-out');
-    video.style.display='none';
+    video.volume=0;
   }
-  land?.classList.remove('startup-active');
+  startupEl.classList.remove('active','xfade-out');
+  startupEl.style.display='none';
+  landEl.style.display='block';
+  landEl.classList.add('active');
+  screen='landing';
 }
 
 async function runBootToHudTransition(){
