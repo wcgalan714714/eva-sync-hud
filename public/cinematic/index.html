@@ -236,10 +236,9 @@
     100%{opacity:1;filter:none;transform:none}
   }
   #screen-hud .holo-fallback{position:absolute;left:4px;right:4px;top:22px;bottom:32px;width:calc(100% - 8px);height:calc(100% - 54px);
-    object-fit:contain;z-index:2;background:#000;pointer-events:none;opacity:1;transition:opacity .25s ease}
-  #screen-hud .holo-video.is-playing~.holo-fallback{opacity:.15}
-  #screen-hud .holo-video{opacity:0;transition:opacity .25s ease}
-  #screen-hud .holo-video.is-playing{opacity:1}
+    object-fit:contain;z-index:2;background:#000;pointer-events:none;opacity:1;transition:opacity .2s ease}
+  #screen-hud .holo-video.is-playing~.holo-fallback{opacity:0}
+  #screen-hud .holo-video{opacity:1;transition:opacity .2s ease}
   #app.boot-hud-glitch{animation:bhg .24s steps(3) 3}
   @keyframes bhg{
     33%{transform:translateX(2px) skewX(.4deg);filter:saturate(1.35) contrast(1.08)}
@@ -706,7 +705,8 @@ let bootOn=false,bootPhase='',psychoBoot=false,neuralBoot=false,sysBoot=false;
 const FEED_ORDER=['feed-sys','feed-neural','feed-magi','feed-eva','feed-psycho','feed-tox','feed-wave'];
 let segLevels=[0,0,0,0,0,0],sysLevels=[0,0,0];
 let dataFrame=0;
-const DATA_RATE=0.18;
+const DATA_RATE=1;
+const HOLO_PLAYBACK_RATE=1.45;
 const live={at:1.02,pulse:72,reserve:87.3,border:.12,magi:[94,91,88],collapse:223.2};
 const holoImg=new Image();holoImg.src='/assets/mainmenuEVAholo.jpg';
 const KNEE_KEY='eva_knee_log',NUTRITION_KEY='eva_nutrition_log',HISTORY_KEY='eva_pilot_history';
@@ -766,13 +766,13 @@ function computeHealthAnim(v){
   const stress=v.stressScore??30,ready=v.readiness??72,hrv=v.hrvMs??42,sleep=v.sleepScore??78,strain=v.strainScore??45;
   const stressN=stress/100,readyN=ready/100,sleepN=sleep/100,strainN=strain/100,hrvN=Math.min(1,hrv/80);
   return{
-    waveSpeed:.55+stressN*1.1+(1-hrvN)*.35,
+    waveSpeed:1.15+stressN*.75+(1-hrvN)*.25,
     waveAmp:readyN*.85+.15,
     stressN,readyN,sleepN,strainN,hrvN,
-    holoScanMs:Math.max(14,38-readyN*22-stressN*8),
-    holoRot:.014+stressN*.018+(1-sleepN)*.006,
-    lclPulse:Math.max(1.8,5.5-sleepN*2.5-stressN*1.2)+'s',
-    orbitSpin:Math.max(4,14-strainN*8-stressN*3)+'s',
+    holoScanMs:Math.max(6,20-readyN*12-stressN*5),
+    holoRot:.038+stressN*.012+(1-sleepN)*.004,
+    lclPulse:Math.max(1.2,3.8-sleepN*1.8-stressN*.8)+'s',
+    orbitSpin:Math.max(3,9-strainN*4-stressN*2)+'s',
     toxPulse:Math.max(.18,.55-stressN*.3),
     atStrength:readyN,
     scanUrgent:stress>55||ready<55,
@@ -831,7 +831,7 @@ function applyHealthAnim(){
 
 function isBootAnim(){return sysBoot||bootPhase||psychoBoot||neuralBoot||bootOn}
 function isAnimFast(){return transitioning||bootOn||landBooting||isBootAnim()}
-function animT(){return isAnimFast()?frame:dataFrame}
+function animT(){return isAnimFast()?frame:screen==='hud'?frame*.92+dataFrame*.5:dataFrame}
 
 const $=id=>document.getElementById(id);
 function appSize(){const a=$('app');return{w:a?.clientWidth||600,h:a?.clientHeight||600}}
@@ -898,6 +898,7 @@ async function ensureHudVideoPlaying(){
     await fetchHoloAsset();
     if(!v.src||!v.src.includes('eva01-visuals'))v.src=HOLO_VIDEO_SRC;
     v.loop=true;v.muted=true;v.defaultMuted=true;v.playsInline=true;
+    v.playbackRate=HOLO_PLAYBACK_RATE;
     v.setAttribute('playsinline','');v.setAttribute('webkit-playsinline','');
     v.autoplay=true;
     if(v.networkState===HTMLMediaElement.NETWORK_EMPTY||v.readyState<1)v.load();
@@ -917,8 +918,8 @@ async function ensureHudVideoPlaying(){
 function maintainHudVideo(){
   const v=$('holo-video');if(!v)return;
   if(!holoVideoPrimed&&screen!=='hud'&&!bootOn)return;
-  if(!v.paused)return;
-  v.loop=true;v.muted=true;
+  if(!v.paused){v.playbackRate=HOLO_PLAYBACK_RATE;return}
+  v.loop=true;v.muted=true;v.playbackRate=HOLO_PLAYBACK_RATE;
   v.play().then(markHoloPlaying).catch(()=>{v.muted=true;v.play().then(markHoloPlaying).catch(()=>{})});
 }
 function stopHudVideo(){
@@ -1080,6 +1081,7 @@ async function runBootToHudTransition(){
   unprimeHudScreen();
   $('scanlines').classList.remove('hot');
   maintainHudVideo();
+  syncAllCanvases();
   syncOura();
   transitioning=false;
 }
@@ -1412,7 +1414,7 @@ function drawWave(ctx,w,h,syncNorm,fast){
   const ft=fast?frame:animT(),ha=healthAnim,v=pilot.vitals;
   const liveSync=waveSyncNorm();
   const sn=liveSync*.65+syncNorm*.35;
-  const wspd=(fast?0.22:0.07)*ha.waveSpeed;
+  const wspd=(fast?0.28:0.14)*ha.waveSpeed;
   const overload=sn<.45||ha.stressN>.55;
   const relaxed=ha.relaxed;
   const hrvN=ha.hrvN;
@@ -1670,7 +1672,7 @@ function fmtTemp(dev){if(dev==null||dev===undefined)return'—';return(dev>=0?'+
 function tempClass(dev){if(dev==null)return'';const a=Math.abs(dev);return a<=.2?'good':a>=.5?'bad':''}
 function drawTrendChart(ctx,w,h,metric='readiness'){
   if(!ctx)return;ctx.clearRect(0,0,w,h);ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);
-  let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
+  const hist=cardHistory();
   if(!hist.length){ctx.fillStyle='#5A5A6E';ctx.font='5px monospace';ctx.fillText('SYNC…',4,h/2);return}
   const pts=hist.slice(0,7).reverse(),n=pts.length,pad=2;
   const vals=pts.map(p=>{
@@ -1687,20 +1689,15 @@ function drawCardSpark(id,ft){
   const cv=$(id),ha=healthAnim,v=pilot.vitals;if(!cv)return;
   const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
   ctx.clearRect(0,0,w,h);ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(0,0,w,h);
-  if(!ouraConnected){
-    ctx.strokeStyle='rgba(153,92,208,.45)';ctx.setLineDash([3,4]);ctx.beginPath();
-    ctx.moveTo(2,h/2);ctx.lineTo(w-2,h/2);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle='rgba(153,92,208,.7)';ctx.font='6px monospace';ctx.fillText('NO OURA',4,h-4);
-    return;
-  }
   const card=id.replace('card-','').replace('-cv','');
+  if(!ouraConnected){ctx.fillStyle='rgba(153,92,208,.55)';ctx.font='5px monospace';ctx.fillText('SIM',w-18,7)}
   if(card==='readiness'){
-    const spd=.12*ha.waveSpeed;
+    const spd=.22*ha.waveSpeed;
     ctx.strokeStyle=ha.stressN>.5?NGE.red:NGE.greenS;ctx.lineWidth=1;ctx.beginPath();
     for(let x=0;x<w;x++){const t=x*.2+ft*spd;const y=h/2+Math.sin(t)*(3+ha.stressN*4);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
     ctx.stroke();
   }else if(card==='sleep'){
-    const spd=ha.relaxed?.04:.08;
+    const spd=ha.relaxed?.07:.14;
     ctx.strokeStyle=NGE.purple;ctx.beginPath();
     for(let x=0;x<w;x++){const t=x*.15+ft*spd;const y=h/2+Math.sin(t)*2.5*(ha.sleepN+.3);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
     ctx.stroke();
@@ -1757,7 +1754,17 @@ function setCardOuraTag(card,live){
   const hd=card.querySelector('.hcard-hd');if(!hd)return;
   let tag=card.querySelector('.oura-tag');
   if(!tag){tag=document.createElement('span');tag.className='oura-tag';hd.appendChild(tag)}
-  tag.textContent=live?' ●OURA':'';
+  tag.textContent=live?' ●OURA':' ○SIM';
+}
+function cardHistory(){
+  let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
+  if(hist.length>=2)return hist;
+  const v=pilot.vitals,r=v.readiness??72,h=v.hrvMs??42;
+  return[
+    {readiness:r,hrvMs:h,sleepScore:v.sleepScore,strainScore:v.strainScore},
+    {readiness:Math.max(0,r-4),hrvMs:Math.max(0,h-3),sleepScore:v.sleepScore,strainScore:v.strainScore},
+    {readiness:Math.max(0,r-7),hrvMs:Math.max(0,h-5),sleepScore:v.sleepScore,strainScore:v.strainScore}
+  ];
 }
 function updateHealthCards(){
   const v=pilot.vitals,live=ouraConnected;
@@ -1767,37 +1774,21 @@ function updateHealthCards(){
     c.classList.toggle('syncing',syncing);
     setCardOuraTag(c,live);
   });
-  if(!live){
-    applyHealthVisuals(v);
-    $('card-readiness-val').textContent='—';$('card-readiness-val').className='hcard-val';
-    $('card-readiness-sub').textContent='TAP ○ CONNECT · OURA OFFLINE';
-    $('card-sleep-val').textContent='—';$('card-sleep-val').className='hcard-val';
-    $('card-sleep-sub').textContent='OURA SLEEP · NO LINK';
-    $('card-activity-val').textContent='—';$('card-activity-val').className='hcard-val';
-    $('card-activity-sub').textContent='OURA LOAD · NO LINK';
-    $('card-coretemp-val').textContent='—';$('card-coretemp-val').className='hcard-val';
-    $('card-coretemp-sub').textContent='OURA TEMP · NO LINK';
-    $('card-trend-val').textContent='—';$('card-trend-sub').textContent='OURA 7D · NO LINK';
-    document.querySelectorAll('.hcard').forEach(c=>c.classList.remove('ok','warn'));
-    fillCardDetails();
-    document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('expanded',c.dataset.card===expandedCard));
-    return;
-  }
   applyHealthVisuals(v);
-  const syncTxt=ouraSyncLabel();
-  const n=$('card-readiness-val');if(n){n.textContent=Math.round(v.readiness??0);n.className='hcard-val '+valClass(v.readiness??0,75,55)}
-  $('card-readiness-sub').textContent=`HRV ${v.hrvMs??'—'}ms · RHR ${v.rhrBpm??'—'} · ${fmtTemp(v.tempDeviation)} · ${syncTxt}`;
+  const syncTxt=live?ouraSyncLabel():'TAP ○ CONNECT';
+  const src=live?'':'SIM · ';
+  const n=$('card-readiness-val');if(n){n.textContent=Math.round(v.readiness??displaySync);n.className='hcard-val '+valClass(v.readiness??72,75,55)}
+  $('card-readiness-sub').textContent=`${src}HRV ${v.hrvMs??'—'}ms · RHR ${v.rhrBpm??'—'} · ${fmtTemp(v.tempDeviation)} · ${syncTxt}`;
   const sl=$('card-sleep-val');if(sl){sl.textContent=v.sleepScore??'—';sl.className='hcard-val '+valClass(v.sleepScore??0,75,55)}
-  $('card-sleep-sub').textContent=`${v.sleepHours??'—'}h · SCORE ${v.sleepScore??'—'} · ${syncTxt}`;
+  $('card-sleep-sub').textContent=`${src}${v.sleepHours??'—'}h · SCORE ${v.sleepScore??'—'} · ${syncTxt}`;
   const ac=$('card-activity-val');if(ac){ac.textContent=v.strainScore??'—';ac.className='hcard-val '+valClass(v.strainScore??0,70,45)}
-  $('card-activity-sub').textContent=`${v.steps?.toLocaleString?.()??'—'} steps · ${v.activeMinutes??'—'}m · ${syncTxt}`;
+  $('card-activity-sub').textContent=`${src}${v.steps?.toLocaleString?.()??'—'} steps · ${v.activeMinutes??'—'}m · ${syncTxt}`;
   const ct=$('card-coretemp-val');if(ct){ct.textContent=fmtTemp(v.tempDeviation);ct.className='hcard-val '+tempClass(v.tempDeviation)}
-  $('card-coretemp-sub').textContent=(Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':'PATTERN CHECK')+` · ${syncTxt}`;
-  let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
-  const metric=trendMetric;
+  $('card-coretemp-sub').textContent=`${src}${Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':'PATTERN CHECK'} · ${syncTxt}`;
+  const hist=cardHistory(),metric=trendMetric;
   const delta=hist.length>=2?(hist[0][metric]??hist[0].readiness)-(hist[1][metric]??hist[1].readiness):0;
   $('card-trend-val').textContent=hist.length>=2?((delta>=0?'+':'')+Math.round(delta)):(v.readiness??'—');
-  $('card-trend-sub').textContent=(metric==='hrvMs'?'HRV 7D':'READY 7D')+` · ${syncTxt}`;
+  $('card-trend-sub').textContent=`${src}${metric==='hrvMs'?'HRV 7D':'READY 7D'} · ${syncTxt}`;
   document.querySelectorAll('.hcard').forEach(c=>{
     const k=c.dataset.card;
     c.classList.toggle('ok',k==='readiness'&&(v.readiness??0)>=70||k==='sleep'&&(v.sleepScore??0)>=70||k==='coretemp'&&Math.abs(v.tempDeviation??0)<=.2);
@@ -1832,7 +1823,11 @@ async function syncOura(){
   }catch(e){cascadeAlert('OURA SYNC FAIL','warn')}
   syncing=false;updateOuraBadge();renderHudLive();renderHudSub();renderHudAlerts();updateHealthCards();
   setShellGlitch(ouraConnected&&(pilot.vitals.readiness??72)<55);
-  if(screen==='hud'){updateHud(true);if(ouraConnected)pulseCardsOnSync()}
+  if(screen==='hud'){
+    updateHud(true);
+    if(ouraConnected)pulseCardsOnSync();
+    else if(!window._ouraHudPrompt){window._ouraHudPrompt=true;cascadeAlert('TAP ○ CONNECT FOR LIVE OURA','warn')}
+  }
   else document.querySelectorAll('.hcard').forEach(c=>c.classList.remove('syncing'));
 }
 
@@ -1855,7 +1850,7 @@ function updateHud(jump){
   });
   updateHoloBar(displaySync);
   $('hud-ref').innerHTML=`LINK: ${ouraConnected?'OURA LIVE':'MOCK'}<br>LCL: ${state.lcl.toFixed(1)}<br>STRESS: ${pilot.vitals.stressScore??'—'}`;
-  if(ouraConnected){const nv=$('card-readiness-val');if(nv){nv.textContent=Math.round(displaySync);nv.className='hcard-val '+valClass(displaySync,75,55)}}
+  const nv=$('card-readiness-val');if(nv){nv.textContent=Math.round(displaySync);nv.className='hcard-val '+valClass(displaySync,75,55)}
 }
 
 function logProtein(){
