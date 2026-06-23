@@ -378,7 +378,11 @@
   #screen-hud .hcard-sub{font-size:10px;color:rgba(142,223,95,.85);padding:4px 7px 7px;line-height:1.25;font-weight:700}
   #screen-hud .hcard-cv{width:calc(100% - 10px);height:32px;display:block;margin:3px 5px 7px;opacity:.92}
   #screen-hud .hcard-pulse{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:var(--green-neon);opacity:0}
-  #screen-hud .hcard.live .hcard-pulse{opacity:.9;box-shadow:0 0 8px var(--green-neon)}
+  #screen-hud .hcard.live .hcard-pulse{opacity:.9;box-shadow:0 0 8px var(--green-neon);animation:live 1.2s step-end infinite}
+  #screen-hud .hcard.mock{border-color:rgba(90,90,110,.45);opacity:.88}
+  #screen-hud .hcard.mock .hcard-val{color:var(--purple)}
+  #screen-hud .hcard.mock .hcard-sub{color:rgba(153,92,208,.75)}
+  #screen-hud .hcard .oura-tag{font-size:8px;color:var(--green-neon);letter-spacing:1px;font-weight:900;text-shadow:0 0 6px rgba(0,255,159,.4)}
   #screen-hud .hcard-detail{position:absolute;left:-3px;right:-3px;top:calc(100% + 4px);display:none;
     border:2px solid var(--orange);background:rgba(8,8,18,.98);padding:10px;font-size:9px;line-height:1.6;
     z-index:25;box-shadow:0 8px 24px rgba(0,0,0,.9);max-height:130px;overflow:auto}
@@ -521,6 +525,7 @@
       src="/assets/sound/eva-ui-boot.mp4"></video>
   </div>
   <audio id="eva-intro-audio" preload="auto" src="/assets/sound/eva-ui-sound.mp3"></audio>
+  <audio id="eva-landing-audio" preload="auto" loop src="/assets/sound/uisound2.mp3"></audio>
 
   <!-- HUD -->
   <div id="screen-hud" class="screen">
@@ -530,15 +535,15 @@
     <div class="oura-badge mock" id="oura-badge" title="Tap to connect Oura or sync">○ CONNECT</div>
     <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • LIVE SYSTEM CHECK ACTIVE</div>
     <div class="hud-deck" id="hud-deck">
-      <div class="hcard live ok" data-card="readiness">
+      <div class="hcard mock" data-card="readiness">
         <div class="hcard-hd">READY<span class="jp">準備</span></div>
-        <div class="hcard-val good" id="card-readiness-val">72</div>
+        <div class="hcard-val" id="card-readiness-val">—</div>
         <div class="hcard-sub" id="card-readiness-sub">HRV — · RHR — · TEMP —</div>
         <canvas class="hcard-cv" id="card-readiness-cv" width="112" height="28"></canvas>
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-readiness-detail"></div>
       </div>
-      <div class="hcard live" data-card="sleep">
+      <div class="hcard mock" data-card="sleep">
         <div class="hcard-hd">SLEEP<span class="jp">睡眠</span></div>
         <div class="hcard-val" id="card-sleep-val">—</div>
         <div class="hcard-sub" id="card-sleep-sub">—h · SCORE —</div>
@@ -546,7 +551,7 @@
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-sleep-detail"></div>
       </div>
-      <div class="hcard live" data-card="activity">
+      <div class="hcard mock" data-card="activity">
         <div class="hcard-hd">LOAD<span class="jp">活動</span></div>
         <div class="hcard-val" id="card-activity-val">—</div>
         <div class="hcard-sub" id="card-activity-sub">— steps · —m active</div>
@@ -554,7 +559,7 @@
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-activity-detail"></div>
       </div>
-      <div class="hcard live" data-card="coretemp">
+      <div class="hcard mock" data-card="coretemp">
         <div class="hcard-hd">TEMP<span class="jp">体温</span></div>
         <div class="hcard-val" id="card-coretemp-val">—</div>
         <div class="hcard-sub" id="card-coretemp-sub">CORE DEVIATION</div>
@@ -562,7 +567,7 @@
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-coretemp-detail"></div>
       </div>
-      <div class="hcard live" data-card="trend">
+      <div class="hcard mock" data-card="trend">
         <div class="hcard-hd">TREND<span class="jp">推移</span></div>
         <div class="hcard-val" id="card-trend-val">7D</div>
         <div class="hcard-sub" id="card-trend-sub">READINESS</div>
@@ -628,34 +633,41 @@ const BOOT_PLAYBACK_RATE=2.38;
 const BOOT_HUD_GLITCH_MS=260;
 const BOOT_HUD_FADE_MS=520;
 const HOLO_VIDEO_SRC='/assets/motion/eva01-visuals.mp4';
+const LANDING_AUDIO_SRC='/assets/sound/uisound2.mp3';
 const EvaAudio=(()=>{
   const intro=document.getElementById('eva-intro-audio')||new Audio('/assets/sound/eva-ui-sound.mp3');
-  intro.preload='auto';
+  const landing=document.getElementById('eva-landing-audio')||new Audio(LANDING_AUDIO_SRC);
+  intro.preload='auto';landing.preload='auto';landing.loop=true;
   let unlocked=false,ambientOn=false;
-  const FULL_VOL=.92,AMBIENT_VOL=.55;
+  const FULL_VOL=.92,AMBIENT_VOL=.62;
   const MONTAGE_CUES=[0,.35,.75,1.15,1.65,2.25,3.05,3.95,4.5,5.1,5.7,6.3,6.9,7.5];
   const FEED_CUES=[4.4,5.2,6.0,6.8,7.6,8.4,9.2];
+  function unlockTrack(a){
+    const v=a.volume;a.volume=.001;
+    return a.play().then(()=>{a.pause();a.currentTime=0;a.volume=v}).catch(()=>{});
+  }
   function unlock(){
     if(unlocked)return;unlocked=true;
-    const v=intro.volume;intro.volume=.001;
-    intro.play().then(()=>{intro.pause();intro.currentTime=0;intro.volume=v}).catch(()=>{});
+    unlockTrack(intro);unlockTrack(landing);
   }
-  function playIntro(){ambientOn=false;intro.loop=false;intro.volume=FULL_VOL;intro.currentTime=0;return intro.play().catch(()=>{})}
+  function playIntro(){ambientOn=false;landing.pause();intro.loop=false;intro.volume=FULL_VOL;intro.currentTime=0;return intro.play().catch(()=>{})}
   function startAmbient(){
     if(!unlocked)unlock();
-    ambientOn=true;intro.loop=true;intro.volume=AMBIENT_VOL;
-    return intro.play().catch(()=>{});
+    ambientOn=true;intro.pause();
+    landing.loop=true;landing.volume=AMBIENT_VOL;landing.currentTime=landing.currentTime||0;
+    return landing.play().catch(()=>{});
   }
   function maintainAmbient(){
+    if(screen!=='landing')return;
     if(!ambientOn)return startAmbient();
-    intro.loop=true;intro.volume=AMBIENT_VOL;
-    if(intro.paused)return intro.play().catch(()=>{});
+    landing.loop=true;landing.volume=AMBIENT_VOL;
+    if(landing.paused)return landing.play().catch(()=>{});
   }
   function pingAmbient(){
     if(!ambientOn)return maintainAmbient();
-    const v=intro.volume;
-    intro.volume=Math.min(.7,v+.14);
-    setTimeout(()=>{if(ambientOn)intro.volume=AMBIENT_VOL},200);
+    const v=landing.volume;
+    landing.volume=Math.min(.78,v+.12);
+    setTimeout(()=>{if(ambientOn)landing.volume=AMBIENT_VOL},200);
   }
   function stingAt(t){
     if(!unlocked)unlock();
@@ -665,23 +677,24 @@ const EvaAudio=(()=>{
   }
   function fadeOutAmbient(ms=480){
     return new Promise(res=>{
-      if(!ambientOn&&!intro.paused&&intro.currentTime>0){
-        const start=intro.volume,steps=8,step=ms/steps;let i=0;
-        const t=setInterval(()=>{i++;intro.volume=Math.max(0,start*(1-i/steps));
-          if(i>=steps){clearInterval(t);intro.pause();intro.loop=false;intro.volume=FULL_VOL;ambientOn=false;res()}},step);
+      const track=landing;
+      if(ambientOn||(!track.paused&&track.currentTime>0)){
+        const start=track.volume,steps=8,step=ms/steps;let i=0;
+        const t=setInterval(()=>{i++;track.volume=Math.max(0,start*(1-i/steps));
+          if(i>=steps){clearInterval(t);track.pause();track.loop=true;track.volume=AMBIENT_VOL;ambientOn=false;res()}},step);
         return;
       }
-      ambientOn=false;intro.loop=false;intro.pause();intro.volume=FULL_VOL;res();
+      ambientOn=false;track.pause();res();
     });
   }
   function playBootAudio(){
-    ambientOn=false;intro.loop=false;intro.currentTime=0;intro.volume=1;intro.playbackRate=BOOT_PLAYBACK_RATE;
+    ambientOn=false;landing.pause();intro.loop=false;intro.currentTime=0;intro.volume=1;intro.playbackRate=BOOT_PLAYBACK_RATE;
     intro.play().catch(()=>{});setTimeout(()=>intro.pause(),BOOT_DURATION_MS);
   }
   function resetBootAudioRate(){intro.playbackRate=1}
-  function stopIntro(){ambientOn=false;intro.loop=false;intro.pause()}
+  function stopIntro(){ambientOn=false;intro.loop=false;intro.pause();landing.pause()}
   function stopBoot(){intro.pause()}
-  return {unlock,playIntro,startAmbient,maintainAmbient,pingAmbient,fadeOutAmbient,stingAt,playBootAudio,resetBootAudioRate,stopIntro,stopBoot,MONTAGE_CUES,FEED_CUES,intro};
+  return {unlock,playIntro,startAmbient,maintainAmbient,pingAmbient,fadeOutAmbient,stingAt,playBootAudio,resetBootAudioRate,stopIntro,stopBoot,MONTAGE_CUES,FEED_CUES,intro,landing};
 })();
 const NGE={bg:'#080810',panel:'#0C0C18',purple:'#995CD0',eva:'#7A3EB5',green:'#00FF9F',greenS:'#8EDF5F',
   red:'#E60012',orange:'#FF6B00',amber:'#FF9500',cyan:'#00E5FF',blue:'#4A90D9',text:'#E8E8F0'};
@@ -1028,6 +1041,8 @@ async function runStartupSequence(){
   landEl.classList.add('active');
   screen='landing';
   syncAllCanvases();
+  EvaAudio.unlock();
+  EvaAudio.startAmbient();
 }
 
 async function runBootToHudTransition(){
@@ -1065,6 +1080,7 @@ async function runBootToHudTransition(){
   unprimeHudScreen();
   $('scanlines').classList.remove('hot');
   maintainHudVideo();
+  syncOura();
   transitioning=false;
 }
 
@@ -1671,6 +1687,12 @@ function drawCardSpark(id,ft){
   const cv=$(id),ha=healthAnim,v=pilot.vitals;if(!cv)return;
   const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
   ctx.clearRect(0,0,w,h);ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(0,0,w,h);
+  if(!ouraConnected){
+    ctx.strokeStyle='rgba(153,92,208,.45)';ctx.setLineDash([3,4]);ctx.beginPath();
+    ctx.moveTo(2,h/2);ctx.lineTo(w-2,h/2);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(153,92,208,.7)';ctx.font='6px monospace';ctx.fillText('NO OURA',4,h-4);
+    return;
+  }
   const card=id.replace('card-','').replace('-cv','');
   if(card==='readiness'){
     const spd=.12*ha.waveSpeed;
@@ -1728,27 +1750,58 @@ function handleCardAction(e){
     fillCardDetails();updateHealthCards();
   }
 }
+function ouraSyncLabel(){
+  return pilot.lastSync?new Date(pilot.lastSync).toLocaleTimeString():'LIVE';
+}
+function setCardOuraTag(card,live){
+  const hd=card.querySelector('.hcard-hd');if(!hd)return;
+  let tag=card.querySelector('.oura-tag');
+  if(!tag){tag=document.createElement('span');tag.className='oura-tag';hd.appendChild(tag)}
+  tag.textContent=live?' ●OURA':'';
+}
 function updateHealthCards(){
-  const v=pilot.vitals;
+  const v=pilot.vitals,live=ouraConnected;
+  document.querySelectorAll('.hcard').forEach(c=>{
+    c.classList.toggle('live',live);
+    c.classList.toggle('mock',!live);
+    c.classList.toggle('syncing',syncing);
+    setCardOuraTag(c,live);
+  });
+  if(!live){
+    applyHealthVisuals(v);
+    $('card-readiness-val').textContent='—';$('card-readiness-val').className='hcard-val';
+    $('card-readiness-sub').textContent='TAP ○ CONNECT · OURA OFFLINE';
+    $('card-sleep-val').textContent='—';$('card-sleep-val').className='hcard-val';
+    $('card-sleep-sub').textContent='OURA SLEEP · NO LINK';
+    $('card-activity-val').textContent='—';$('card-activity-val').className='hcard-val';
+    $('card-activity-sub').textContent='OURA LOAD · NO LINK';
+    $('card-coretemp-val').textContent='—';$('card-coretemp-val').className='hcard-val';
+    $('card-coretemp-sub').textContent='OURA TEMP · NO LINK';
+    $('card-trend-val').textContent='—';$('card-trend-sub').textContent='OURA 7D · NO LINK';
+    document.querySelectorAll('.hcard').forEach(c=>c.classList.remove('ok','warn'));
+    fillCardDetails();
+    document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('expanded',c.dataset.card===expandedCard));
+    return;
+  }
   applyHealthVisuals(v);
-  const n=$('card-readiness-val');if(n){n.textContent=Math.round(v.readiness??displaySync);n.className='hcard-val '+valClass(v.readiness??72,75,55)}
-  $('card-readiness-sub').textContent=`HRV ${v.hrvMs??'—'} · RHR ${v.rhrBpm??'—'} · ${fmtTemp(v.tempDeviation)}`;
+  const syncTxt=ouraSyncLabel();
+  const n=$('card-readiness-val');if(n){n.textContent=Math.round(v.readiness??0);n.className='hcard-val '+valClass(v.readiness??0,75,55)}
+  $('card-readiness-sub').textContent=`HRV ${v.hrvMs??'—'}ms · RHR ${v.rhrBpm??'—'} · ${fmtTemp(v.tempDeviation)} · ${syncTxt}`;
   const sl=$('card-sleep-val');if(sl){sl.textContent=v.sleepScore??'—';sl.className='hcard-val '+valClass(v.sleepScore??0,75,55)}
-  $('card-sleep-sub').textContent=`${v.sleepHours??'—'}h · SCORE ${v.sleepScore??'—'}`;
+  $('card-sleep-sub').textContent=`${v.sleepHours??'—'}h · SCORE ${v.sleepScore??'—'} · ${syncTxt}`;
   const ac=$('card-activity-val');if(ac){ac.textContent=v.strainScore??'—';ac.className='hcard-val '+valClass(v.strainScore??0,70,45)}
-  $('card-activity-sub').textContent=`${v.steps?.toLocaleString?.()??'—'} steps · ${v.activeMinutes??'—'}m active`;
+  $('card-activity-sub').textContent=`${v.steps?.toLocaleString?.()??'—'} steps · ${v.activeMinutes??'—'}m · ${syncTxt}`;
   const ct=$('card-coretemp-val');if(ct){ct.textContent=fmtTemp(v.tempDeviation);ct.className='hcard-val '+tempClass(v.tempDeviation)}
-  $('card-coretemp-sub').textContent=Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':'PATTERN CHECK';
+  $('card-coretemp-sub').textContent=(Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':'PATTERN CHECK')+` · ${syncTxt}`;
   let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
   const metric=trendMetric;
   const delta=hist.length>=2?(hist[0][metric]??hist[0].readiness)-(hist[1][metric]??hist[1].readiness):0;
-  $('card-trend-val').textContent=hist.length>=2?((delta>=0?'+':'')+Math.round(delta)):'7D';
-  $('card-trend-sub').textContent=metric==='hrvMs'?'HRV 7D':'READY 7D';
+  $('card-trend-val').textContent=hist.length>=2?((delta>=0?'+':'')+Math.round(delta)):(v.readiness??'—');
+  $('card-trend-sub').textContent=(metric==='hrvMs'?'HRV 7D':'READY 7D')+` · ${syncTxt}`;
   document.querySelectorAll('.hcard').forEach(c=>{
     const k=c.dataset.card;
-    c.classList.toggle('ok',k==='readiness'&&(v.readiness??72)>=70||k==='sleep'&&(v.sleepScore??0)>=70||k==='coretemp'&&Math.abs(v.tempDeviation??0)<=.2);
-    c.classList.toggle('warn',k==='readiness'&&(v.readiness??72)<55||k==='sleep'&&(v.sleepScore??0)<55||k==='coretemp'&&Math.abs(v.tempDeviation??0)>=.5);
-    c.classList.toggle('syncing',syncing);
+    c.classList.toggle('ok',k==='readiness'&&(v.readiness??0)>=70||k==='sleep'&&(v.sleepScore??0)>=70||k==='coretemp'&&Math.abs(v.tempDeviation??0)<=.2);
+    c.classList.toggle('warn',k==='readiness'&&(v.readiness??0)<55||k==='sleep'&&(v.sleepScore??0)<55||k==='coretemp'&&Math.abs(v.tempDeviation??0)>=.5);
   });
   fillCardDetails();
   document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('expanded',c.dataset.card===expandedCard));
@@ -1768,7 +1821,11 @@ async function syncOura(){
     const res=await fetch('/api/oura/sync',{cache:'no-store',credentials:'same-origin'});
     const data=await res.json();
     if(data.trend)mergeOuraTrend(data.trend);
-    if(data.pilot){pilot={...pilot,...data.pilot};loadManualLogs();applyPilotToState();appendHistory(pilot.vitals)}
+    if(data.pilot){
+      const p=data.pilot;
+      pilot={...pilot,...p,vitals:{...pilot.vitals,...p.vitals},alerts:p.alerts??pilot.alerts};
+      loadManualLogs();applyPilotToState();appendHistory(pilot.vitals);
+    }
     ouraConnected=!!data.connected;pilot.ouraConnected=ouraConnected;
     if(data.error)cascadeAlert(data.error.slice(0,40),'warn');
     else if(ouraConnected&&pilot.alerts?.length)cascadeAlert(pilot.alerts[0],pilot.alerts[0]==='ALL SYSTEMS NOMINAL'?'ok':'warn');
@@ -1798,7 +1855,7 @@ function updateHud(jump){
   });
   updateHoloBar(displaySync);
   $('hud-ref').innerHTML=`LINK: ${ouraConnected?'OURA LIVE':'MOCK'}<br>LCL: ${state.lcl.toFixed(1)}<br>STRESS: ${pilot.vitals.stressScore??'—'}`;
-  const nv=$('card-readiness-val');if(nv)nv.textContent=Math.round(displaySync);
+  if(ouraConnected){const nv=$('card-readiness-val');if(nv){nv.textContent=Math.round(displaySync);nv.className='hcard-val '+valClass(displaySync,75,55)}}
 }
 
 function logProtein(){
@@ -1860,8 +1917,9 @@ function tick(){
   requestAnimationFrame(tick);
 }
 
-$('engage-btn').addEventListener('click',()=>{EvaAudio.unlock();engagePilot()});
-$('engage-btn').addEventListener('touchend',e=>{e.preventDefault();engagePilot()});
+$('engage-btn').addEventListener('click',()=>{EvaAudio.unlock();EvaAudio.startAmbient();engagePilot()});
+$('engage-btn').addEventListener('touchend',e=>{e.preventDefault();EvaAudio.unlock();engagePilot()});
+document.getElementById('screen-landing')?.addEventListener('pointerdown',()=>{EvaAudio.unlock();if(screen==='landing')EvaAudio.startAmbient()},{passive:true});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&bootOn){e.preventDefault();skipBoot();return}
   if(e.key!=='Enter'&&e.key!==' ')return;
