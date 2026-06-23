@@ -74,9 +74,13 @@
   @keyframes dramw{0%{opacity:0;transform:scale(1.6) skewX(-6deg)}40%{opacity:1;transform:scale(1) skewX(2deg)}100%{opacity:0;transform:scale(.9)}}
   #app:has(.screen.active) .noise{opacity:.02}
   #app:has(.screen.active) .scanlines{opacity:.05}
+  #app.startup-mode{background:#000!important}
   #app.startup-mode .noise,#app.startup-mode .scanlines,#app.startup-mode #fui-global,
-  #app.startup-mode #fx-cut,#app.startup-mode .impact-bar{display:none!important}
+  #app.startup-mode #fx-cut,#app.startup-mode .impact-bar,#app.startup-mode #sync-handoff,
+  #app.startup-mode #alert-cascade,#app.startup-mode #drama-flash{display:none!important}
   #app.startup-mode .flash,#app.startup-mode .chroma,#app.startup-mode .vhs{opacity:0!important;visibility:hidden;pointer-events:none}
+  #app.startup-mode .screen:not(#screen-startup){display:none!important;visibility:hidden!important}
+  #app.startup-mode #screen-startup{display:block!important;z-index:100}
   #app:has(#screen-hud.active) .scanlines{animation:none;opacity:.035}
   #app:has(#screen-hud.active) .noise{animation:none;opacity:.015}
   #alert-cascade{position:absolute;top:8%;right:1%;width:28%;z-index:86;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
@@ -111,10 +115,10 @@
   .land-boot .t{font-size:clamp(14px,4vmin,18px);letter-spacing:6px;color:var(--orange-bright);text-shadow:0 0 16px var(--orange)}
   .land-boot .s{font-size:clamp(9px,2.5vmin,11px);letter-spacing:4px;color:var(--green-neon);opacity:.9}
   .land-boot.hide{display:none}
-  /* PART 1 — StartUp MP4 only */
-  #screen-startup{background:#000;z-index:95}
+  /* PART 1 — StartUp MP4 only (no overlays, no canvas intros) */
+  #screen-startup{background:#000;z-index:100;isolation:isolate}
   #screen-startup .startup-video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;background:#000;
-    pointer-events:none;-webkit-tap-highlight-color:transparent}
+    z-index:1;pointer-events:none;-webkit-tap-highlight-color:transparent}
   #screen-startup .startup-video::-webkit-media-controls{display:none!important}
   #screen-startup .startup-video::-webkit-media-controls-enclosure{display:none!important}
   #screen-startup .startup-video::-webkit-media-controls-start-playback-button{display:none!important}
@@ -618,9 +622,7 @@ const DRAMA_WORDS=['SYNC','LINK','ALERT','MAGI','初号機','ANGEL','AT FIELD','
 const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY NOMINAL','MAGI ARRAY ONLINE',
   'BERSERK LOCKED','GEOFRONT DEPTH 1200m','ENTRY PLUG STANDBY','NEURAL LINK ACTIVE','SYNC CABLE OFF'];
 const STARTUP_VIDEO_SRC='/assets/motion/startup.mp4';
-const STARTUP_DURATION_MS=3000;
 const STARTUP_FADE_MS=500;
-const STARTUP_PLAYBACK_RATE=2.014;
 const BOOT_DURATION_MS=3000;
 const BOOT_PLAYBACK_RATE=2.38;
 const BOOT_HUD_GLITCH_MS=260;
@@ -897,11 +899,21 @@ function waitForStartupReady(v,ms=3500){
     setTimeout(done,ms);
   });
 }
+function waitForVideoEnd(v,fallbackMs=8000){
+  if(!v)return Promise.resolve();
+  return new Promise(res=>{
+    const done=()=>{v.removeEventListener('ended',done);clearTimeout(t);res()};
+    if(v.ended||(v.duration&&v.currentTime>=v.duration-.05))return res();
+    v.addEventListener('ended',done,{once:true});
+    const ms=v.duration&&isFinite(v.duration)?v.duration*1000+250:fallbackMs;
+    const t=setTimeout(done,ms);
+  });
+}
 async function playStartupVideo(video){
   if(!video)return false;
   video.src=video.src||STARTUP_VIDEO_SRC;
   video.loop=false;
-  video.playbackRate=STARTUP_PLAYBACK_RATE;
+  video.playbackRate=1;
   video.currentTime=0;
   video.volume=1;
   if(video.readyState<2)video.load();
@@ -922,10 +934,8 @@ async function runStartupSequence(){
   startupEl.classList.add('active');
   startupEl.classList.remove('xfade-out');
   screen='startup';
-  const t0=performance.now();
   await playStartupVideo(video);
-  const remain=STARTUP_DURATION_MS-(performance.now()-t0);
-  if(remain>0)await wait(remain);
+  await waitForVideoEnd(video);
   startupEl.classList.add('xfade-out');
   await wait(STARTUP_FADE_MS);
   if(video){
@@ -1730,6 +1740,7 @@ function logProtein(){
 
 function tick(){
   frame++;
+  if(screen==='startup'){requestAnimationFrame(tick);return}
   dataFrame+=isAnimFast()?1:DATA_RATE;
   if(screen==='landing'){tickLandingFeeds();if(landReady)EvaAudio.maintainAmbient()}
   if(sysBoot){
@@ -1810,10 +1821,11 @@ runStartupSequence().then(()=>{
   syncAllCanvases();
   bootLandingFeeds();
   fetchHoloAsset().then(()=>ensureHudVideoPlaying());
+  syncOura();
+  setInterval(syncOura,REFRESH_MS);
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)maintainHudVideo()});
 document.addEventListener('pointerdown',()=>{fetchHoloAsset();primeHudScreen();ensureHudVideoPlaying()},{once:true,passive:true});
-syncOura();setInterval(syncOura,REFRESH_MS);
 </script>
 </body>
 </html>
