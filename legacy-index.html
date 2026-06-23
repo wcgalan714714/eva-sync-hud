@@ -110,11 +110,7 @@
   #screen-landing .feed-stat,#screen-ack .feed-stat{position:absolute;bottom:4px;right:6px;font-size:9px;color:var(--green-neon);z-index:2;
     font-variant-numeric:tabular-nums;font-weight:900;text-shadow:0 0 6px var(--green-neon)}
   .feed canvas{display:block;width:100%;height:calc(100% - 22px);margin-top:20px}
-  .land-boot{position:absolute;inset:0;z-index:25;background:#000;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:12px}
-  .land-boot .t{font-size:clamp(14px,4vmin,18px);letter-spacing:6px;color:var(--orange-bright);text-shadow:0 0 16px var(--orange)}
-  .land-boot .s{font-size:clamp(9px,2.5vmin,11px);letter-spacing:4px;color:var(--green-neon);opacity:.9}
-  .land-boot.hide{display:none}
+
   /* PART 1 — StartUp MP4 only (no overlays, no canvas intros) */
   #screen-startup{background:#000;z-index:100;isolation:isolate}
   #screen-startup .startup-video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;background:#000;
@@ -442,10 +438,6 @@
 
   <!-- PART 2: Engage pilot interface / feed grid -->
   <div id="screen-landing" class="screen" style="display:none">
-    <div class="land-boot hide" id="land-boot">
-      <div class="t nge-type">NERV COMMAND</div>
-      <div class="s nge-flicker" id="land-boot-status">INITIALIZING LIVE FEEDS...</div>
-    </div>
     <div class="cc-header" style="opacity:0">
       <div class="cc-row">
         <div><div class="brand">NERV COMMAND • EVA-01</div><div class="meta" id="cc-meta">第3新東京市 • 司令室</div></div>
@@ -469,7 +461,7 @@
     </div>
     <div class="feed feed-wave"><span class="feed-label">SYNC WAVEFORM • IKARI SHINJI</span><span class="feed-jp">同期率</span><span class="feed-stat" id="st-sync">--%</span><canvas id="fc-wave" width="586" height="50"></canvas></div>
     <div class="land-fringe tl">GEOFRONT<br>DEPTH 1200m</div>
-    <div class="land-fringe tr">A.T.FIELD<br>±0.03</div>
+    <div class="land-fringe tr" id="land-atfield">A.T.FIELD<br>±0.03</div>
     <div class="land-fringe bl">第3新東京市</div>
     <div class="land-fringe br">NERV HQ<br>司令室</div>
     <button type="button" class="land-engage wait" id="engage-btn">INITIALIZING FEEDS...</button>
@@ -708,19 +700,54 @@ let holoBlobUrl=null,holoFetchPromise=null,holoVideoPrimed=false,holoPlayPromise
 let healthAnim=computeHealthAnim(pilot.vitals);
 const HOLO_PARTS=[
   {id:'0001',name:'HEAD',x:0,y:-38,bad:false},
-  {id:'0002',name:'ARM',x:-18,y:-8,bad:true},
+  {id:'0002',name:'ARM',x:-18,y:-8,bad:false},
   {id:'0003',name:'TORSO',x:0,y:-2,bad:false},
   {id:'0004',name:'AT FIELD',x:0,y:14,bad:false},
   {id:'0005',name:'SYNC',x:0,y:-18,bad:false}
 ];
+let telemetry={at:1.02,pulse:58,reserve:78,border:.12,magi:[72,72,78],collapse:220,sync:72,toxLevels:[]};
+
 function holoScanIdx(){return Math.floor(animT()/(healthAnim.holoScanMs||32))%HOLO_PARTS.length}
+function hJitter(amp,hz,t){return Math.sin(t*hz)*amp}
+function computeHoloFaults(v){
+  const f=[];
+  if((v.sleepScore??100)<60)f.push(0);
+  if((v.stressScore??0)>65)f.push(1);
+  if((v.readiness??100)<55)f.push(4);
+  if(Math.abs(v.tempDeviation??0)>=.4)f.push(3);
+  if((v.strainScore??0)>85)f.push(2);
+  return f;
+}
+function deriveTelemetry(v,t){
+  const ready=v.readiness??72,hrv=v.hrvMs??42,rhr=v.rhrBpm??58,sleep=v.sleepScore??78;
+  const strain=v.strainScore??45,stress=v.stressScore??30,temp=v.tempDeviation??0,hrvB=v.hrvBalance??70;
+  const stressN=stress/100,readyN=ready/100,sleepN=sleep/100,strainN=strain/100,hrvN=Math.min(1,hrv/80);
+  return{
+    at:readyN*.12+.9+hJitter(.025,.03,t),
+    pulse:rhr+hJitter(1.5,.025,t),
+    reserve:sleep+hJitter(1.5,.02,t),
+    border:Math.abs(temp)*.45+.06+hJitter(.015,.018,t),
+    magi:[
+      Math.round(hrvB+hJitter(1.5,.015,t)),
+      Math.round(ready+hJitter(1.5,.012,t)),
+      Math.round(sleep+hJitter(1.5,.01,t))
+    ],
+    collapse:220-ready*1.15+hJitter(.8,.012,t),
+    sync:ready+hJitter(1.2,.06,t),
+    stressN,readyN,sleepN,strainN,hrvN,
+    sysTargets:[readyN,sleepN,strainN],
+    segTargets:[hrvN,readyN,sleepN,strainN,1-stressN,readyN*.92],
+    toxLevels:TOX.map((_,i)=>Math.round(8+stressN*16+i*1.2+Math.sin(t*.08+i)*2)),
+    holoFaults:computeHoloFaults(v)
+  };
+}
 function computeHealthAnim(v){
   const stress=v.stressScore??30,ready=v.readiness??72,hrv=v.hrvMs??42,sleep=v.sleepScore??78,strain=v.strainScore??45;
   const stressN=stress/100,readyN=ready/100,sleepN=sleep/100,strainN=strain/100,hrvN=Math.min(1,hrv/80);
   return{
     waveSpeed:.55+stressN*1.1+(1-hrvN)*.35,
     waveAmp:readyN*.85+.15,
-    stressN,readyN,sleepN,strainN,
+    stressN,readyN,sleepN,strainN,hrvN,
     holoScanMs:Math.max(14,38-readyN*22-stressN*8),
     holoRot:.014+stressN*.018+(1-sleepN)*.006,
     lclPulse:Math.max(1.8,5.5-sleepN*2.5-stressN*1.2)+'s',
@@ -730,6 +757,30 @@ function computeHealthAnim(v){
     scanUrgent:stress>55||ready<55,
     relaxed:sleep>=75&&stress<35&&ready>=70
   };
+}
+function refreshMotionLevels(t){
+  const tel=deriveTelemetry(pilot.vitals,t);
+  telemetry=tel;
+  sysLevels=tel.sysTargets.map((b,i)=>Math.min(1,Math.max(.05,b+hJitter(.02,.08+i,t))));
+  segLevels=tel.segTargets.map((b,i)=>Math.min(1,Math.max(0,b+hJitter(.015,.06+i*1.2,t))));
+  live.at=tel.at;live.pulse=tel.pulse;live.reserve=tel.reserve;live.border=tel.border;
+  live.magi=tel.magi;live.collapse=tel.collapse;
+  HOLO_PARTS.forEach((p,i)=>{p.bad=tel.holoFaults.includes(i)});
+  updateToxBarHeights(tel.toxLevels);
+  const atEl=$('land-atfield');if(atEl){
+    const td=pilot.vitals.tempDeviation??0;
+    atEl.innerHTML=`A.T.FIELD<br>${td>=0?'+':''}${td.toFixed(2)}`;
+  }
+}
+function updateToxBarHeights(levels){
+  document.querySelectorAll('.tox-bars-land .b').forEach((b,i)=>{
+    if(levels?.[i]!=null)b.style.height=Math.min(28,levels[i])+'px';
+  });
+}
+function applyHealthVisuals(v,t){
+  healthAnim=computeHealthAnim(v);
+  refreshMotionLevels(t??dataFrame);
+  applyHealthAnim();
 }
 function applyHealthAnim(){
   const h=healthAnim,el=$('screen-hud');if(!el)return;
@@ -744,8 +795,8 @@ function applyHealthAnim(){
   const lb=$('log-b');
   if(lb&&!lb.classList.contains('hit')){
     lb.textContent=h.scanUrgent
-      ?`SYNC ${Math.round(displaySync)}% · STRESS ${pilot.vitals.stressScore??'—'} · TAP CARD FOR DETAIL`
-      :`SYNC ${Math.round(displaySync)}% · TAP ANY CARD · SYNC RING = +10g PROTEIN`;
+      ?`SYNC ${Math.round(displaySync)}% · STRESS ${pilot.vitals.stressScore??'—'} · HRV ${pilot.vitals.hrvMs??'—'}`
+      :`SYNC ${Math.round(displaySync)}% · HRV ${pilot.vitals.hrvMs??'—'} · RHR ${pilot.vitals.rhrBpm??'—'}`;
   }
 }
 
@@ -1139,43 +1190,39 @@ function drawHealthScanOverlay(ctx,w,h,ft,highlight){
 }
 function tickLiveData(){
   const t=dataFrame;
-  live.at=1+Math.sin(t*.03)*.05;live.pulse=70+Math.sin(t*.025)*6;
-  live.reserve=86+Math.sin(t*.02)*3;live.border=.1+Math.abs(Math.sin(t*.018))*.06;
-  live.collapse=221-Math.sin(t*.012)*2;
-  live.magi=live.magi.map((v,i)=>Math.round(90+i*2+Math.sin(t*.015+i*1.5)*4));
-  const uiTick=isAnimFast()||frame%14===0;
+  refreshMotionLevels(t);
+  const v=pilot.vitals,uiTick=isAnimFast()||frame%14===0;
   if(screen==='landing'&&landReady&&uiTick){
-    $('st-sys').textContent=sysLevels.every(v=>v>.7)?'OK':'CHK';
-    $('st-neural').textContent=Math.round(live.pulse)+'bpm';
+    $('st-sys').textContent=sysLevels.every(x=>x>.7)?'OK':'CHK';
+    $('st-neural').textContent=(v.hrvMs??'—')+'ms';
     $('st-magi').textContent=live.magi[0]+'%';
-    $('st-eva').textContent='Z'+Math.floor(t/18%9);
-    $('st-psycho').textContent=Math.floor(t/40)%2?'LINK-A':'LINK-B';
-    $('st-tox').textContent=state.sync>70?'LOW':'MID';
-    $('st-sync').textContent=Math.round(state.sync+Math.sin(t*.06)*1.5)+'%';
+    $('st-eva').textContent=HOLO_PARTS[holoScanIdx()].id;
+    $('st-psycho').textContent=(v.stressScore??0)>55?'STRESS':'CALM';
+    $('st-tox').textContent=(v.stressScore??0)>65?'HIGH':(v.stressScore??0)>40?'MID':'LOW';
+    $('st-sync').textContent=Math.round(v.readiness??state.sync)+'%';
   }
   if(screen==='ack'&&uiTick){
     const e=(performance.now()-ackT0)/1000;
     $('ack-cnt').textContent='T-MINUS '+fmt7(Math.max(0,30-e));
-    const vi=Math.floor(t/28);
     [1,2,3].forEach((n,i)=>{
-      $('mb'+n).style.width=(72+Math.sin(t*.012+i)*18)+'%';
-      const v=$('mv'+n),ver=MAGI_VERDICTS[(vi+i)%MAGI_VERDICTS.length];
-      if(v.textContent!==ver){v.classList.remove('flash-v');void v.offsetWidth;v.classList.add('flash-v')}
-      v.textContent=ver;
+      $('mb'+n).style.width=Math.min(100,live.magi[i]??72)+'%';
+      const el=$('mv'+n),ver=live.magi[i]>=70?'APPROVE':live.magi[i]>=55?'HOLD':'DENY';
+      if(el.textContent!==ver){el.classList.remove('flash-v');void el.offsetWidth;el.classList.add('flash-v')}
+      el.textContent=ver;
     });
-    $('ack-plug').textContent=(4.15+Math.sin(t*.01)*.06).toFixed(1)+'m';
+    $('ack-plug').textContent=(4+((v.sleepHours??7)-7)*.15).toFixed(1)+'m';
     $('ack-lcl').textContent=state.lcl.toFixed(1);
-    $('ack-sync').textContent=Math.round(state.sync)+'%';
-    $('ack-eva').textContent=['STANDBY','ARMED','READY'][Math.floor(t/45)%3];
-    $('ack-status').textContent='MAGI VOTE '+Math.floor(t/28)%3+'/3 • BARRIER '+live.at.toFixed(2);
-    $('ack-threat').textContent=Math.floor(t/90)%2
-      ?'⚠ ANGEL DETECTED — PATTERN BLUE UNCONFIRMED'
-      :'⚠ ALL PERSONNEL — BATTLE STATIONS IMMEDIATE';
+    $('ack-sync').textContent=Math.round(v.readiness??state.sync)+'%';
+    $('ack-eva').textContent=(v.readiness??0)>=70?'READY':(v.readiness??0)>=55?'ARMED':'STANDBY';
+    $('ack-status').textContent=`MAGI ${live.magi.join('/')} • BARRIER ${live.at.toFixed(2)}`;
+    $('ack-threat').textContent=(v.stressScore??0)>60
+      ?'⚠ STRESS ELEVATED — NEURAL LOAD HIGH'
+      :'⚠ ALL SYSTEMS NOMINAL — BATTLE STATIONS STANDBY';
   }
   if(screen==='hud'&&uiTick){
     $('hud-live').innerHTML=
-      `AT FIELD <span class="g">${live.at.toFixed(2)}</span> • PULSE <span class="v">${Math.round(live.pulse)}</span> • RESERVE <span class="v">${live.reserve.toFixed(1)}%</span><br>`+
-      `BORDER <span class="v">${live.border.toFixed(3)}</span> • MAGI <span class="g">${live.magi.join('/')}</span>`;
+      `AT FIELD <span class="g">${live.at.toFixed(2)}</span> • PULSE <span class="v">${Math.round(live.pulse)}</span> • RESERVE <span class="v">${live.reserve.toFixed(0)}%</span><br>`+
+      `HRV <span class="v">${v.hrvMs??'—'}</span> • STRESS <span class="v">${v.stressScore??'—'}</span> • MAGI <span class="g">${live.magi.join('/')}</span>`;
     if(ouraConnected)renderHudSub();
     else $('hud-sub').textContent=`PILOT: IKARI SHINJI • PLUG ${(4.15+Math.sin(t*.01)*.05).toFixed(1)}m • LCL ${state.lcl.toFixed(1)}`;
     if(frame%150===0){
@@ -1239,23 +1286,25 @@ function drawSysCheck(ctx,w,h,full){
 }
 
 function drawNeural(ctx,w,h,fast){
-  const ft=fast?frame:animT();
-  const spd=fast?0.48:0.14;
+  const ft=fast?frame:animT(),ha=healthAnim,v=pilot.vitals;
+  const spd=(fast?.48:.14)*(ha.waveSpeed||1);
+  const ampBase=4+ha.hrvN*14,chaos=ha.stressN*6;
   ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.04);
   const cols=6,cw=w/cols;
   for(let c=0;c<cols;c++){
-    const x0=c*cw;if(c){ctx.fillStyle='#FF2D00';ctx.fillRect(x0,0,2,h)}
+    const x0=c*cw;if(c){ctx.fillStyle=ha.stressN>.5?NGE.red:NGE.orange;ctx.fillRect(x0,0,2,h)}
     ctx.fillStyle='#FF9500';ctx.font='6px monospace';ctx.fillText(REGIONS[c],x0+2,h>40?10:4);
-    ctx.strokeStyle='#8EDF5F';ctx.lineWidth=1.2;ctx.beginPath();
-    const mid=h/2;
+    ctx.strokeStyle=ha.stressN>.55?NGE.red:NGE.greenS;ctx.lineWidth=ha.stressN>.5?1.6:1.2;ctx.beginPath();
+    const mid=h/2+(v.rhrBpm??58)-58;
     for(let x=x0+1;x<x0+cw-1;x+=1){
-      const t=(x-x0)*.12+ft*spd+c*1.4;
-      const y=mid+Math.sin(t)*(10+c*4)+Math.sin(t*4.2)*5+Math.sin(t*9)*2;
+      const t=(x-x0)*(.1+ha.hrvN*.04)+ft*spd+c*1.4;
+      const y=mid+Math.sin(t)*(ampBase+c*2)+Math.sin(t*4.2)*chaos+Math.sin(t*9)*ha.stressN*2;
       x===x0+1?ctx.moveTo(x,y):ctx.lineTo(x,y);
     }
     ctx.stroke();
   }
-  ctx.strokeStyle='#FF2D00';ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+  ctx.strokeStyle=NGE.red;ctx.beginPath();ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+  if(h>40){ctx.fillStyle=NGE.greenS;ctx.font='5px monospace';ctx.fillText('HRV '+ (v.hrvMs??'—')+'ms',4,h-4)}
 }
 
 function drawMagi(ctx,w,h,fast){
@@ -1292,14 +1341,15 @@ function drawEvaScan(ctx,w,h,fast){
   drawHealthScanOverlay(ctx,w,h,ft*(fast?2.2:1),hi);
   ctx.fillStyle=NGE.orange;ctx.font='7px monospace';ctx.fillText('初号機 EVA-01',4,12);
   ctx.fillStyle=NGE.purple;ctx.font='5px monospace';ctx.fillText('PILOT: IKARI',4,20);
-  const bw=w-8,fill=.5+.35*Math.sin(ft*(fast?.14:.04));
+  const bw=w-8,fill=((pilot.vitals.readiness??72)/100)+hJitter(.04,fast?.14:.04,ft)*.15;
   ctx.strokeStyle=NGE.orange;ctx.strokeRect(4,h-16,bw,10);
-  ctx.fillStyle=NGE.greenS;ctx.fillRect(4,h-16,bw*fill,10);
+  ctx.fillStyle=NGE.greenS;ctx.fillRect(4,h-16,bw*Math.min(1,Math.max(0,fill)),10);
 }
 
 function drawPsycho(ctx,w,h,intense){
-  const ft=intense?frame:animT();
-  const pspd=intense?0.38:0.1;
+  const ft=intense?frame:animT(),sn=healthAnim.stressN;
+  const pspd=(intense?.38:.1)*(1+sn*.6);
+  intense=intense||sn>.5;
   ctx.fillStyle=NGE.panel;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.05);
   ctx.strokeStyle='rgba(142,223,95,.3)';ctx.lineWidth=.5;
   const step=intense?16:12;
@@ -1343,7 +1393,7 @@ function drawWave(ctx,w,h,syncNorm,fast){
 /* HUD holo panel — continuous turntable rotation + live structural health scan */
 function drawHoloPanel(ctx,w,h,syncPct){
   const ft=animT(),hi=holoScanIdx(),ha=healthAnim;
-  const health=Math.min(100,Math.max(0,syncPct*88+10+Math.sin(ft*.05)*3));
+  const health=Math.min(100,Math.max(0,syncPct+hJitter(2,.05,ft)));
 
   ctx.fillStyle=NGE.panel;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.05);
   ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(2,2,w-4,h-4);
@@ -1365,7 +1415,7 @@ function drawHoloPanel(ctx,w,h,syncPct){
 
 function updateHoloBar(sync){
   const ft=animT(),hi=holoScanIdx(),p=HOLO_PARTS[hi];
-  const health=Math.min(100,Math.max(0,sync*.85+10+Math.sin(ft*.05)*2));
+  const health=Math.min(100,Math.max(0,sync+hJitter(1.2,.05,ft)));
   const el=$('holo-fill');if(el)el.style.width=health+'%';
   $('holo-pct').textContent=health.toFixed(0)+'%';
   $('holo-sector').textContent='SECT '+p.id;
@@ -1379,8 +1429,6 @@ function updateHoloBar(sync){
 function tickLandingFeeds(){
   if(frame%90===0)syncAllCanvases();
   const t=animT();
-  sysLevels=sysLevels.map((v,i)=>Math.min(1,v+.006+Math.sin(t*.08+i)*.004));
-  segLevels=segLevels.map((v,i)=>Math.min(1,v+.005+Math.sin(t*.06+i*1.2)*.004));
 
   document.querySelectorAll('.feed.live canvas').forEach(c=>{
     const id=c.id,ctx=c.getContext('2d'),w=c.width,h=c.height;
@@ -1389,10 +1437,7 @@ function tickLandingFeeds(){
     else if(id==='fc-magi')drawMagi(ctx,w,h,false);
     else if(id==='fc-eva')drawEvaScan(ctx,w,h,false);
     else if(id==='fc-psycho')drawPsycho(ctx,w,h,false);
-    else if(id==='fc-wave')drawWave(ctx,w,h,state.sync/100,false);
-  });
-  if(frame%8===0)document.querySelectorAll('.tox-bars-land .b').forEach((b,i)=>{
-    b.style.height=(14+i*2+Math.sin(t*.08+i)*2)+'px';
+    else if(id==='fc-wave')drawWave(ctx,w,h,(pilot.vitals.readiness??state.sync)/100,false);
   });
 
   const elapsed=(performance.now()-landT0)/1000;
@@ -1405,7 +1450,7 @@ function tickLandingFeeds(){
   }
   if(frame%14===0){
     $('cc-meta').textContent=['第3新東京市 • 司令室','GEOFRONT • DEPTH 1200m','NERV-01 • MAGI ARRAY'][Math.floor(t/55)%3];
-    $('land-magi-txt').textContent='VOTE '+live.magi.join('/')+'%';
+    $('land-magi-txt').textContent='MAGI '+live.magi.join('/')+'%';
     $('land-angel-txt').textContent=['PATTERN BLUE — NO CONTACT','ANGEL SIG NULL','RADAR SWEEP ACTIVE'][Math.floor(t/40)%3];
   }
   drawAngelMap($('land-angel').getContext('2d'),72,56,t);
@@ -1414,35 +1459,27 @@ function tickLandingFeeds(){
 
 async function bootLandingFeeds(){
   landBooting=true;landReady=false;
-  const boot=$('land-boot'),status=$('land-boot-status');
-  boot?.classList.remove('hide');
-  status.textContent='INITIALIZING LIVE FEEDS...';
-  const msgs=['SCANNING MAGI ARRAY...','LINKING NEURAL FEEDS...','EVA-01 STRUCTURAL ONLINE...','PSYCHOGRAPHIC ACTIVE...','ALL FEEDS NOMINAL'];
+  applyHealthVisuals(pilot.vitals);
   try{
     for(let i=0;i<FEED_ORDER.length;i++){
-      EvaAudio.stingAt(EvaAudio.FEED_CUES[i]||4.4+i*.75);
-      if(i%3===0)flash(i%2?'rgba(153,92,208,.2)':'rgba(255,107,0,.18)');
-      if(i%4===0)cascadeAlert(msgs[Math.min(i,msgs.length-1)],'ok');
-      status.textContent=msgs[Math.min(i,msgs.length-1)];
       const el=document.querySelector('.'+FEED_ORDER[i]);
       if(el){el.classList.add('live');const cv=el.querySelector('canvas');if(cv)requestAnimationFrame(()=>syncCanvas(cv))}
-      await wait(75);
+      await wait(35);
     }
-    flash('rgba(142,223,95,.2)');$('cc-header').style.opacity='1';
-    status.textContent='CONTROL CENTER ONLINE';
-    await wait(280);
+    $('cc-header').style.opacity='1';
+    flash('rgba(142,223,95,.12)');
+    await wait(120);
   }finally{
-    $('land-boot').classList.add('hide');
     landBooting=false;landT0=performance.now();
     EvaAudio.startAmbient();
-    // Do not gate on requestAnimationFrame — embedded browsers may throttle rAF
-    setTimeout(enableEngage,400);
+    setTimeout(enableEngage,200);
   }
 }
 
 function buildDom(){
   $('cc-track').textContent=TICKER.concat(TICKER).join('  ///  ')+'  ///  ';
-  $('land-tox').innerHTML=TOX.map((n,i)=>`<div class="b" style="height:${14+i*2}px"></div>`).join('');
+  $('land-tox').innerHTML=TOX.map(()=>'<div class="b"></div>').join('');
+  updateToxBarHeights(deriveTelemetry(pilot.vitals,0).toxLevels);
   $('parts-p').innerHTML=PARTS.map(([t,s])=>`<div class="${s==='bad'?'bad':''}">${t}</div>`).join('');
 }
 
@@ -1527,6 +1564,7 @@ function applyPilotToState(){
   state.sync=v.readiness??state.sync;
   if(pilot.nutrition){state.protein=pilot.nutrition.proteinG??state.protein;state.hydration=pilot.nutrition.hydrationPct??state.hydration}
   state.lcl=Math.min(99.9,94+(v.sleepScore??70)*.05);
+  applyHealthVisuals(v);
   saveState();
 }
 function renderHudLive(){
@@ -1660,7 +1698,7 @@ function handleCardAction(e){
 }
 function updateHealthCards(){
   const v=pilot.vitals;
-  healthAnim=computeHealthAnim(v);applyHealthAnim();
+  applyHealthVisuals(v);
   const n=$('card-readiness-val');if(n){n.textContent=Math.round(v.readiness??displaySync);n.className='hcard-val '+valClass(v.readiness??72,75,55)}
   $('card-readiness-sub').textContent=`HRV ${v.hrvMs??'—'} · RHR ${v.rhrBpm??'—'} · ${fmtTemp(v.tempDeviation)}`;
   const sl=$('card-sleep-val');if(sl){sl.textContent=v.sleepScore??'—';sl.className='hcard-val '+valClass(v.sleepScore??0,75,55)}
@@ -1744,8 +1782,7 @@ function tick(){
   dataFrame+=isAnimFast()?1:DATA_RATE;
   if(screen==='landing'){tickLandingFeeds();if(landReady)EvaAudio.maintainAmbient()}
   if(sysBoot){
-    sysLevels=sysLevels.map((v,i)=>Math.min(1,v+.04+Math.sin(frame*.08+i)*.02));
-    segLevels=segLevels.map((v,i)=>Math.min(1,v+.03+Math.sin(frame*.07+i)*.03));
+    refreshMotionLevels(animT());
     const bc=$('bc-sys');if(bc)drawSysCheck(bc.getContext('2d'),bc.width,bc.height,true);
   }
   if(bootPhase==='eva'){
@@ -1812,16 +1849,15 @@ $('hud-deck')?.addEventListener('click',e=>{
 });
 
 handleOAuthReturn();
-buildDom();loadState();loadManualLogs();applyPilotToState();healthAnim=computeHealthAnim(pilot.vitals);
-applyHealthAnim();updateHealthCards();renderHudLive();renderHudSub();renderHudAlerts();updateOuraBadge();
+buildDom();loadState();loadManualLogs();applyPilotToState();updateHealthCards();renderHudLive();renderHudSub();renderHudAlerts();updateOuraBadge();
 fetchHoloAsset();syncAllCanvases();
 let resizeT;window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(syncAllCanvases,80)});
 requestAnimationFrame(tick);
-runStartupSequence().then(()=>{
+runStartupSequence().then(async ()=>{
   syncAllCanvases();
+  await syncOura();
   bootLandingFeeds();
   fetchHoloAsset().then(()=>ensureHudVideoPlaying());
-  syncOura();
   setInterval(syncOura,REFRESH_MS);
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)maintainHudVideo()});
