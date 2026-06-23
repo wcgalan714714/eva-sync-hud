@@ -270,8 +270,8 @@
   #hud-scope{position:absolute;right:52px;top:72px;width:120px;height:120px;z-index:3;opacity:.35;pointer-events:none}
   #hud-atfield{position:absolute;left:200px;top:88px;width:64px;height:64px;z-index:3;opacity:.5;pointer-events:none}
   #hud-gauss{position:absolute;right:200px;top:218px;width:80px;height:36px;z-index:3;opacity:.6;pointer-events:none}
-  .hud-alert-strip{position:absolute;left:28px;top:218px;width:165px;font-size:4px;line-height:1.5;color:rgba(230,0,18,.7);
-    border-left:2px solid var(--red);padding-left:4px;z-index:4;max-height:28px;overflow:hidden}
+  .hud-alert-strip{position:absolute;left:28px;top:234px;width:165px;font-size:4px;line-height:1.5;color:rgba(230,0,18,.7);
+    border-left:2px solid var(--red);padding-left:4px;z-index:4;max-height:24px;overflow:hidden}
   .hud-side{position:absolute;left:0;top:0;bottom:0;width:22px;
     background:linear-gradient(180deg,var(--purple-deep) 0%,var(--purple-eva) 40%,var(--blood) 100%);
     box-shadow:4px 0 20px rgba(122,62,181,.3)}
@@ -323,13 +323,6 @@
   .parts-p .scan{color:var(--orange-bright);text-shadow:0 0 8px var(--orange);animation:live .25s step-end infinite}
   .hud-ref{position:absolute;left:200px;top:118px;width:108px;font-size:5px;line-height:1.45;color:rgba(153,92,208,.55);border-left:2px solid var(--purple);padding-left:4px}
   .parts-p .on{color:var(--green-neon)}.parts-p .bad{color:var(--red)}
-  .stats-p{position:absolute;right:10px;top:222px;width:195px;font-size:7px;text-align:right}
-  .stats-p .v{color:var(--orange-bright);font-weight:900}
-  .tox-p{position:absolute;left:26px;top:222px;width:280px}
-  .tox-p h{font-size:7px;color:var(--orange);margin-bottom:2px}
-  .tox-p .bars{display:flex;gap:3px;align-items:flex-end;height:32px;border-left:2px solid var(--purple);padding-left:4px}
-  .tox-p .bars .b{width:16px;background:var(--green-neon);animation:tb .45s ease-in-out infinite}
-  .tox-p .bars .b.bad{background:var(--red)}
   .wv{position:absolute;left:26px;right:8px;bottom:44px;height:58px;border:1px solid rgba(142,223,95,.3);overflow:hidden;
     background:rgba(0,0,0,.4);box-shadow:inset 0 0 20px rgba(122,62,181,.12)}
   .wv.overload{border-color:var(--red);animation:gw .2s ease-in-out infinite}
@@ -340,30 +333,56 @@
   .hud-fringe{position:absolute;top:34px;right:8px;font-size:4px;color:var(--muted);letter-spacing:2px;text-align:right;line-height:1.5;z-index:4}
   .log-p .h{color:var(--purple)}.log-p .b{color:var(--orange-bright)}
   .log-p .b.hit{animation:ch .08s steps(2) 3}
-  .wing-strip{position:absolute;top:22px;left:118px;right:198px;display:flex;gap:2px;z-index:12}
-  .wing-tab{flex:1;border:1px solid rgba(122,62,181,.5);background:rgba(8,8,16,.88);font-size:4px;
-    letter-spacing:.8px;padding:3px 1px;text-align:center;color:var(--muted);cursor:pointer;transition:color .1s,border-color .1s}
-  .wing-tab.on,.wing-tab:hover{color:var(--green-neon);border-color:var(--orange);background:rgba(255,107,0,.12)}
-  .wing-panel{position:absolute;left:28px;right:8px;top:218px;bottom:42px;z-index:11;display:none;
-    border:1px solid var(--purple-eva);background:rgba(12,12,24,.94);padding:6px 8px;font-size:6px;line-height:1.45;
-    overflow:auto;box-shadow:0 0 24px rgba(122,62,181,.2),inset 0 0 30px rgba(0,0,0,.8)}
-  .wing-panel.on{display:block}
-  .wing-panel .wl{color:var(--orange);font-size:5px;letter-spacing:1.5px;margin-bottom:4px;font-weight:900}
-  .wing-panel .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-  .wing-panel .cell{border:1px solid rgba(122,62,181,.35);padding:4px;background:rgba(8,8,16,.6)}
-  .wing-panel .cell .v{color:var(--orange-bright);font-weight:900;font-size:9px}
-  .wing-panel .cell .jp{color:var(--purple);font-size:4px}
-  .wing-panel input[type=range]{width:100%;accent-color:var(--orange)}
-  .wing-panel button{border:1px solid var(--orange);background:rgba(255,107,0,.1);color:var(--orange-bright);
-    font:inherit;font-size:5px;padding:3px 6px;cursor:pointer;margin-top:4px}
+  .hud-deck{position:absolute;left:200px;top:40px;right:200px;height:58px;display:flex;gap:3px;z-index:12}
+  .hcard{flex:1;min-width:0;position:relative;border:1px solid rgba(122,62,181,.55);
+    background:linear-gradient(160deg,rgba(12,12,24,.92),rgba(8,8,16,.88));cursor:pointer;overflow:visible;
+    box-shadow:0 0 10px rgba(122,62,181,.12),inset 0 0 16px rgba(0,0,0,.7);transition:flex .18s,border-color .12s,box-shadow .12s}
+  .hcard::before{content:'';position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,159,.03) 3px 4px);opacity:.6}
+  .hcard:hover,.hcard.expanded{border-color:var(--orange);box-shadow:0 0 14px rgba(255,107,0,.2),inset 0 0 12px rgba(255,107,0,.06)}
+  .hcard.expanded{flex:1.65;z-index:14}
+  .hcard.warn{border-color:rgba(230,0,18,.65);animation:cardWarn .35s ease-in-out infinite}
+  .hcard.ok{border-color:rgba(0,255,159,.35)}
+  .hcard.syncing{animation:cardSync .6s ease-in-out infinite}
+  @keyframes cardWarn{50%{box-shadow:0 0 16px rgba(230,0,18,.25)}}
+  @keyframes cardSync{50%{border-color:var(--green-neon);box-shadow:0 0 18px rgba(0,255,159,.3)}}
+  .hcard-hd{font-size:4px;letter-spacing:1px;color:var(--orange);padding:2px 4px 0;font-weight:900}
+  .hcard-hd .jp{color:var(--purple);font-weight:400;margin-left:2px}
+  .hcard-val{font-size:11px;font-weight:900;color:var(--orange-bright);padding:0 4px;line-height:1;
+    font-variant-numeric:tabular-nums;text-shadow:0 0 8px rgba(255,107,0,.4)}
+  .hcard-val.good{color:var(--green-neon);text-shadow:0 0 10px rgba(0,255,159,.5)}
+  .hcard-val.bad{color:var(--red);text-shadow:0 0 10px rgba(230,0,18,.5)}
+  .hcard-sub{font-size:4px;color:rgba(142,223,95,.55);padding:0 4px 2px}
+  .hcard-cv{width:100%;height:14px;display:block;margin-top:1px;opacity:.85}
+  .hcard-pulse{position:absolute;bottom:2px;right:3px;width:4px;height:4px;border-radius:50%;background:var(--green-neon);
+    opacity:0;animation:none}
+  .hcard.live .hcard-pulse{opacity:1;animation:live .4s step-end infinite}
+  .hcard-detail{position:absolute;left:-1px;right:-1px;top:calc(100% + 2px);display:none;
+    border:1px solid var(--orange);background:rgba(10,10,20,.97);padding:5px 6px;font-size:5px;line-height:1.5;
+    z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.8);max-height:72px;overflow:auto}
+  .hcard.expanded .hcard-detail{display:block}
+  .hcard-detail .row{display:flex;justify-content:space-between;gap:6px;margin-bottom:2px}
+  .hcard-detail .row .v{color:var(--orange-bright);font-weight:900}
+  .hcard-detail input[type=range]{width:100%;accent-color:var(--orange);height:8px}
+  .hcard-detail button{border:1px solid var(--orange);background:rgba(255,107,0,.1);color:var(--orange-bright);
+    font:inherit;font-size:4px;padding:2px 5px;cursor:pointer;margin-top:3px;margin-right:4px}
+  .sys-check-lbl{position:absolute;left:200px;top:100px;width:200px;font-size:4px;color:var(--purple);letter-spacing:1.5px;z-index:5}
   .oura-badge{position:absolute;top:6px;right:198px;font-size:5px;z-index:12;cursor:pointer;letter-spacing:1px;
     border:1px solid rgba(122,62,181,.4);padding:2px 5px;background:rgba(8,8,16,.8)}
   .oura-badge.live{color:var(--green-neon);border-color:var(--green-neon);animation:live .5s step-end infinite}
   .oura-badge.mock{color:var(--orange)}
+  #screen-hud{--wave-speed:1;--holo-scan-ms:32;--lcl-pulse:4s;--orbit-spin:10s;--holo-rot:.022;--scan-hot:0}
+  #screen-hud.stress-high .hud-lcl{animation-duration:var(--lcl-pulse)}
+  #screen-hud .g-orbit{animation-duration:var(--orbit-spin)}
+  #screen-hud .holo-panel{animation-duration:calc(2.4s / var(--wave-speed))}
+  #screen-hud.scan-urgent .scanlines{animation-duration:.08s}
   #app.shell-glitch{animation:sgl .12s steps(2) infinite}
   @keyframes sgl{50%{filter:hue-rotate(6deg) saturate(1.35);transform:translateX(1px)}}
-  .hud-core-hide{opacity:.15;pointer-events:none}
-  #wing-trend-cv{width:100%;height:48px;display:block;margin-top:4px;border:1px solid rgba(142,223,95,.25)}
+  .hud-check-banner{position:absolute;left:28px;right:8px;top:218px;height:14px;font-size:4px;letter-spacing:2px;
+    color:rgba(0,255,159,.65);border-left:2px solid var(--green-neon);padding-left:6px;z-index:5;
+    display:flex;align-items:center;gap:8px}
+  .hud-check-banner .dot{width:5px;height:5px;border-radius:50%;background:var(--green-neon);animation:live .3s step-end infinite}
+  .hud-check-banner.stress .dot{background:var(--red);animation-duration:.12s}
   #ack-crosshair{position:absolute;inset:0;z-index:4;opacity:.2;pointer-events:none}
   .ack-stack{position:absolute;left:24px;top:148px;width:120px;z-index:4;font-size:4px;color:var(--red);line-height:1.4;opacity:.85}
 </style>
@@ -503,16 +522,52 @@
     <div class="hud-side"></div>
     <div class="hud-hd"><span class="t">PRESENT STATUS — 初号機 EVA-01</span><span class="m" id="hud-mode">FIELD OPS</span></div>
     <div class="oura-badge mock" id="oura-badge" title="Click to force sync">○ MOCK</div>
-    <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • ENTRY PLUG DEPTH 4.2m</div>
-    <div class="wing-strip" id="wing-strip">
-      <div class="wing-tab on" data-wing="status">STATUS</div>
-      <div class="wing-tab" data-wing="sleep">SLEEP</div>
-      <div class="wing-tab" data-wing="strain">STRAIN</div>
-      <div class="wing-tab" data-wing="nutrition">NUTR</div>
-      <div class="wing-tab" data-wing="trends">TREND</div>
+    <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • LIVE SYSTEM CHECK ACTIVE</div>
+    <div class="hud-deck" id="hud-deck">
+      <div class="hcard live ok" data-card="neural">
+        <div class="hcard-hd">NEURAL<span class="jp">神経</span></div>
+        <div class="hcard-val good" id="card-neural-val">72</div>
+        <div class="hcard-sub" id="card-neural-sub">HRV — · RHR —</div>
+        <canvas class="hcard-cv" id="card-neural-cv" width="68" height="14"></canvas>
+        <div class="hcard-pulse"></div>
+        <div class="hcard-detail" id="card-neural-detail"></div>
+      </div>
+      <div class="hcard live" data-card="sleep">
+        <div class="hcard-hd">SLEEP<span class="jp">睡眠</span></div>
+        <div class="hcard-val" id="card-sleep-val">—</div>
+        <div class="hcard-sub" id="card-sleep-sub">RECOVERY —</div>
+        <canvas class="hcard-cv" id="card-sleep-cv" width="68" height="14"></canvas>
+        <div class="hcard-pulse"></div>
+        <div class="hcard-detail" id="card-sleep-detail"></div>
+      </div>
+      <div class="hcard live" data-card="strain">
+        <div class="hcard-hd">STRAIN<span class="jp">負荷</span></div>
+        <div class="hcard-val" id="card-strain-val">—</div>
+        <div class="hcard-sub" id="card-strain-sub">STEPS —</div>
+        <canvas class="hcard-cv" id="card-strain-cv" width="68" height="14"></canvas>
+        <div class="hcard-pulse"></div>
+        <div class="hcard-detail" id="card-strain-detail"></div>
+      </div>
+      <div class="hcard live" data-card="nutr">
+        <div class="hcard-hd">NUTR<span class="jp">栄養</span></div>
+        <div class="hcard-val" id="card-nutr-val">—</div>
+        <div class="hcard-sub" id="card-nutr-sub">HYD —%</div>
+        <canvas class="hcard-cv" id="card-nutr-cv" width="68" height="14"></canvas>
+        <div class="hcard-pulse"></div>
+        <div class="hcard-detail" id="card-nutr-detail"></div>
+      </div>
+      <div class="hcard live" data-card="trend">
+        <div class="hcard-hd">TREND<span class="jp">推移</span></div>
+        <div class="hcard-val" id="card-trend-val">7D</div>
+        <div class="hcard-sub" id="card-trend-sub">READINESS</div>
+        <canvas class="hcard-cv" id="card-trend-cv" width="68" height="14"></canvas>
+        <div class="hcard-pulse"></div>
+        <div class="hcard-detail" id="card-trend-detail"></div>
+      </div>
     </div>
+    <div class="sys-check-lbl">LIVE PILOT TELEMETRY — CLICK CARD FOR DETAIL</div>
+    <div class="hud-check-banner" id="hud-check-banner"><span class="dot"></span><span id="hud-check-txt">SYSTEM CHECK NOMINAL</span></div>
     <div class="hud-live" id="hud-live"></div>
-    <div class="wing-panel" id="wing-panel"></div>
     <div class="holo-panel">
       <div class="ret tl"></div><div class="ret tr"></div><div class="ret bl"></div><div class="ret br"></div>
       <div class="holo-lbl">SYSTEM CHECK<span id="holo-sub">STRUCTURAL INSPECTION</span></div>
@@ -534,13 +589,7 @@
       <div class="g-orbit"></div>
       <div class="g-core" id="g-core"><div class="g-hole"><div class="sync-n" id="sync-n">72</div><div class="sync-l">SYNC %</div></div></div>
     </div>
-    <div class="stats-p">
-      <div>PROTEIN <span class="v" id="s-prot">1240g</span></div>
-      <div>HYDRATION <span class="v" id="s-hyd">87%</span></div>
-      <div>LCL <span class="v" id="s-lcl">98.4</span></div>
-      <div class="v" id="s-st" style="color:var(--green-neon);margin-top:4px;font-weight:900">AT FIELD STABLE</div>
-    </div>
-    <div class="tox-p"><h>MENTAL TOXICITY</h><div class="bars" id="tox-p"></div></div>
+
     <div class="wv-label">NEURAL SYNC TRACE • 神経同期</div>
     <div class="wv"><canvas id="hud-wv" width="564" height="58"></canvas></div>
     <div class="log-p"><div class="h">NEURAL LOG • <span id="log-t">--:--:--</span></div><div class="b" id="log-b">SYSTEM ONLINE</div></div>
@@ -576,13 +625,14 @@ const DATA_RATE=0.18;
 const live={at:1.02,pulse:72,reserve:87.3,border:.12,magi:[94,91,88],collapse:223.2};
 const holoImg=new Image();holoImg.src='/assets/mainmenuEVAholo.jpg';
 const KNEE_KEY='eva_knee_log',NUTRITION_KEY='eva_nutrition_log',HISTORY_KEY='eva_pilot_history';
-const REFRESH_MS=5*60*1000;
+const REFRESH_MS=90*1000;
 let pilot={
   source:'mock',status:'nominal',lastSync:null,ouraConnected:false,alerts:[],
   vitals:{readiness:72,hrvMs:42,rhrBpm:58,tempDeviation:.1,stressScore:28,sleepScore:78,sleepHours:7.2,strainScore:45,steps:6200,activeCalories:320},
   knee:null,nutrition:{date:new Date().toISOString().slice(0,10),proteinG:1240,fastingHours:14,hydrationPct:87}
 };
-let activeWing='status',ouraConnected=false,syncing=false;
+let expandedCard=null,ouraConnected=false,syncing=false,lastSyncPulse=0;
+let healthAnim=computeHealthAnim(pilot.vitals);
 const HOLO_PARTS=[
   {id:'0001',name:'HEAD',x:0,y:-38,bad:false},
   {id:'0002',name:'ARM',x:-18,y:-8,bad:true},
@@ -590,7 +640,40 @@ const HOLO_PARTS=[
   {id:'0004',name:'AT FIELD',x:0,y:14,bad:false},
   {id:'0005',name:'SYNC',x:0,y:-18,bad:false}
 ];
-function holoScanIdx(){return Math.floor(animT()/32)%HOLO_PARTS.length}
+function holoScanIdx(){return Math.floor(animT()/(healthAnim.holoScanMs||32))%HOLO_PARTS.length}
+function computeHealthAnim(v){
+  const stress=v.stressScore??30,ready=v.readiness??72,hrv=v.hrvMs??42,sleep=v.sleepScore??78,strain=v.strainScore??45;
+  const stressN=stress/100,readyN=ready/100,sleepN=sleep/100,strainN=strain/100,hrvN=Math.min(1,hrv/80);
+  return{
+    waveSpeed:.55+stressN*1.1+(1-hrvN)*.35,
+    waveAmp:readyN*.85+.15,
+    stressN,readyN,sleepN,strainN,
+    holoScanMs:Math.max(14,38-readyN*22-stressN*8),
+    holoRot:.014+stressN*.018+(1-sleepN)*.006,
+    lclPulse:Math.max(1.8,5.5-sleepN*2.5-stressN*1.2)+'s',
+    orbitSpin:Math.max(4,14-strainN*8-stressN*3)+'s',
+    toxPulse:Math.max(.18,.55-stressN*.3),
+    atStrength:readyN,
+    scanUrgent:stress>55||ready<55,
+    relaxed:sleep>=75&&stress<35&&ready>=70
+  };
+}
+function applyHealthAnim(){
+  const h=healthAnim,el=$('screen-hud');if(!el)return;
+  el.style.setProperty('--wave-speed',h.waveSpeed.toFixed(2));
+  el.style.setProperty('--holo-scan-ms',h.holoScanMs);
+  el.style.setProperty('--lcl-pulse',h.lclPulse);
+  el.style.setProperty('--orbit-spin',h.orbitSpin);
+  el.style.setProperty('--holo-rot',h.holoRot);
+  el.classList.toggle('stress-high',h.stressN>.45);
+  el.classList.toggle('scan-urgent',h.scanUrgent);
+  const ban=$('hud-check-banner'),txt=$('hud-check-txt');
+  if(ban&&txt){
+    ban.classList.toggle('stress',h.scanUrgent);
+    txt.textContent=h.relaxed?'SYSTEM CHECK NOMINAL — PILOT RELAXED':h.scanUrgent?'LIVE SCAN — ELEVATED STRESS / LOW SYNC':'LIVE SYSTEM CHECK — MONITORING';
+  }
+  $('holo-sub').textContent=h.scanUrgent?'URGENT INSPECTION':'STRUCTURAL INSPECTION';
+}
 
 function isBootAnim(){return sysBoot||bootPhase||psychoBoot||neuralBoot||bootOn}
 function isAnimFast(){return transitioning||bootOn||landBooting||isBootAnim()}
@@ -981,15 +1064,20 @@ function drawPsycho(ctx,w,h,intense){
   }
 }
 
-function drawWave(ctx,w,h,stress,fast){
-  const ft=fast?frame:animT();
-  const wspd=fast?0.22:0.07,overload=stress<.45&&Math.sin(ft*.08)>.92;
+function drawWave(ctx,w,h,syncNorm,fast){
+  const ft=fast?frame:animT(),ha=healthAnim;
+  const wspd=(fast?0.22:0.07)*ha.waveSpeed;
+  const overload=syncNorm<.45||ha.stressN>.55;
+  const relaxed=ha.relaxed;
   ctx.fillStyle='rgba(8,8,16,.75)';ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.03);
   if(overload){ctx.fillStyle='rgba(230,0,18,.08)';ctx.fillRect(0,0,w,h)}
+  if(relaxed){ctx.fillStyle='rgba(0,255,159,.03)';ctx.fillRect(0,0,w,h)}
   [[NGE.purple,0],[NGE.greenS,1.5],[NGE.orange,3]].forEach(([col,off],li)=>{
-    const amp=overload&&li===2?stress*32+18:stress*22+8;
-    ctx.strokeStyle=col;ctx.lineWidth=overload?1.8:1.4;ctx.shadowColor=col;ctx.shadowBlur=overload?6:3;ctx.beginPath();
-    for(let x=0;x<w;x+=1){const t=x*.05+ft*wspd+off;const y=h/2+Math.sin(t)*amp+Math.sin(t*5)*5*stress+Math.sin(t*11)*2;
+    const base=syncNorm*22+8,amp=overload&&li===2?base+ha.stressN*22:relaxed?base*.55:base*(.7+ha.waveAmp*.3);
+    const freq=relaxed?.85:1+ha.stressN*.4;
+    ctx.strokeStyle=col;ctx.lineWidth=overload?1.8:relaxed?1:1.4;ctx.shadowColor=col;ctx.shadowBlur=overload?6:relaxed?2:3;ctx.beginPath();
+    for(let x=0;x<w;x+=1){const t=x*.05*freq+ft*wspd+off;
+      const y=h/2+Math.sin(t)*amp+Math.sin(t*5)*5*syncNorm*ha.stressN+Math.sin(t*11)*2*(1+ha.stressN);
       x===0?ctx.moveTo(x,y):ctx.lineTo(x,y)}
     ctx.stroke();ctx.shadowBlur=0;
   });
@@ -997,13 +1085,13 @@ function drawWave(ctx,w,h,stress,fast){
 
 /* HUD holo panel — continuous turntable rotation + live structural health scan */
 function drawHoloPanel(ctx,w,h,syncPct){
-  const ft=animT(),hi=holoScanIdx();
+  const ft=animT(),hi=holoScanIdx(),ha=healthAnim;
   const health=Math.min(100,Math.max(0,syncPct*88+10+Math.sin(ft*.05)*3));
 
   ctx.fillStyle=NGE.panel;ctx.fillRect(0,0,w,h);drawNgeGrid(ctx,w,h,.05);
   ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(2,2,w-4,h-4);
   if(holoImg.complete){
-    const ang=ft*0.022,ghostA=.12+.08*Math.abs(Math.cos(ang));
+    const ang=ft*ha.holoRot,ghostA=.12+.08*Math.abs(Math.cos(ang));
     ctx.globalAlpha=ghostA;ctx.drawImage(holoImg,w*.04,h*.02,w*.92,h*.88);ctx.globalAlpha=1;
   }
   const ecx=w/2,ecy=h*.54;
@@ -1106,7 +1194,7 @@ function buildDom(){
   $('cc-track').textContent=TICKER.concat(TICKER).join('  ///  ')+'  ///  ';
   $('land-tox').innerHTML=TOX.map((n,i)=>`<div class="b" style="height:${14+i*2}px"></div>`).join('');
   $('parts-p').innerHTML=PARTS.map(([t,s])=>`<div class="${s==='bad'?'bad':''}">${t}</div>`).join('');
-  $('tox-p').innerHTML=TOX.map((n,i)=>`<div class="b ${i===0?'bad':''}" style="height:${16+i*2}px"></div>`).join('');
+
   buildBootSysUi();
 }
 
@@ -1209,61 +1297,120 @@ function updateOuraBadge(){
   b.textContent=syncing?'◌ SYNC…':ouraConnected?'● OURA LIVE':'○ MOCK';
 }
 function setShellGlitch(on){$('app').classList.toggle('shell-glitch',on)}
-function renderWingPanel(){
-  const p=$('wing-panel'),v=pilot.vitals;if(!p)return;
-  if(activeWing==='status'){p.classList.remove('on');p.innerHTML='';return}
-  p.classList.add('on');
-  const grids={
-    sleep:`<div class="wl">SLEEP & RECOVERY — 睡眠</div><div class="grid">
-      <div class="cell"><div class="jp">SLEEP SCORE</div><div class="v">${v.sleepScore??'—'}</div></div>
-      <div class="cell"><div class="jp">HOURS</div><div class="v">${v.sleepHours??'—'}</div></div>
-      <div class="cell"><div class="jp">RECOVERY</div><div class="v">${(v.readiness??0)>=70?'NOMINAL':'RECOVER'}</div></div>
-      <div class="cell"><div class="jp">READINESS</div><div class="v">${v.readiness??'—'}%</div></div></div>`,
-    strain:`<div class="wl">STRAIN & ACTIVITY — 膝</div><div class="grid">
-      <div class="cell"><div class="jp">STRAIN</div><div class="v">${v.strainScore??'—'}</div></div>
-      <div class="cell"><div class="jp">STEPS</div><div class="v">${v.steps?.toLocaleString?.()??v.steps??'—'}</div></div>
-      <div class="cell"><div class="jp">ACTIVE CAL</div><div class="v">${v.activeCalories??'—'}</div></div>
-      <div class="cell"><div class="jp">KNEE</div><div class="v">${pilot.knee?`P${pilot.knee.pain}/10 M${pilot.knee.mobility}%`:'—'}</div></div></div>
-      <div style="margin-top:6px">PAIN <input type="range" id="knee-pain" min="0" max="10" value="${pilot.knee?.pain??3}">
-      MOBILITY <input type="range" id="knee-mob" min="0" max="100" value="${pilot.knee?.mobility??80}">
-      <button type="button" id="knee-log-btn">LOG KNEE</button>`,
-    nutrition:`<div class="wl">NUTRITION — 栄養</div><div class="grid">
-      <div class="cell"><div class="jp">PROTEIN</div><div class="v">${pilot.nutrition?.proteinG??state.protein}g</div></div>
-      <div class="cell"><div class="jp">HYDRATION</div><div class="v">${pilot.nutrition?.hydrationPct??state.hydration}%</div></div>
-      <div class="cell"><div class="jp">FASTING</div><div class="v">${pilot.nutrition?.fastingHours??'—'}h</div></div>
-      <div class="cell"><div class="jp">SYNC BOOST</div><div class="v">+10g / +3%</div></div></div>
-      <div style="margin-top:6px">PROTEIN <input type="range" id="nutr-prot" min="0" max="3000" step="10" value="${pilot.nutrition?.proteinG??state.protein}">
-      HYDRATION <input type="range" id="nutr-hyd" min="0" max="100" value="${pilot.nutrition?.hydrationPct??state.hydration}">
-      <button type="button" id="nutr-log-btn">SAVE NUTRITION</button>
-      <button type="button" id="nutr-boost-btn">+10g PROTEIN</button>`,
-    trends:`<div class="wl">TRENDS — 7-DAY TRACE</div><canvas id="wing-trend-cv" width="540" height="48"></canvas>
-      <div style="margin-top:4px;color:var(--muted);font-size:5px">READINESS · HRV · SLEEP · STRAIN history (local)</div>`
-  };
-  p.innerHTML=grids[activeWing]||'';
-  $('knee-log-btn')?.addEventListener('click',()=>{
-    pilot.knee={date:new Date().toISOString().slice(0,10),pain:+$('knee-pain').value,mobility:+$('knee-mob').value};
-    localStorage.setItem(KNEE_KEY,JSON.stringify(pilot.knee));renderWingPanel();flash('#FF6B00');
-  });
-  $('nutr-log-btn')?.addEventListener('click',()=>{
-    pilot.nutrition={date:new Date().toISOString().slice(0,10),proteinG:+$('nutr-prot').value,hydrationPct:+$('nutr-hyd').value,fastingHours:pilot.nutrition?.fastingHours??14};
-    localStorage.setItem(NUTRITION_KEY,JSON.stringify(pilot.nutrition));applyPilotToState();updateHud(true);renderWingPanel();
-  });
-  $('nutr-boost-btn')?.addEventListener('click',()=>{logProtein();renderWingPanel()});
-  if(activeWing==='trends')drawTrendChart($('wing-trend-cv')?.getContext('2d'),540,48);
-}
-function drawTrendChart(ctx,w,h){
+function valClass(n,good=70,warn=55){return n>=good?'good':n<warn?'bad':''}
+function drawTrendChart(ctx,w,h,metric='readiness'){
   if(!ctx)return;ctx.clearRect(0,0,w,h);ctx.fillStyle=NGE.bg;ctx.fillRect(0,0,w,h);
   let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
-  if(!hist.length){ctx.fillStyle=NGE.muted||'#5A5A6E';ctx.font='6px monospace';ctx.fillText('NO HISTORY — FORCE SYNC',8,h/2);return}
-  const pts=hist.slice(0,7).reverse(),n=pts.length,pad=8;
-  const vals=pts.map(p=>p.readiness),max=100,min=0;
-  ctx.strokeStyle=NGE.green;ctx.lineWidth=1.5;ctx.beginPath();
-  pts.forEach((p,i)=>{const x=pad+i*((w-pad*2)/Math.max(1,n-1)),y=h-pad-((p.readiness-min)/(max-min))*(h-pad*2);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
+  if(!hist.length){ctx.fillStyle='#5A5A6E';ctx.font='5px monospace';ctx.fillText('SYNC…',4,h/2);return}
+  const pts=hist.slice(0,7).reverse(),n=pts.length,pad=2;
+  const vals=pts.map(p=>p[metric]??p.readiness??0),max=100,min=0;
+  ctx.strokeStyle=NGE.green;ctx.lineWidth=1;ctx.beginPath();
+  pts.forEach((p,i)=>{const v=vals[i],x=pad+i*((w-pad*2)/Math.max(1,n-1)),y=h-2-((v-min)/(max-min))*(h-4);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});
   ctx.stroke();
-  ctx.fillStyle=NGE.orange;ctx.font='5px monospace';ctx.fillText('READINESS',pad,8);
+}
+function drawCardSpark(id,ft){
+  const cv=$(id),ha=healthAnim,v=pilot.vitals;if(!cv)return;
+  const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
+  ctx.clearRect(0,0,w,h);ctx.fillStyle='rgba(0,0,0,.35)';ctx.fillRect(0,0,w,h);
+  const card=id.replace('card-','').replace('-cv','');
+  if(card==='neural'){
+    const spd=.12*ha.waveSpeed;
+    ctx.strokeStyle=ha.stressN>.5?NGE.red:NGE.greenS;ctx.lineWidth=1;ctx.beginPath();
+    for(let x=0;x<w;x++){const t=x*.2+ft*spd;const y=h/2+Math.sin(t)*(3+ha.stressN*4);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+    ctx.stroke();
+  }else if(card==='sleep'){
+    const spd=ha.relaxed?.04:.08;
+    ctx.strokeStyle=NGE.purple;ctx.beginPath();
+    for(let x=0;x<w;x++){const t=x*.15+ft*spd;const y=h/2+Math.sin(t)*2.5*(ha.sleepN+.3);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+    ctx.stroke();
+  }else if(card==='strain'){
+    ctx.fillStyle=NGE.orange;
+    for(let i=0;i<5;i++){const bh=(v.strainScore??40)/100*(h-2)*(.4+i*.12);ctx.fillRect(2+i*13,h-bh-1,8,bh)}
+  }else if(card==='nutr'){
+    const fill=(pilot.nutrition?.hydrationPct??state.hydration)/100;
+    ctx.fillStyle=NGE.cyan;ctx.fillRect(2,h-3,w-4,2);
+    ctx.fillStyle=NGE.greenS;ctx.fillRect(2,h-3,(w-4)*fill,2);
+  }else if(card==='trend'){
+    drawTrendChart(ctx,w,h,'readiness');
+  }
+}
+function fillCardDetails(){
+  const v=pilot.vitals;
+  const D={
+    neural:`<div class="row"><span>READINESS (SYNC)</span><span class="v">${v.readiness??'—'}%</span></div>
+      <div class="row"><span>HRV</span><span class="v">${v.hrvMs??'—'}ms</span></div>
+      <div class="row"><span>RHR</span><span class="v">${v.rhrBpm??'—'}bpm</span></div>
+      <div class="row"><span>STRESS</span><span class="v">${v.stressScore??'—'}</span></div>
+      <div class="row"><span>TEMP Δ</span><span class="v">${v.tempDeviation??'—'}</span></div>`,
+    sleep:`<div class="row"><span>SLEEP SCORE</span><span class="v">${v.sleepScore??'—'}</span></div>
+      <div class="row"><span>HOURS</span><span class="v">${v.sleepHours??'—'}</span></div>
+      <div class="row"><span>LCL DENSITY</span><span class="v">${state.lcl.toFixed(1)}</span></div>
+      <div class="row"><span>RECOVERY</span><span class="v">${(v.readiness??0)>=70?'NOMINAL':'RECOVER'}</span></div>`,
+    strain:`<div class="row"><span>STRAIN</span><span class="v">${v.strainScore??'—'}</span></div>
+      <div class="row"><span>STEPS</span><span class="v">${v.steps?.toLocaleString?.()??'—'}</span></div>
+      <div class="row"><span>ACTIVE CAL</span><span class="v">${v.activeCalories??'—'}</span></div>
+      <div class="row"><span>KNEE</span><span class="v">${pilot.knee?`P${pilot.knee.pain}/10 M${pilot.knee.mobility}%`:'—'}</span></div>
+      PAIN <input type="range" id="knee-pain" min="0" max="10" value="${pilot.knee?.pain??3}">
+      MOB <input type="range" id="knee-mob" min="0" max="100" value="${pilot.knee?.mobility??80}">
+      <button type="button" id="knee-log-btn">LOG KNEE</button>`,
+    nutr:`<div class="row"><span>PROTEIN</span><span class="v">${pilot.nutrition?.proteinG??state.protein}g</span></div>
+      <div class="row"><span>HYDRATION</span><span class="v">${pilot.nutrition?.hydrationPct??state.hydration}%</span></div>
+      <div class="row"><span>FASTING</span><span class="v">${pilot.nutrition?.fastingHours??'—'}h</span></div>
+      PROTEIN <input type="range" id="nutr-prot" min="0" max="3000" step="10" value="${pilot.nutrition?.proteinG??state.protein}">
+      HYD <input type="range" id="nutr-hyd" min="0" max="100" value="${pilot.nutrition?.hydrationPct??state.hydration}">
+      <button type="button" id="nutr-log-btn">SAVE</button><button type="button" id="nutr-boost-btn">+10g</button>`,
+    trend:`<div class="row"><span>7-DAY READINESS</span><span class="v">${v.readiness??'—'}% now</span></div>
+      <canvas id="card-trend-detail-cv" width="200" height="36" style="width:100%;margin-top:3px;border:1px solid rgba(142,223,95,.2)"></canvas>
+      <div style="color:var(--muted);margin-top:2px">HRV · SLEEP · STRAIN logged each sync</div>`
+  };
+  Object.keys(D).forEach(k=>{const el=$('card-'+k+'-detail');if(el)el.innerHTML=D[k]});
+  drawTrendChart($('card-trend-detail-cv')?.getContext('2d'),200,36);
+}
+function handleCardAction(e){
+  const t=e.target;if(!t||!t.id)return;
+  if(t.id==='knee-log-btn'){
+    pilot.knee={date:new Date().toISOString().slice(0,10),pain:+$('knee-pain').value,mobility:+$('knee-mob').value};
+    localStorage.setItem(KNEE_KEY,JSON.stringify(pilot.knee));updateHealthCards();flash('#FF6B00');
+  }else if(t.id==='nutr-log-btn'){
+    pilot.nutrition={date:new Date().toISOString().slice(0,10),proteinG:+$('nutr-prot').value,hydrationPct:+$('nutr-hyd').value,fastingHours:pilot.nutrition?.fastingHours??14};
+    localStorage.setItem(NUTRITION_KEY,JSON.stringify(pilot.nutrition));applyPilotToState();updateHud(true);updateHealthCards();
+  }else if(t.id==='nutr-boost-btn'){logProtein();updateHealthCards()}
+}
+function updateHealthCards(){
+  const v=pilot.vitals;
+  healthAnim=computeHealthAnim(v);applyHealthAnim();
+  const n=$('card-neural-val');if(n){n.textContent=Math.round(v.readiness??displaySync);n.className='hcard-val '+valClass(v.readiness??72,75,55)}
+  $('card-neural-sub').textContent=`HRV ${v.hrvMs??'—'}ms · RHR ${v.rhrBpm??'—'}`;
+  const sl=$('card-sleep-val');if(sl){sl.textContent=v.sleepScore??'—';sl.className='hcard-val '+valClass(v.sleepScore??0,75,55)}
+  $('card-sleep-sub').textContent=`${v.sleepHours??'—'}h · ${(v.readiness??0)>=70?'NOMINAL':'RECOVER'}`;
+  const st=$('card-strain-val');if(st){st.textContent=v.strainScore??'—';st.className='hcard-val'}
+  $('card-strain-sub').textContent=`${v.steps?.toLocaleString?.()??'—'} steps`;
+  const nu=$('card-nutr-val');if(nu){nu.textContent=(pilot.nutrition?.proteinG??state.protein)+'g';nu.className='hcard-val'}
+  $('card-nutr-sub').textContent=`HYD ${pilot.nutrition?.hydrationPct??state.hydration}% · LCL ${state.lcl.toFixed(1)}`;
+  let hist=[];try{hist=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]')}catch(_){}
+  const delta=hist.length>=2?hist[0].readiness-hist[1].readiness:0;
+  $('card-trend-val').textContent=(delta>=0?'+':'')+Math.round(delta)||'7D';
+  $('card-trend-sub').textContent=`${hist.length||0} samples`;
+  document.querySelectorAll('.hcard').forEach(c=>{
+    const k=c.dataset.card;
+    c.classList.toggle('ok',k==='neural'&&(v.readiness??72)>=70||k==='sleep'&&(v.sleepScore??0)>=70);
+    c.classList.toggle('warn',k==='neural'&&(v.readiness??72)<55||k==='sleep'&&(v.sleepScore??0)<55||(k==='strain'&&pilot.knee&&pilot.knee.pain>5));
+    c.classList.toggle('syncing',syncing);
+  });
+  fillCardDetails();
+  document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('expanded',c.dataset.card===expandedCard));
+}
+function pulseCardsOnSync(){
+  document.querySelectorAll('.hcard').forEach(c=>{c.classList.add('syncing');setTimeout(()=>c.classList.remove('syncing'),900)});
+  lastSyncPulse=performance.now();flash('#8EDF5F');cascadeAlert('TELEMETRY SYNC COMPLETE','ok');
+}
+function toggleCard(id){
+  expandedCard=expandedCard===id?null:id;
+  document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('expanded',c.dataset.card===expandedCard));
+  if(expandedCard)fillCardDetails();
 }
 async function syncOura(){
-  if(syncing)return;syncing=true;updateOuraBadge();
+  if(syncing)return;syncing=true;updateOuraBadge();document.querySelectorAll('.hcard').forEach(c=>c.classList.add('syncing'));
   try{
     const res=await fetch('/api/oura/sync',{cache:'no-store'});
     const data=await res.json();
@@ -1271,17 +1418,9 @@ async function syncOura(){
     ouraConnected=!!data.connected;pilot.ouraConnected=ouraConnected;
     if(data.error)cascadeAlert(data.error.slice(0,40),'warn');
   }catch(e){cascadeAlert('OURA SYNC FAIL','warn')}
-  syncing=false;updateOuraBadge();renderHudLive();renderWingPanel();setShellGlitch((pilot.vitals.readiness??72)<55);
-  if(screen==='hud')updateHud(true);
-}
-function selectWing(id){
-  activeWing=id;
-  document.querySelectorAll('.wing-tab').forEach(t=>t.classList.toggle('on',t.dataset.wing===id));
-  const hide=id!=='status';
-  ['.tox-p','.stats-p','.hud-alert-strip','.wv','.wv-label'].forEach(sel=>{
-    document.querySelectorAll(sel).forEach(el=>el.classList.toggle('hud-core-hide',hide));
-  });
-  renderWingPanel();
+  syncing=false;updateOuraBadge();renderHudLive();updateHealthCards();setShellGlitch((pilot.vitals.readiness??72)<55);
+  if(screen==='hud'){updateHud(true);pulseCardsOnSync()}
+  else document.querySelectorAll('.hcard').forEach(c=>c.classList.remove('syncing'));
 }
 
 function updateHud(jump){
@@ -1292,18 +1431,18 @@ function updateHud(jump){
   g.classList.remove('good','low');
   const sn=$('sync-n');sn.classList.remove('good');
   sn.textContent=Math.round(displaySync);
-  $('s-prot').textContent=state.protein+'g';$('s-hyd').textContent=state.hydration+'%';$('s-lcl').textContent=state.lcl.toFixed(1);
-  const st=$('s-st');
-  if(displaySync>=75){g.classList.add('good');sn.classList.add('good');st.textContent='AT FIELD STABLE';st.style.color='var(--green-neon)';$('hud-mode').textContent=displaySync>=90?'MAX SYNC':'FIELD OPS'}
-  else if(displaySync<45){g.classList.add('low');st.textContent='⚠ SYNC LOW';st.style.color='var(--red)';$('hud-mode').textContent='WARNING'}
-  else{st.textContent='FIELD OPS';st.style.color='var(--orange-bright)';$('hud-mode').textContent='FIELD OPS'}
-  const si=holoScanIdx();
+  if(displaySync>=75){g.classList.add('good');sn.classList.add('good');$('hud-mode').textContent=displaySync>=90?'MAX SYNC':'FIELD OPS'}
+  else if(displaySync<45){g.classList.add('low');$('hud-mode').textContent='WARNING'}
+  else{$('hud-mode').textContent='FIELD OPS'}
+  const si=holoScanIdx(),stressN=healthAnim.stressN;
   document.querySelectorAll('.parts-p div').forEach((el,i)=>{
     el.classList.toggle('on',i>0&&i<=Math.floor(displaySync/15));
     el.classList.toggle('scan',i===si);
+    el.classList.toggle('bad',i===1&&stressN>.5);
   });
-  document.querySelectorAll('.tox-p .b').forEach((el,i)=>{el.style.height=(i<=Math.floor(displaySync/14)?16+i*2:8)+'px'});
   updateHoloBar(displaySync);
+  $('hud-ref').innerHTML=`LINK: ${ouraConnected?'OURA LIVE':'MOCK'}<br>LCL: ${state.lcl.toFixed(1)}<br>STRESS: ${pilot.vitals.stressScore??'—'}`;
+  const nv=$('card-neural-val');if(nv)nv.textContent=Math.round(displaySync);
 }
 
 function logProtein(){
@@ -1349,19 +1488,25 @@ function tick(){
     updateHud();tickLiveData();renderHudLive();
     setShellGlitch(displaySync<55);
     drawHoloPanel($('holo-canvas').getContext('2d'),164,134,displaySync/100);
-    drawDnaHelix($('hud-dna').getContext('2d'),36,36,animT());
-    drawCrosshair($('hud-scope').getContext('2d'),120,120,animT(),displaySync/100);
-    drawAtField($('hud-atfield').getContext('2d'),64,64,animT(),displaySync/100);
-    drawGaussCurve($('hud-gauss').getContext('2d'),80,36,animT());
+    drawDnaHelix($('hud-dna').getContext('2d'),36,36,animT()*(healthAnim.relaxed?.7:1.1));
+    drawCrosshair($('hud-scope').getContext('2d'),120,120,animT()*healthAnim.waveSpeed,healthAnim.atStrength);
+    drawAtField($('hud-atfield').getContext('2d'),64,64,animT()*healthAnim.waveSpeed,healthAnim.atStrength);
+    drawGaussCurve($('hud-gauss').getContext('2d'),80,36,animT()*(healthAnim.relaxed?.6:1));
     drawWave($('hud-wv').getContext('2d'),564,58,displaySync/100,false);
+    ['neural','sleep','strain','nutr','trend'].forEach(c=>drawCardSpark('card-'+c+'-cv',animT()));
     if(frame%14===0){
-      const alerts=['PAIN IND: LOW','LCL pH 7.0','PLUG DEPTH OK','NEURAL FEED ACTIVE'];
-      $('hud-alerts').innerHTML=alerts.map((a,i)=>'▶ '+a).join('<br>');
+      const v=pilot.vitals,alerts=[
+        `HRV ${v.hrvMs??'—'}ms`,`STRESS ${v.stressScore??'—'}`,`LCL ${state.lcl.toFixed(1)}`,
+        healthAnim.relaxed?'PILOT RELAXED':'NEURAL FEED ACTIVE',pilot.knee?`KNEE P${pilot.knee.pain}/10`:'PAIN IND: LOW'
+      ];
+      $('hud-alerts').innerHTML=alerts.map(a=>'▶ '+a).join('<br>');
     }
     const wvEl=document.querySelector('.wv');
-    if(wvEl)wvEl.classList.toggle('overload',displaySync<45);
-    if(frame%90===0)chroma();
+    if(wvEl)wvEl.classList.toggle('overload',displaySync<45||healthAnim.stressN>.55);
+    if(healthAnim.scanUrgent&&frame%60===0)chroma();
     if(displaySync<45&&frame%24===0)flash('rgba(230,0,18,.3)');
+    if(healthAnim.relaxed&&frame%180===0)flash('rgba(0,255,159,.08)');
+    $('scanlines').classList.toggle('hot',healthAnim.scanUrgent);
     $('sync-n').style.textShadow=displaySync>=75?'0 0 20px '+NGE.green:'none';
   }
   requestAnimationFrame(tick);
@@ -1379,9 +1524,13 @@ document.addEventListener('keydown',e=>{
 });
 $('g-core').onclick=()=>{if(screen==='hud')logProtein()};
 $('oura-badge')?.addEventListener('click',()=>syncOura());
-document.querySelectorAll('.wing-tab').forEach(t=>t.addEventListener('click',()=>selectWing(t.dataset.wing)));
+$('hud-deck')?.addEventListener('click',e=>{
+  if(e.target.closest('button,input')){handleCardAction(e);return}
+  const card=e.target.closest('.hcard');if(card)toggleCard(card.dataset.card);
+});
 
-buildDom();loadState();loadManualLogs();applyPilotToState();renderHudLive();updateOuraBadge();
+buildDom();loadState();loadManualLogs();applyPilotToState();healthAnim=computeHealthAnim(pilot.vitals);
+applyHealthAnim();updateHealthCards();renderHudLive();updateOuraBadge();
 requestAnimationFrame(tick);
 runOpeningMontage().then(()=>bootLandingFeeds());
 syncOura();setInterval(syncOura,REFRESH_MS);
