@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=600, height=600, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>EVA SYNC HUD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -17,12 +17,14 @@
     --cyan:#00E5FF; --text:#E8E8F0; --muted:#5A5A6E;
   }
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--black);font-family:'Share Tech Mono',ui-monospace,Menlo,Consolas,monospace;width:600px;height:600px;margin:0 auto;overflow:hidden}
+  html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--black)}
+  body{font-family:'Share Tech Mono',ui-monospace,Menlo,Consolas,monospace;
+    display:flex;align-items:center;justify-content:center}
   .nge-jp{font-family:'Noto Serif JP',serif;font-weight:900}
   .nge-drama{font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:#fff;text-shadow:0 0 20px var(--green-neon),0 0 40px var(--purple)}
   .nge-drama.red{color:#fff;text-shadow:0 0 24px var(--red),0 0 50px var(--orange)}
-  #app{width:600px;height:600px;position:relative;overflow:hidden;background:var(--bg);
-    border:2px solid var(--purple-eva);box-shadow:0 0 40px rgba(122,62,181,.25),inset 0 0 60px rgba(0,0,0,.9)}
+  #app{width:100vmin;height:100vmin;max-width:600px;max-height:600px;position:relative;overflow:hidden;background:var(--bg);
+    border:2px solid var(--purple-eva);box-shadow:0 0 40px rgba(122,62,181,.25),inset 0 0 60px rgba(0,0,0,.9);flex-shrink:0}
   #app::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
     background:repeating-linear-gradient(-42deg,transparent 0 18px,rgba(122,62,181,.035) 18px 19px),
       radial-gradient(ellipse 80% 50% at 50% 100%,rgba(230,0,18,.07),transparent),
@@ -260,129 +262,114 @@
   .boot-confirm.on{animation:conf .5s ease-out forwards}
   @keyframes conf{0%{opacity:0;transform:translate(-50%,-50%) scale(1.3)}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
 
-  /* HUD — Present Status (clinical, melancholy, Eva-01 purple) */
+  /* HUD — Meta Display Glasses first (600vmin canvas, max legibility) */
   #screen-hud{color:var(--green-neon);background:linear-gradient(160deg,#06060e,#0f0a1c 35%,#080810);z-index:3}
-  .hud-lcl{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.12;
+  #screen-hud .hud-lcl{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.1;
     background:radial-gradient(ellipse 80% 60% at 50% 80%,rgba(122,62,181,.35),transparent),
       repeating-linear-gradient(0deg,transparent 0 18px,rgba(0,255,159,.03) 18px 19px);
     animation:lcl 4s ease-in-out infinite}
-  @keyframes lcl{50%{opacity:.18;transform:scale(1.02)}}
-  #hud-scope{position:absolute;right:52px;top:72px;width:120px;height:120px;z-index:3;opacity:.35;pointer-events:none}
-  #hud-atfield{position:absolute;left:200px;top:88px;width:64px;height:64px;z-index:3;opacity:.5;pointer-events:none}
-  #hud-gauss{position:absolute;right:200px;top:218px;width:80px;height:36px;z-index:3;opacity:.6;pointer-events:none}
-  .hud-alert-strip{position:absolute;left:28px;top:234px;width:165px;font-size:4px;line-height:1.5;color:rgba(230,0,18,.7);
-    border-left:2px solid var(--red);padding-left:4px;z-index:4;max-height:24px;overflow:hidden}
-  .hud-side{position:absolute;left:0;top:0;bottom:0;width:22px;
-    background:linear-gradient(180deg,var(--purple-deep) 0%,var(--purple-eva) 40%,var(--blood) 100%);
-    box-shadow:4px 0 20px rgba(122,62,181,.3)}
-  .hud-side::after{content:'';position:absolute;bottom:20px;left:5px;width:12px;height:12px;
-    border-right:2px solid rgba(255,255,255,.2);border-bottom:2px solid rgba(255,255,255,.2);transform:rotate(45deg);opacity:.4}
-  .hud-hd{position:absolute;top:6px;left:28px;right:8px;display:flex;justify-content:space-between;font-size:7px}
-  .hud-hd .t{color:var(--text);text-shadow:0 0 8px var(--green-neon)}.hud-hd .m{color:var(--orange);font-weight:900}
-  .hud-dna{position:absolute;right:196px;top:32px;width:36px;height:36px;opacity:.7;z-index:4;pointer-events:none}
-  .hud-sub{position:absolute;top:16px;left:26px;right:8px;font-size:5px;color:var(--purple);letter-spacing:1px}
-  .hud-live{position:absolute;top:24px;left:26px;width:200px;font-size:5px;line-height:1.5;color:rgba(142,223,95,.5)}
-  .hud-live .v{color:var(--orange-bright);font-weight:900;font-variant-numeric:tabular-nums}
-  .hud-live .g{color:var(--green-neon)}
-  .gauge-z{position:absolute;right:8px;top:28px;width:188px;height:188px}
-  .g-orbit{position:absolute;inset:-5px;border-radius:50%;border:1px dashed rgba(255,107,0,.45);animation:spin 10s linear infinite}
-  .g-core{width:188px;height:188px;border-radius:50%;border:4px solid var(--purple-eva);
-    background:conic-gradient(var(--orange) 0deg var(--sa,0deg),var(--purple-dark) var(--sa,0deg) 360deg);
-    box-shadow:0 0 30px rgba(122,62,181,.5),0 0 12px rgba(255,107,0,.4);transition:background .05s;position:relative}
-  .g-core.good{background:conic-gradient(var(--green-neon) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gp .45s ease-in-out infinite}
-  .g-core.low{background:conic-gradient(var(--red) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gw .12s ease-in-out infinite}
-  @keyframes gp{50%{box-shadow:0 0 52px var(--green-neon),0 0 20px rgba(153,92,208,.4);transform:scale(1.02)}}
-  @keyframes gw{50%{box-shadow:0 0 40px var(--red)}}
-  .g-hole{position:absolute;inset:24px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
-  .sync-n{font-size:48px;font-weight:900;color:var(--orange-bright);line-height:1}
-  .sync-n.good{color:var(--green-neon);text-shadow:0 0 16px var(--green-neon)}
-  .sync-l{font-size:7px;letter-spacing:4px;color:var(--purple)}
-  .holo-panel{position:absolute;left:28px;top:38px;width:168px;height:178px;
-    border:1px solid rgba(122,62,181,.65);background:var(--panel);overflow:hidden;
-    box-shadow:0 0 22px rgba(122,62,181,.25),inset 0 0 40px rgba(0,0,0,.92);
+  @keyframes lcl{50%{opacity:.16;transform:scale(1.01)}}
+  #screen-hud .hud-side{position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(180deg,var(--purple-deep),var(--purple-eva) 50%,var(--blood))}
+  #screen-hud .hud-hd{position:absolute;top:4px;left:8px;right:72px;display:flex;justify-content:space-between;align-items:center;font-size:9px;z-index:12}
+  #screen-hud .hud-hd .t{color:var(--text);text-shadow:0 0 10px var(--green-neon);letter-spacing:1px}
+  #screen-hud .hud-hd .m{color:var(--orange);font-weight:900;font-size:10px;text-shadow:0 0 8px var(--orange)}
+  #screen-hud .hud-sub{display:none}
+  #screen-hud .hud-live{display:none}
+  #screen-hud .oura-badge{position:absolute;top:4px;right:6px;font-size:8px;z-index:14;cursor:pointer;letter-spacing:1px;
+    border:1px solid rgba(122,62,181,.5);padding:4px 8px;background:rgba(8,8,16,.92);font-weight:900}
+  #screen-hud .oura-badge.live{color:var(--green-neon);border-color:var(--green-neon);animation:live .5s step-end infinite}
+  #screen-hud .oura-badge.mock{color:var(--orange)}
+  #screen-hud .holo-panel{position:absolute;left:6px;top:28px;width:42%;height:39%;
+    border:2px solid rgba(122,62,181,.7);background:var(--panel);overflow:hidden;
+    box-shadow:0 0 24px rgba(122,62,181,.28),inset 0 0 40px rgba(0,0,0,.92);
     animation:holoPulse 2.4s ease-in-out infinite}
-  @keyframes holoPulse{50%{border-color:rgba(255,107,0,.7);box-shadow:0 0 28px rgba(255,107,0,.15),inset 0 0 40px rgba(0,0,0,.92)}}
-  .holo-panel::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  @keyframes holoPulse{50%{border-color:rgba(255,107,0,.75);box-shadow:0 0 32px rgba(255,107,0,.18),inset 0 0 40px rgba(0,0,0,.92)}}
+  #screen-hud .holo-panel::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
     background:radial-gradient(ellipse 70% 55% at 50% 58%,rgba(122,62,181,.14),transparent)}
-  .holo-panel .ret{position:absolute;width:10px;height:10px;border-color:var(--orange);border-style:solid;z-index:4;pointer-events:none}
-  .holo-panel .ret.tl{top:2px;left:2px;border-width:2px 0 0 2px}
-  .holo-panel .ret.tr{top:2px;right:2px;border-width:2px 2px 0 0}
-  .holo-panel .ret.bl{bottom:26px;left:2px;border-width:0 0 2px 2px}
-  .holo-panel .ret.br{bottom:26px;right:2px;border-width:0 2px 2px 0}
-  .holo-lbl{position:absolute;top:3px;left:6px;z-index:4;font-size:7px;font-weight:900;color:var(--orange-bright);letter-spacing:1px;line-height:1.3;
-    text-shadow:0 0 6px var(--orange)}
-  .holo-lbl span{display:block;font-size:5px;color:var(--green-neon);font-weight:400;letter-spacing:.5px;animation:live .5s step-end infinite}
-  .holo-tag{position:absolute;top:3px;right:6px;z-index:4;font-size:5px;color:var(--purple);letter-spacing:1px}
-  #holo-canvas{position:absolute;inset:14px 2px 30px 2px;width:164px;height:134px;display:block;z-index:2}
-  .holo-bar{position:absolute;bottom:4px;left:6px;right:6px;height:14px;border:1px solid rgba(122,62,181,.6);background:#06060e;z-index:4}
-  .holo-fill{height:100%;background:linear-gradient(90deg,#8EDF5F,#00FF9F);box-shadow:0 0 10px var(--green-neon);
-    transition:width .6s ease;background-image:repeating-linear-gradient(90deg,transparent 0 3px,rgba(0,0,0,.15) 3px 6px)}
-  .holo-scan{position:absolute;bottom:20px;left:6px;font-size:4px;color:var(--green-neon);z-index:4;letter-spacing:1px}
-  .holo-pct{position:absolute;bottom:5px;right:8px;font-size:5px;color:var(--green-neon);z-index:5;font-weight:900;text-shadow:0 0 6px var(--green-neon)}
-  .parts-p{position:absolute;left:200px;top:42px;width:108px;font-size:6px;line-height:1.4;color:rgba(142,223,95,.35)}
-  .parts-p .scan{color:var(--orange-bright);text-shadow:0 0 8px var(--orange);animation:live .25s step-end infinite}
-  .hud-ref{position:absolute;left:200px;top:118px;width:108px;font-size:5px;line-height:1.45;color:rgba(153,92,208,.55);border-left:2px solid var(--purple);padding-left:4px}
-  .parts-p .on{color:var(--green-neon)}.parts-p .bad{color:var(--red)}
-  .wv{position:absolute;left:26px;right:8px;bottom:44px;height:58px;border:1px solid rgba(142,223,95,.3);overflow:hidden;
-    background:rgba(0,0,0,.4);box-shadow:inset 0 0 20px rgba(122,62,181,.12)}
-  .wv.overload{border-color:var(--red);animation:gw .2s ease-in-out infinite}
-  #hud-wv{width:100%;height:100%;display:block}
-  .wv-label{position:absolute;left:30px;bottom:46px;font-size:5px;color:var(--orange);letter-spacing:1.5px;z-index:2;pointer-events:none}
-  .log-p{position:absolute;left:28px;right:8px;bottom:6px;height:32px;border:1px solid var(--purple-eva);
-    background:rgba(12,12,24,.85);padding:3px 6px;font-size:7px}
-  .hud-fringe{position:absolute;top:34px;right:8px;font-size:4px;color:var(--muted);letter-spacing:2px;text-align:right;line-height:1.5;z-index:4}
-  .log-p .h{color:var(--purple)}.log-p .b{color:var(--orange-bright)}
-  .log-p .b.hit{animation:ch .08s steps(2) 3}
-  .hud-deck{position:absolute;left:200px;top:40px;right:200px;height:58px;display:flex;gap:3px;z-index:12}
-  .hcard{flex:1;min-width:0;position:relative;border:1px solid rgba(122,62,181,.55);
-    background:linear-gradient(160deg,rgba(12,12,24,.92),rgba(8,8,16,.88));cursor:pointer;overflow:visible;
-    box-shadow:0 0 10px rgba(122,62,181,.12),inset 0 0 16px rgba(0,0,0,.7);transition:flex .18s,border-color .12s,box-shadow .12s}
-  .hcard::before{content:'';position:absolute;inset:0;pointer-events:none;
-    background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,159,.03) 3px 4px);opacity:.6}
-  .hcard:hover,.hcard.expanded{border-color:var(--orange);box-shadow:0 0 14px rgba(255,107,0,.2),inset 0 0 12px rgba(255,107,0,.06)}
-  .hcard.expanded{flex:1.65;z-index:14}
-  .hcard.warn{border-color:rgba(230,0,18,.65);animation:cardWarn .35s ease-in-out infinite}
-  .hcard.ok{border-color:rgba(0,255,159,.35)}
-  .hcard.syncing{animation:cardSync .6s ease-in-out infinite}
-  @keyframes cardWarn{50%{box-shadow:0 0 16px rgba(230,0,18,.25)}}
-  @keyframes cardSync{50%{border-color:var(--green-neon);box-shadow:0 0 18px rgba(0,255,159,.3)}}
-  .hcard-hd{font-size:4px;letter-spacing:1px;color:var(--orange);padding:2px 4px 0;font-weight:900}
-  .hcard-hd .jp{color:var(--purple);font-weight:400;margin-left:2px}
-  .hcard-val{font-size:11px;font-weight:900;color:var(--orange-bright);padding:0 4px;line-height:1;
-    font-variant-numeric:tabular-nums;text-shadow:0 0 8px rgba(255,107,0,.4)}
-  .hcard-val.good{color:var(--green-neon);text-shadow:0 0 10px rgba(0,255,159,.5)}
-  .hcard-val.bad{color:var(--red);text-shadow:0 0 10px rgba(230,0,18,.5)}
-  .hcard-sub{font-size:4px;color:rgba(142,223,95,.55);padding:0 4px 2px}
-  .hcard-cv{width:100%;height:14px;display:block;margin-top:1px;opacity:.85}
-  .hcard-pulse{position:absolute;bottom:2px;right:3px;width:4px;height:4px;border-radius:50%;background:var(--green-neon);
-    opacity:0;animation:none}
-  .hcard.live .hcard-pulse{opacity:1;animation:live .4s step-end infinite}
-  .hcard-detail{position:absolute;left:-1px;right:-1px;top:calc(100% + 2px);display:none;
-    border:1px solid var(--orange);background:rgba(10,10,20,.97);padding:5px 6px;font-size:5px;line-height:1.5;
-    z-index:20;box-shadow:0 6px 20px rgba(0,0,0,.8);max-height:72px;overflow:auto}
-  .hcard.expanded .hcard-detail{display:block}
-  .hcard-detail .row{display:flex;justify-content:space-between;gap:6px;margin-bottom:2px}
-  .hcard-detail .row .v{color:var(--orange-bright);font-weight:900}
-  .hcard-detail input[type=range]{width:100%;accent-color:var(--orange);height:8px}
-  .hcard-detail button{border:1px solid var(--orange);background:rgba(255,107,0,.1);color:var(--orange-bright);
-    font:inherit;font-size:4px;padding:2px 5px;cursor:pointer;margin-top:3px;margin-right:4px}
-  .sys-check-lbl{position:absolute;left:200px;top:100px;width:200px;font-size:4px;color:var(--purple);letter-spacing:1.5px;z-index:5}
-  .oura-badge{position:absolute;top:6px;right:198px;font-size:5px;z-index:12;cursor:pointer;letter-spacing:1px;
-    border:1px solid rgba(122,62,181,.4);padding:2px 5px;background:rgba(8,8,16,.8)}
-  .oura-badge.live{color:var(--green-neon);border-color:var(--green-neon);animation:live .5s step-end infinite}
-  .oura-badge.mock{color:var(--orange)}
-  #screen-hud{--wave-speed:1;--holo-scan-ms:32;--lcl-pulse:4s;--orbit-spin:10s;--holo-rot:.022;--scan-hot:0}
+  #screen-hud .holo-panel .ret{position:absolute;width:12px;height:12px;border-color:var(--orange);border-style:solid;z-index:4;pointer-events:none}
+  #screen-hud .holo-panel .ret.tl{top:2px;left:2px;border-width:2px 0 0 2px}
+  #screen-hud .holo-panel .ret.tr{top:2px;right:2px;border-width:2px 2px 0 0}
+  #screen-hud .holo-panel .ret.bl{bottom:28px;left:2px;border-width:0 0 2px 2px}
+  #screen-hud .holo-panel .ret.br{bottom:28px;right:2px;border-width:0 2px 2px 0}
+  #screen-hud .holo-lbl{position:absolute;top:4px;left:8px;z-index:4;font-size:8px;font-weight:900;color:var(--orange-bright);letter-spacing:1px;line-height:1.3;text-shadow:0 0 8px var(--orange)}
+  #screen-hud .holo-lbl span{display:block;font-size:7px;color:var(--green-neon);font-weight:400;animation:live .5s step-end infinite}
+  #screen-hud .holo-tag{position:absolute;top:4px;right:8px;z-index:4;font-size:7px;color:var(--purple);letter-spacing:1px}
+  #screen-hud #holo-canvas{position:absolute;left:4px;right:4px;top:22px;bottom:32px;width:calc(100% - 8px);height:calc(100% - 54px);display:block;z-index:2}
+  #screen-hud .holo-bar{position:absolute;bottom:4px;left:8px;right:8px;height:16px;border:1px solid rgba(122,62,181,.6);background:#06060e;z-index:4}
+  #screen-hud .holo-fill{height:100%;background:linear-gradient(90deg,#8EDF5F,#00FF9F);box-shadow:0 0 12px var(--green-neon);transition:width .6s ease}
+  #screen-hud .holo-scan{position:absolute;bottom:22px;left:8px;font-size:7px;color:var(--green-neon);z-index:4;letter-spacing:1px;font-weight:900}
+  #screen-hud .holo-pct{position:absolute;bottom:6px;right:10px;font-size:8px;color:var(--green-neon);z-index:5;font-weight:900;text-shadow:0 0 8px var(--green-neon)}
+  #screen-hud .gauge-z{position:absolute;right:6px;top:28px;width:54%;height:39%;display:flex;align-items:center;justify-content:center}
+  #screen-hud .g-orbit{position:absolute;inset:0;border-radius:50%;border:2px dashed rgba(255,107,0,.5);animation:spin 10s linear infinite}
+  #screen-hud .g-core{width:min(36vmin,210px);height:min(36vmin,210px);border-radius:50%;border:5px solid var(--purple-eva);
+    background:conic-gradient(var(--orange) 0deg var(--sa,0deg),var(--purple-dark) var(--sa,0deg) 360deg);
+    box-shadow:0 0 36px rgba(122,62,181,.55),0 0 16px rgba(255,107,0,.45);transition:background .05s;position:relative}
+  #screen-hud .g-core.good{background:conic-gradient(var(--green-neon) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gp .45s ease-in-out infinite}
+  #screen-hud .g-core.low{background:conic-gradient(var(--red) 0deg var(--sa,0deg),#161616 var(--sa,0deg) 360deg);animation:gw .12s ease-in-out infinite}
+  @keyframes gp{50%{box-shadow:0 0 56px var(--green-neon),0 0 24px rgba(153,92,208,.4);transform:scale(1.02)}}
+  @keyframes gw{50%{box-shadow:0 0 44px var(--red)}}
+  #screen-hud .g-hole{position:absolute;inset:18%;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
+  #screen-hud .sync-n{font-size:clamp(42px,11vmin,64px);font-weight:900;color:var(--orange-bright);line-height:1;text-shadow:0 0 20px rgba(255,107,0,.5)}
+  #screen-hud .sync-n.good{color:var(--green-neon);text-shadow:0 0 24px var(--green-neon)}
+  #screen-hud .sync-l{font-size:9px;letter-spacing:5px;color:var(--purple);margin-top:2px}
+  #screen-hud .hud-deck{position:absolute;left:6px;right:6px;top:43.5%;height:17.5%;display:flex;gap:4px;z-index:12}
+  #screen-hud .hcard{flex:1;min-width:0;position:relative;border:2px solid rgba(122,62,181,.6);
+    background:linear-gradient(160deg,rgba(12,12,24,.95),rgba(8,8,16,.9));cursor:pointer;overflow:visible;
+    box-shadow:0 0 12px rgba(122,62,181,.15),inset 0 0 12px rgba(0,0,0,.75);transition:flex .15s,border-color .1s}
+  #screen-hud .hcard:hover,#screen-hud .hcard.expanded{border-color:var(--orange);box-shadow:0 0 18px rgba(255,107,0,.25)}
+  #screen-hud .hcard.expanded{flex:1.8;z-index:14}
+  #screen-hud .hcard.warn{border-color:rgba(230,0,18,.7);animation:cardWarn .35s ease-in-out infinite}
+  #screen-hud .hcard.ok{border-color:rgba(0,255,159,.4)}
+  #screen-hud .hcard.syncing{animation:cardSync .6s ease-in-out infinite}
+  @keyframes cardWarn{50%{box-shadow:0 0 20px rgba(230,0,18,.3)}}
+  @keyframes cardSync{50%{border-color:var(--green-neon);box-shadow:0 0 22px rgba(0,255,159,.35)}}
+  #screen-hud .hcard-hd{font-size:7px;letter-spacing:1.2px;color:var(--orange);padding:4px 5px 0;font-weight:900}
+  #screen-hud .hcard-hd .jp{color:var(--purple);font-weight:400}
+  #screen-hud .hcard-val{font-size:clamp(16px,4.2vmin,22px);font-weight:900;color:var(--orange-bright);padding:2px 5px 0;line-height:1;
+    font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(255,107,0,.45)}
+  #screen-hud .hcard-val.good{color:var(--green-neon);text-shadow:0 0 14px rgba(0,255,159,.55)}
+  #screen-hud .hcard-val.bad{color:var(--red);text-shadow:0 0 14px rgba(230,0,18,.55)}
+  #screen-hud .hcard-sub{font-size:6px;color:rgba(142,223,95,.7);padding:2px 5px 4px;line-height:1.2}
+  #screen-hud .hcard-cv{width:calc(100% - 6px);height:20px;display:block;margin:2px 3px 4px;opacity:.9}
+  #screen-hud .hcard-pulse{position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--green-neon);opacity:0}
+  #screen-hud .hcard.live .hcard-pulse{opacity:1;animation:live .4s step-end infinite}
+  #screen-hud .hcard-detail{position:absolute;left:-2px;right:-2px;top:calc(100% + 3px);display:none;
+    border:2px solid var(--orange);background:rgba(8,8,18,.98);padding:8px;font-size:7px;line-height:1.55;
+    z-index:25;box-shadow:0 8px 24px rgba(0,0,0,.9);max-height:110px;overflow:auto}
+  #screen-hud .hcard.expanded .hcard-detail{display:block}
+  #screen-hud .hcard-detail .row{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px}
+  #screen-hud .hcard-detail .row .v{color:var(--orange-bright);font-weight:900;font-size:8px}
+  #screen-hud .hcard-detail input[type=range]{width:100%;accent-color:var(--orange);height:12px;margin:4px 0}
+  #screen-hud .hcard-detail button{border:1px solid var(--orange);background:rgba(255,107,0,.15);color:var(--orange-bright);
+    font:inherit;font-size:7px;padding:5px 10px;cursor:pointer;margin-top:4px;margin-right:6px;font-weight:900}
+  #screen-hud .wv{position:absolute;left:6px;right:6px;top:64%;height:15%;border:2px solid rgba(142,223,95,.35);overflow:hidden;
+    background:rgba(0,0,0,.5);box-shadow:inset 0 0 24px rgba(122,62,181,.15)}
+  #screen-hud .wv.overload{border-color:var(--red);animation:gw .2s ease-in-out infinite}
+  #screen-hud #hud-wv{width:100%;height:100%;display:block}
+  #screen-hud .wv-label{position:absolute;left:10px;top:62.2%;font-size:7px;color:var(--orange);letter-spacing:2px;z-index:6;font-weight:900;text-shadow:0 0 6px var(--orange)}
+  #screen-hud .hud-check-banner{position:absolute;left:6px;right:6px;top:61.2%;height:2.8%;font-size:7px;letter-spacing:2px;
+    color:rgba(0,255,159,.8);border-left:3px solid var(--green-neon);padding-left:8px;z-index:6;
+    display:flex;align-items:center;gap:8px;font-weight:900}
+  #screen-hud .hud-check-banner .dot{width:7px;height:7px;border-radius:50%;background:var(--green-neon);animation:live .3s step-end infinite;flex-shrink:0}
+  #screen-hud .hud-check-banner.stress .dot{background:var(--red)}
+  #screen-hud .log-p{position:absolute;left:6px;right:6px;bottom:1%;height:7.5%;border:2px solid var(--purple-eva);
+    background:rgba(12,12,24,.92);padding:5px 8px;font-size:9px;display:flex;flex-direction:column;justify-content:center}
+  #screen-hud .log-p .h{color:var(--purple);font-size:7px;letter-spacing:1px}
+  #screen-hud .log-p .b{color:var(--orange-bright);font-size:10px;font-weight:900;text-shadow:0 0 8px rgba(255,107,0,.3)}
+  #screen-hud .log-p .b.hit{animation:ch .08s steps(2) 3}
+  #screen-hud .parts-p,#screen-hud .hud-ref,#screen-hud .hud-fringe,#screen-hud .hud-dna,
+  #screen-hud #hud-scope,#screen-hud #hud-atfield,#screen-hud #hud-gauss,
+  #screen-hud .hud-alert-strip,#screen-hud .sys-check-lbl{display:none!important}
+  #screen-hud{--wave-speed:1;--holo-scan-ms:32;--lcl-pulse:4s;--orbit-spin:10s;--holo-rot:.022}
   #screen-hud.stress-high .hud-lcl{animation-duration:var(--lcl-pulse)}
   #screen-hud .g-orbit{animation-duration:var(--orbit-spin)}
   #screen-hud .holo-panel{animation-duration:calc(2.4s / var(--wave-speed))}
   #screen-hud.scan-urgent .scanlines{animation-duration:.08s}
   #app.shell-glitch{animation:sgl .12s steps(2) infinite}
   @keyframes sgl{50%{filter:hue-rotate(6deg) saturate(1.35);transform:translateX(1px)}}
-  .hud-check-banner{position:absolute;left:28px;right:8px;top:218px;height:14px;font-size:4px;letter-spacing:2px;
-    color:rgba(0,255,159,.65);border-left:2px solid var(--green-neon);padding-left:6px;z-index:5;
-    display:flex;align-items:center;gap:8px}
-  .hud-check-banner .dot{width:5px;height:5px;border-radius:50%;background:var(--green-neon);animation:live .3s step-end infinite}
-  .hud-check-banner.stress .dot{background:var(--red);animation-duration:.12s}
+  #screen-hud.active~.noise,#app:has(#screen-hud.active) .noise{opacity:.04}
+  #screen-hud.active~.scanlines,#app:has(#screen-hud.active) .scanlines{opacity:.35}
   #ack-crosshair{position:absolute;inset:0;z-index:4;opacity:.2;pointer-events:none}
   .ack-stack{position:absolute;left:24px;top:148px;width:120px;z-index:4;font-size:4px;color:var(--red);line-height:1.4;opacity:.85}
 </style>
@@ -520,7 +507,7 @@
   <div id="screen-hud" class="screen">
     <div class="hud-lcl"></div>
     <div class="hud-side"></div>
-    <div class="hud-hd"><span class="t">PRESENT STATUS — 初号機 EVA-01</span><span class="m" id="hud-mode">FIELD OPS</span></div>
+    <div class="hud-hd"><span class="t">EVA-01 PILOT HUD</span><span class="m" id="hud-mode">FIELD OPS</span></div>
     <div class="oura-badge mock" id="oura-badge" title="Click to force sync">○ MOCK</div>
     <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • LIVE SYSTEM CHECK ACTIVE</div>
     <div class="hud-deck" id="hud-deck">
@@ -528,7 +515,7 @@
         <div class="hcard-hd">NEURAL<span class="jp">神経</span></div>
         <div class="hcard-val good" id="card-neural-val">72</div>
         <div class="hcard-sub" id="card-neural-sub">HRV — · RHR —</div>
-        <canvas class="hcard-cv" id="card-neural-cv" width="68" height="14"></canvas>
+        <canvas class="hcard-cv" id="card-neural-cv" width="112" height="20"></canvas>
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-neural-detail"></div>
       </div>
@@ -536,7 +523,7 @@
         <div class="hcard-hd">SLEEP<span class="jp">睡眠</span></div>
         <div class="hcard-val" id="card-sleep-val">—</div>
         <div class="hcard-sub" id="card-sleep-sub">RECOVERY —</div>
-        <canvas class="hcard-cv" id="card-sleep-cv" width="68" height="14"></canvas>
+        <canvas class="hcard-cv" id="card-sleep-cv" width="112" height="20"></canvas>
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-sleep-detail"></div>
       </div>
@@ -544,7 +531,7 @@
         <div class="hcard-hd">STRAIN<span class="jp">負荷</span></div>
         <div class="hcard-val" id="card-strain-val">—</div>
         <div class="hcard-sub" id="card-strain-sub">STEPS —</div>
-        <canvas class="hcard-cv" id="card-strain-cv" width="68" height="14"></canvas>
+        <canvas class="hcard-cv" id="card-strain-cv" width="112" height="20"></canvas>
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-strain-detail"></div>
       </div>
@@ -552,7 +539,7 @@
         <div class="hcard-hd">NUTR<span class="jp">栄養</span></div>
         <div class="hcard-val" id="card-nutr-val">—</div>
         <div class="hcard-sub" id="card-nutr-sub">HYD —%</div>
-        <canvas class="hcard-cv" id="card-nutr-cv" width="68" height="14"></canvas>
+        <canvas class="hcard-cv" id="card-nutr-cv" width="112" height="20"></canvas>
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-nutr-detail"></div>
       </div>
@@ -560,19 +547,19 @@
         <div class="hcard-hd">TREND<span class="jp">推移</span></div>
         <div class="hcard-val" id="card-trend-val">7D</div>
         <div class="hcard-sub" id="card-trend-sub">READINESS</div>
-        <canvas class="hcard-cv" id="card-trend-cv" width="68" height="14"></canvas>
+        <canvas class="hcard-cv" id="card-trend-cv" width="112" height="20"></canvas>
         <div class="hcard-pulse"></div>
         <div class="hcard-detail" id="card-trend-detail"></div>
       </div>
     </div>
-    <div class="sys-check-lbl">LIVE PILOT TELEMETRY — CLICK CARD FOR DETAIL</div>
+
     <div class="hud-check-banner" id="hud-check-banner"><span class="dot"></span><span id="hud-check-txt">SYSTEM CHECK NOMINAL</span></div>
     <div class="hud-live" id="hud-live"></div>
     <div class="holo-panel">
       <div class="ret tl"></div><div class="ret tr"></div><div class="ret bl"></div><div class="ret br"></div>
       <div class="holo-lbl">SYSTEM CHECK<span id="holo-sub">STRUCTURAL INSPECTION</span></div>
       <div class="holo-tag" id="holo-sector">SECT 0001</div>
-      <canvas id="holo-canvas" width="164" height="134"></canvas>
+      <canvas id="holo-canvas" width="248" height="200"></canvas>
       <div class="holo-scan" id="holo-scan">● LIVE HEALTH SCAN</div>
       <div class="holo-bar"><div class="holo-fill" id="holo-fill"></div></div>
       <div class="holo-pct" id="holo-pct">--%</div>
@@ -591,7 +578,7 @@
     </div>
 
     <div class="wv-label">NEURAL SYNC TRACE • 神経同期</div>
-    <div class="wv"><canvas id="hud-wv" width="564" height="58"></canvas></div>
+    <div class="wv"><canvas id="hud-wv" width="588" height="90"></canvas></div>
     <div class="log-p"><div class="h">NEURAL LOG • <span id="log-t">--:--:--</span></div><div class="b" id="log-b">SYSTEM ONLINE</div></div>
   </div>
 </div>
@@ -1487,19 +1474,13 @@ function tick(){
     if(Math.abs(d)>.2)displaySync+=d*.45;else displaySync=state.sync;
     updateHud();tickLiveData();renderHudLive();
     setShellGlitch(displaySync<55);
-    drawHoloPanel($('holo-canvas').getContext('2d'),164,134,displaySync/100);
-    drawDnaHelix($('hud-dna').getContext('2d'),36,36,animT()*(healthAnim.relaxed?.7:1.1));
-    drawCrosshair($('hud-scope').getContext('2d'),120,120,animT()*healthAnim.waveSpeed,healthAnim.atStrength);
-    drawAtField($('hud-atfield').getContext('2d'),64,64,animT()*healthAnim.waveSpeed,healthAnim.atStrength);
-    drawGaussCurve($('hud-gauss').getContext('2d'),80,36,animT()*(healthAnim.relaxed?.6:1));
-    drawWave($('hud-wv').getContext('2d'),564,58,displaySync/100,false);
+    const holoCv=$('holo-canvas'),wvCv=$('hud-wv');
+    if(holoCv)drawHoloPanel(holoCv.getContext('2d'),holoCv.width,holoCv.height,displaySync/100);
+    if(wvCv)drawWave(wvCv.getContext('2d'),wvCv.width,wvCv.height,displaySync/100,false);
     ['neural','sleep','strain','nutr','trend'].forEach(c=>drawCardSpark('card-'+c+'-cv',animT()));
-    if(frame%14===0){
-      const v=pilot.vitals,alerts=[
-        `HRV ${v.hrvMs??'—'}ms`,`STRESS ${v.stressScore??'—'}`,`LCL ${state.lcl.toFixed(1)}`,
-        healthAnim.relaxed?'PILOT RELAXED':'NEURAL FEED ACTIVE',pilot.knee?`KNEE P${pilot.knee.pain}/10`:'PAIN IND: LOW'
-      ];
-      $('hud-alerts').innerHTML=alerts.map(a=>'▶ '+a).join('<br>');
+    if(frame%45===0){
+      const v=pilot.vitals,lb=$('log-b');
+      if(lb)lb.textContent=`HRV ${v.hrvMs??'—'} · STRESS ${v.stressScore??'—'} · ${healthAnim.relaxed?'RELAXED':'ACTIVE'}`;
     }
     const wvEl=document.querySelector('.wv');
     if(wvEl)wvEl.classList.toggle('overload',displaySync<45||healthAnim.stressN>.55);
