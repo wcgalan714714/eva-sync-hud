@@ -12,7 +12,8 @@ import { usePilotSync } from '@/hooks/usePilotSync';
 
 export default function DashboardPage() {
   const [wing, setWing] = useState<WingId>('status');
-  const { pilot, connected, loading, error, sync } = usePilotSync();
+  const { pilot, history, connected, loading, error, sync, refreshManual } = usePilotSync();
+  const glitch = pilot.vitals.readiness < 55;
 
   const headerRight = (
     <div style={{ textAlign: 'right', fontSize: '0.55rem' }}>
@@ -49,13 +50,13 @@ export default function DashboardPage() {
   const wings: Record<WingId, ReactNode> = {
     status: <StatusWing pilot={pilot} />,
     sleep: <SleepWing pilot={pilot} />,
-    strain: <StrainWing pilot={pilot} />,
-    nutrition: <NutritionWing pilot={pilot} />,
-    trends: <TrendsWing pilot={pilot} />,
+    strain: <StrainWing pilot={pilot} onSave={refreshManual} />,
+    nutrition: <NutritionWing pilot={pilot} onSave={refreshManual} />,
+    trends: <TrendsWing pilot={pilot} history={history} />,
   };
 
   return (
-    <NgeShell active={wing} onWing={setWing} headerRight={headerRight}>
+    <NgeShell active={wing} onWing={setWing} headerRight={headerRight} glitch={glitch}>
       {wings[wing]}
     </NgeShell>
   );

@@ -121,3 +121,14 @@ a {
   color: var(--red);
   text-shadow: 0 0 12px var(--red);
 }
+
+.shell.glitch {
+  animation: shell-glitch 0.15s step-end infinite;
+}
+
+@keyframes shell-glitch {
+  50% {
+    filter: hue-rotate(8deg) brightness(1.08);
+    box-shadow: 0 0 40px rgba(230, 0, 18, 0.2), inset 0 0 60px rgba(0, 0, 0, 0.9);
+  }
+}

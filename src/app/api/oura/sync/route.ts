@@ -21,9 +21,20 @@ export async function GET() {
   }
 
   try {
-    const snapshot = await fetchOuraSnapshot(token);
+    const snapshot = await fetchOuraSnapshot(token, 14);
     const pilot = mapOuraToPilot(snapshot);
-    return NextResponse.json({ pilot, connected: true, snapshot: { fetchedAt: snapshot.fetchedAt } });
+    return NextResponse.json({
+      pilot,
+      connected: true,
+      snapshot: {
+        fetchedAt: snapshot.fetchedAt,
+        days: snapshot.readiness.length,
+      },
+      trend: {
+        readiness: snapshot.readiness.map((r) => ({ day: r.day, score: r.score })),
+        sleep: snapshot.sleep.map((s) => ({ day: s.day, score: s.score })),
+      },
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Oura sync failed';
     return NextResponse.json(

@@ -15,12 +15,13 @@ interface Props {
   active: WingId;
   onWing: (id: WingId) => void;
   headerRight?: ReactNode;
+  glitch?: boolean;
   children: ReactNode;
 }
 
-export function NgeShell({ active, onWing, headerRight, children }: Props) {
+export function NgeShell({ active, onWing, headerRight, glitch, children }: Props) {
   return (
-    <div className="shell" style={{ padding: '12px 16px', position: 'relative', zIndex: 1 }}>
+    <div className={`shell${glitch ? ' glitch' : ''}`} style={{ padding: '12px 16px', position: 'relative', zIndex: 1 }}>
       <header
         style={{
           display: 'flex',
