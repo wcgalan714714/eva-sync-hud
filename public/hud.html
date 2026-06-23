@@ -356,13 +356,23 @@
   #screen-hud .sync-n{font-size:clamp(46px,12vmin,72px);font-weight:900;color:var(--orange-bright);line-height:1;text-shadow:0 0 20px rgba(255,107,0,.5)}
   #screen-hud .sync-n.good{color:var(--green-neon);text-shadow:0 0 24px var(--green-neon)}
   #screen-hud .sync-l{font-size:9px;letter-spacing:5px;color:var(--purple);margin-top:2px}
-  #screen-hud .hud-deck{position:absolute;left:6px;right:6px;top:40%;height:30%;display:flex;gap:7px;z-index:12}
+  #screen-hud .oura-status{position:absolute;left:6px;right:88px;top:32px;font-size:8px;letter-spacing:1px;
+    padding:3px 6px;border:1px solid rgba(122,62,181,.45);background:rgba(8,8,16,.85);z-index:11;font-weight:900}
+  #screen-hud .oura-status.live{color:var(--green-neon);border-color:rgba(0,255,159,.45)}
+  #screen-hud .oura-status.mock{color:var(--orange);border-color:rgba(255,107,0,.35)}
+  #screen-hud .hud-deck{position:absolute;left:6px;right:6px;top:calc(40% + 2px);height:28%;display:flex;gap:6px;z-index:12}
   #screen-hud .hcard{flex:1;min-width:0;min-height:0;position:relative;border:3px solid rgba(122,62,181,.65);
-    background:linear-gradient(160deg,rgba(12,12,24,.95),rgba(8,8,16,.9));cursor:pointer;overflow:visible;
-    box-shadow:0 0 14px rgba(122,62,181,.18),inset 0 0 12px rgba(0,0,0,.75);transition:flex .15s,border-color .1s;
+    background:linear-gradient(160deg,rgba(12,12,24,.95),rgba(8,8,16,.9));cursor:pointer;overflow:hidden;
+    box-shadow:0 0 14px rgba(122,62,181,.18),inset 0 0 12px rgba(0,0,0,.75);transition:border-color .12s,box-shadow .12s;
     display:flex;flex-direction:column;justify-content:space-between}
-  #screen-hud .hcard:hover,#screen-hud .hcard.expanded{border-color:var(--orange);box-shadow:0 0 22px rgba(255,107,0,.3)}
-  #screen-hud .hcard.expanded{flex:1.9;z-index:14}
+  #screen-hud .hcard:hover,#screen-hud .hcard.selected{border-color:var(--orange);box-shadow:0 0 18px rgba(255,107,0,.28)}
+  #screen-hud .card-detail-panel{position:absolute;left:6px;right:6px;top:calc(40% + 28% + 6px);height:0;
+    overflow:hidden;opacity:0;border:2px solid transparent;background:rgba(8,8,18,.98);z-index:13;
+    padding:0 8px;transition:height .15s ease,opacity .15s ease;pointer-events:none}
+  #screen-hud .card-detail-panel.open{height:9%;opacity:1;padding:6px 8px;border-color:var(--orange);pointer-events:auto;overflow:auto}
+  #screen-hud .card-detail-panel .panel-hd{display:flex;justify-content:space-between;font-size:9px;color:var(--orange);font-weight:900;margin-bottom:4px;letter-spacing:1px}
+  #screen-hud .card-detail-panel .panel-hd .src{font-size:8px;color:var(--green-neon)}
+  #screen-hud .card-detail-panel.mock .panel-hd .src{color:var(--purple)}
   #screen-hud .hcard.warn{border-color:rgba(230,0,18,.7);animation:cardWarn .35s ease-in-out infinite}
   #screen-hud .hcard.ok{border-color:rgba(0,255,159,.45)}
   #screen-hud .hcard.syncing{animation:cardSync .6s ease-in-out infinite}
@@ -382,15 +392,11 @@
   #screen-hud .hcard.mock .hcard-val{color:var(--purple)}
   #screen-hud .hcard.mock .hcard-sub{color:rgba(153,92,208,.75)}
   #screen-hud .hcard .oura-tag{font-size:8px;color:var(--green-neon);letter-spacing:1px;font-weight:900;text-shadow:0 0 6px rgba(0,255,159,.4)}
-  #screen-hud .hcard-detail{position:absolute;left:-3px;right:-3px;top:calc(100% + 4px);display:none;
-    border:2px solid var(--orange);background:rgba(8,8,18,.98);padding:10px;font-size:9px;line-height:1.6;
-    z-index:25;box-shadow:0 8px 24px rgba(0,0,0,.9);max-height:130px;overflow:auto}
-  #screen-hud .hcard.expanded .hcard-detail{display:block}
-  #screen-hud .hcard-detail .row{display:flex;justify-content:space-between;gap:8px;margin-bottom:4px}
-  #screen-hud .hcard-detail .row .v{color:var(--orange-bright);font-weight:900;font-size:10px}
-  #screen-hud .hcard-detail input[type=range]{width:100%;accent-color:var(--orange);height:16px;margin:6px 0}
-  #screen-hud .hcard-detail button{border:1px solid var(--orange);background:rgba(255,107,0,.15);color:var(--orange-bright);
-    font:inherit;font-size:9px;padding:7px 12px;cursor:pointer;margin-top:5px;margin-right:6px;font-weight:900}
+  #screen-hud .hcard-detail{display:none!important}
+  #screen-hud .card-detail-panel .row{display:flex;justify-content:space-between;gap:8px;margin-bottom:3px;font-size:9px;line-height:1.5}
+  #screen-hud .card-detail-panel .row .v{color:var(--orange-bright);font-weight:900;font-size:10px}
+  #screen-hud .card-detail-panel button{border:1px solid var(--orange);background:rgba(255,107,0,.15);color:var(--orange-bright);
+    font:inherit;font-size:9px;padding:6px 10px;cursor:pointer;margin-top:4px;font-weight:900}
   #screen-hud .wv-block{position:absolute;left:6px;right:6px;bottom:6px;height:19%;z-index:8;display:flex;flex-direction:column;gap:3px}
   #screen-hud .wv-label{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
     font-size:10px;color:var(--orange);letter-spacing:2px;font-weight:900;text-shadow:0 0 6px var(--orange);padding:0 4px}
@@ -533,6 +539,7 @@
     <div class="hud-hd"><span class="t">EVA-01 PILOT HUD</span><span class="m" id="hud-mode">FIELD OPS</span></div>
     <div class="oura-badge mock" id="oura-badge" title="Tap to connect Oura or sync">○ CONNECT</div>
     <div class="hud-sub" id="hud-sub">PILOT: IKARI SHINJI • LIVE SYSTEM CHECK ACTIVE</div>
+    <div class="oura-status mock" id="oura-status">TELEMETRY: ○ SIMULATED — TAP CONNECT FOR OURA RING</div>
     <div class="hud-deck" id="hud-deck">
       <div class="hcard mock" data-card="readiness">
         <div class="hcard-hd">READY<span class="jp">準備</span></div>
@@ -575,6 +582,7 @@
         <div class="hcard-detail" id="card-trend-detail"></div>
       </div>
     </div>
+    <div class="card-detail-panel" id="card-detail-panel"></div>
 
     <div class="hud-live" id="hud-live"></div>
     <div class="holo-panel">
@@ -716,7 +724,7 @@ let pilot={
   vitals:{readiness:72,hrvMs:42,hrvBalance:72,rhrBpm:58,tempDeviation:.1,stressScore:28,recoveryHigh:42,sleepScore:78,sleepHours:7.2,strainScore:45,steps:6200,activeMinutes:48,activeCalories:320},
   knee:null,nutrition:{date:new Date().toISOString().slice(0,10),proteinG:1240,fastingHours:14,hydrationPct:87}
 };
-let expandedCard=null,ouraConnected=false,syncing=false,lastSyncPulse=0,trendMetric='readiness';
+let selectedCard=null,ouraConnected=false,syncing=false,lastSyncPulse=0,trendMetric='readiness',ouraStatusMsg='';
 let holoFetchPromise=null,holoVideoPrimed=false,holoPlayPromise=null,holoVideoBound=false;
 let healthAnim=computeHealthAnim(pilot.vitals);
 const HOLO_PARTS=[
@@ -1662,6 +1670,7 @@ function handleOAuthReturn(){
 }
 async function handleOuraBadge(){
   if(syncing)return;
+  EvaAudio.unlock();
   if(ouraConnected){syncOura();return}
   await syncOura();
   if(!ouraConnected)window.location.href='/api/oura/auth';
@@ -1713,8 +1722,8 @@ function drawCardSpark(id,ft){
     drawTrendChart(ctx,w,h,trendMetric);
   }
 }
-function fillCardDetails(){
-  const v=pilot.vitals;
+const CARD_LABELS={readiness:'READY',sleep:'SLEEP',activity:'LOAD',coretemp:'TEMP',trend:'TREND'};
+function cardDetailHtml(id,v){
   const D={
     readiness:`<div class="row"><span>READINESS</span><span class="v">${v.readiness??'—'}%</span></div>
       <div class="row"><span>HRV</span><span class="v">${v.hrvMs??'—'}ms</span></div>
@@ -1723,28 +1732,42 @@ function fillCardDetails(){
       <div class="row"><span>TEMP Δ</span><span class="v">${fmtTemp(v.tempDeviation)}</span></div>`,
     sleep:`<div class="row"><span>SLEEP SCORE</span><span class="v">${v.sleepScore??'—'}</span></div>
       <div class="row"><span>DURATION</span><span class="v">${v.sleepHours??'—'}h</span></div>
-      <div class="row"><span>RECOVERY HIGH</span><span class="v">${v.recoveryHigh??'—'}</span></div>
-      <div class="row"><span>LCL DENSITY</span><span class="v">${state.lcl.toFixed(1)}</span></div>`,
+      <div class="row"><span>RECOVERY HIGH</span><span class="v">${v.recoveryHigh??'—'}</span></div>`,
     activity:`<div class="row"><span>ACTIVITY LOAD</span><span class="v">${v.strainScore??'—'}</span></div>
       <div class="row"><span>STEPS</span><span class="v">${v.steps?.toLocaleString?.()??'—'}</span></div>
       <div class="row"><span>ACTIVE TIME</span><span class="v">${v.activeMinutes??'—'}m</span></div>
       <div class="row"><span>ACTIVE CAL</span><span class="v">${v.activeCalories??'—'}</span></div>`,
     coretemp:`<div class="row"><span>BODY TEMP Δ</span><span class="v">${fmtTemp(v.tempDeviation)}</span></div>
-      <div class="row"><span>STATUS</span><span class="v">${Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':Math.abs(v.tempDeviation??0)>=.5?'ALERT':'WATCH'}</span></div>
-      <div style="color:var(--muted);margin-top:4px">Oura core temperature deviation from baseline</div>`,
+      <div class="row"><span>STATUS</span><span class="v">${Math.abs(v.tempDeviation??0)<=.2?'NOMINAL':Math.abs(v.tempDeviation??0)>=.5?'ALERT':'WATCH'}</span></div>`,
     trend:`<div class="row"><span>METRIC</span><span class="v">${trendMetric==='hrvMs'?'HRV':'READINESS'}</span></div>
       <div class="row"><span>CURRENT</span><span class="v">${trendMetric==='hrvMs'?(v.hrvMs??'—')+'ms':(v.readiness??'—')+'%'}</span></div>
-      <canvas id="card-trend-detail-cv" width="200" height="36" style="width:100%;margin-top:3px;border:1px solid rgba(142,223,95,.2)"></canvas>
+      <canvas id="card-trend-detail-cv" width="200" height="28" style="width:100%;margin-top:2px;border:1px solid rgba(142,223,95,.2)"></canvas>
       <button type="button" id="trend-toggle-btn">SWITCH READINESS / HRV</button>`
   };
-  Object.keys(D).forEach(k=>{const el=$('card-'+k+'-detail');if(el)el.innerHTML=D[k]});
-  drawTrendChart($('card-trend-detail-cv')?.getContext('2d'),200,36,trendMetric);
+  return D[id]||'';
+}
+function fillCardDetails(){
+  const panel=$('card-detail-panel');if(!panel||!selectedCard)return;
+  const v=pilot.vitals,src=ouraConnected?'● OURA LIVE':'○ SIMULATED';
+  panel.classList.toggle('mock',!ouraConnected);
+  panel.innerHTML=`<div class="panel-hd"><span>${CARD_LABELS[selectedCard]||selectedCard}</span><span class="src">${src}</span></div>${cardDetailHtml(selectedCard,v)}${ouraConnected?'':'<button type="button" id="card-connect-btn">CONNECT OURA RING</button>'}`;
+  if(selectedCard==='trend')drawTrendChart($('card-trend-detail-cv')?.getContext('2d'),200,28,trendMetric);
 }
 function handleCardAction(e){
-  const t=e.target;if(!t||!t.id)return;
+  const t=e.target;if(!t)return;
   if(t.id==='trend-toggle-btn'){
     trendMetric=trendMetric==='readiness'?'hrvMs':'readiness';
     fillCardDetails();updateHealthCards();
+  }else if(t.id==='card-connect-btn')handleOuraBadge();
+}
+function renderOuraStatus(){
+  const el=$('oura-status');if(!el)return;
+  el.classList.toggle('live',ouraConnected);el.classList.toggle('mock',!ouraConnected);
+  if(ouraConnected){
+    el.textContent=`TELEMETRY: ● OURA LIVE · SYNC ${ouraSyncLabel()} · SOURCE ${pilot.source.toUpperCase()}`;
+  }else{
+    const hint=ouraStatusMsg||'NO OURA SESSION — TAP ○ CONNECT (TOP-RIGHT)';
+    el.textContent=`TELEMETRY: ○ SIMULATED · ${hint}`;
   }
 }
 function ouraSyncLabel(){
@@ -1794,17 +1817,20 @@ function updateHealthCards(){
     c.classList.toggle('ok',k==='readiness'&&(v.readiness??0)>=70||k==='sleep'&&(v.sleepScore??0)>=70||k==='coretemp'&&Math.abs(v.tempDeviation??0)<=.2);
     c.classList.toggle('warn',k==='readiness'&&(v.readiness??0)<55||k==='sleep'&&(v.sleepScore??0)<55||k==='coretemp'&&Math.abs(v.tempDeviation??0)>=.5);
   });
-  fillCardDetails();
-  document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('expanded',c.dataset.card===expandedCard));
+  if(selectedCard)fillCardDetails();
+  renderOuraStatus();
 }
 function pulseCardsOnSync(){
   document.querySelectorAll('.hcard').forEach(c=>{c.classList.add('syncing');setTimeout(()=>c.classList.remove('syncing'),900)});
   lastSyncPulse=performance.now();flash('#8EDF5F');cascadeAlert('TELEMETRY SYNC COMPLETE','ok');
 }
-function toggleCard(id){
-  expandedCard=expandedCard===id?null:id;
-  document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('expanded',c.dataset.card===expandedCard));
-  if(expandedCard)fillCardDetails();
+function selectCard(id){
+  selectedCard=selectedCard===id?null:id;
+  document.querySelectorAll('.hcard').forEach(c=>c.classList.toggle('selected',c.dataset.card===selectedCard));
+  const panel=$('card-detail-panel');
+  if(!panel)return;
+  if(selectedCard){panel.classList.add('open');fillCardDetails()}
+  else panel.classList.remove('open');
 }
 async function syncOura(){
   if(syncing)return;syncing=true;updateOuraBadge();document.querySelectorAll('.hcard').forEach(c=>c.classList.add('syncing'));
@@ -1818,10 +1844,12 @@ async function syncOura(){
       loadManualLogs();applyPilotToState();appendHistory(pilot.vitals);
     }
     ouraConnected=!!data.connected;pilot.ouraConnected=ouraConnected;
-    if(data.error)cascadeAlert(data.error.slice(0,40),'warn');
+    ouraStatusMsg=data.error||data.message||'';
+    if(data.error)cascadeAlert('OURA: '+String(data.error).slice(0,48),'warn');
     else if(ouraConnected&&pilot.alerts?.length)cascadeAlert(pilot.alerts[0],pilot.alerts[0]==='ALL SYSTEMS NOMINAL'?'ok':'warn');
-  }catch(e){cascadeAlert('OURA SYNC FAIL','warn')}
-  syncing=false;updateOuraBadge();renderHudLive();renderHudSub();renderHudAlerts();updateHealthCards();
+    else if(!ouraConnected&&data.message)cascadeAlert(String(data.message).slice(0,48),'warn');
+  }catch(e){ouraStatusMsg='SYNC REQUEST FAILED';cascadeAlert('OURA SYNC FAIL','warn')}
+  syncing=false;updateOuraBadge();renderHudLive();renderHudSub();renderHudAlerts();updateHealthCards();renderOuraStatus();
   setShellGlitch(ouraConnected&&(pilot.vitals.readiness??72)<55);
   if(screen==='hud'){
     updateHud(true);
@@ -1919,17 +1947,18 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&bootOn){e.preventDefault();skipBoot();return}
   if(e.key!=='Enter'&&e.key!==' ')return;
   if(screen==='landing'&&landReady){e.preventDefault();engagePilot()}
-  else if(screen==='hud'){e.preventDefault();logProtein()}
+  else if(screen==='hud'&&!selectedCard){e.preventDefault();logProtein()}
 });
 $('g-core').onclick=()=>{if(screen==='hud')logProtein()};
-$('oura-badge')?.addEventListener('click',()=>handleOuraBadge());
+$('oura-badge')?.addEventListener('click',e=>{e.stopPropagation();handleOuraBadge()});
 $('hud-deck')?.addEventListener('click',e=>{
-  if(e.target.closest('button,input')){handleCardAction(e);return}
-  const card=e.target.closest('.hcard');if(card)toggleCard(card.dataset.card);
+  const card=e.target.closest('.hcard');
+  if(card){selectCard(card.dataset.card);return}
 });
+$('card-detail-panel')?.addEventListener('click',e=>{if(e.target.closest('button'))handleCardAction(e)});
 
 handleOAuthReturn();
-buildDom();loadState();loadManualLogs();applyPilotToState();updateHealthCards();renderHudLive();renderHudSub();renderHudAlerts();updateOuraBadge();
+buildDom();loadState();loadManualLogs();applyPilotToState();updateHealthCards();renderHudLive();renderHudSub();renderHudAlerts();updateOuraBadge();renderOuraStatus();
 fetchHoloAsset();syncAllCanvases();
 let resizeT;window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(syncAllCanvases,80)});
 requestAnimationFrame(tick);
