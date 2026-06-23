@@ -129,6 +129,7 @@
   #screen-landing.startup-active .split-h{display:none!important}
   #screen-landing.startup-active .land-boot{background:transparent;z-index:30;pointer-events:none}
   #screen-landing.startup-active .land-boot .t,#screen-landing.startup-active .land-boot .s{display:none}
+  #screen-landing:not(.startup-active) .startup-video{display:none!important;visibility:hidden;pointer-events:none}
   .opening-word{position:absolute;font-size:clamp(24px,7vmin,36px);font-weight:900;color:#fff;opacity:0;z-index:26;letter-spacing:.2em;
     text-shadow:0 0 30px var(--purple);animation:ow .12s ease-out forwards}
   @keyframes ow{0%{opacity:0;transform:scale(1.5)}30%{opacity:1}100%{opacity:0;transform:scale(.8)}}
@@ -435,7 +436,7 @@
   <!-- LANDING: multi live-feed control center -->
   <div id="screen-landing" class="screen active startup-active">
     <canvas id="opening-canvas" width="600" height="600"></canvas>
-    <video id="startup-video" class="startup-video" playsinline webkit-playsinline muted preload="auto"
+    <video id="startup-video" class="startup-video" playsinline webkit-playsinline preload="auto"
       disablepictureinpicture disableremoteplayback
       controlslist="nodownload noplaybackrate noremoteplayback nofullscreen"
       src="/assets/motion/startup.mp4"></video>
@@ -892,15 +893,21 @@ async function showBoot(){
 async function runStartupSequence(){
   syncAllCanvases();
   const land=$('screen-landing'),video=$('startup-video');
+  EvaAudio.stopIntro();
   land?.classList.add('startup-active');
-  $('land-boot-status').textContent='EVA SYNC — STARTUP';
-  EvaAudio.playIntro();
   if(video){
+    video.style.display='block';
     video.classList.remove('xfade-out');
     video.playbackRate=STARTUP_PLAYBACK_RATE;
     video.currentTime=0;
-    video.muted=true;
-    try{await video.play()}catch(_){}
+    video.muted=false;
+    video.volume=1;
+    try{
+      await video.play();
+    }catch(_){
+      video.muted=true;
+      try{await video.play();video.muted=false}catch(_){}
+    }
   }
   const end=performance.now()+STARTUP_DURATION_MS;
   await new Promise(res=>{
@@ -914,11 +921,12 @@ async function runStartupSequence(){
     video.pause();
     video.currentTime=0;
     video.playbackRate=1;
+    video.volume=0;
+    video.muted=true;
     video.classList.remove('xfade-out');
+    video.style.display='none';
   }
   land?.classList.remove('startup-active');
-  $('land-boot')?.classList.add('hide');
-  EvaAudio.startAmbient();
 }
 
 async function runBootToHudTransition(){
@@ -1374,7 +1382,9 @@ function tickLandingFeeds(){
 
 async function bootLandingFeeds(){
   landBooting=true;landReady=false;
-  const status=$('land-boot-status');
+  const boot=$('land-boot'),status=$('land-boot-status');
+  boot?.classList.remove('hide');
+  status.textContent='INITIALIZING LIVE FEEDS...';
   const msgs=['SCANNING MAGI ARRAY...','LINKING NEURAL FEEDS...','EVA-01 STRUCTURAL ONLINE...','PSYCHOGRAPHIC ACTIVE...','ALL FEEDS NOMINAL'];
   try{
     for(let i=0;i<FEED_ORDER.length;i++){
