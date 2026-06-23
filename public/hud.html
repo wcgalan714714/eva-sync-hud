@@ -45,13 +45,13 @@
 
   .scanlines{position:absolute;inset:0;z-index:90;pointer-events:none;
     background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.04) 3px 4px);
-    animation:scan 1.2s linear infinite;mix-blend-mode:overlay;opacity:.05}
-  .scanlines.hot{animation-duration:.8s;opacity:.07}
+    animation:scan 1.2s linear infinite;mix-blend-mode:overlay;opacity:.035}
+  .scanlines.hot{animation-duration:.8s;opacity:.05}
   @keyframes scan{to{transform:translateY(3px)}}
-  .noise{position:absolute;inset:0;z-index:89;pointer-events:none;opacity:.025;
+  .noise{position:absolute;inset:0;z-index:89;pointer-events:none;opacity:.015;
     background:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.95' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     animation:nf 3s steps(2) infinite}
-  @keyframes nf{50%{opacity:.04}}
+  @keyframes nf{50%{opacity:.01}}
   #fx-cut{position:absolute;inset:0;z-index:95;pointer-events:none;overflow:hidden}
   .tear{position:absolute;left:0;right:0;height:36px;opacity:0}
   .tear.go{animation:tear .06s ease-out forwards}
@@ -74,7 +74,7 @@
   @keyframes drama{0%{opacity:1;background:rgba(0,0,0,.7)}100%{opacity:0;background:transparent}}
   @keyframes dramw{0%{opacity:0;transform:scale(1.6) skewX(-6deg)}40%{opacity:1;transform:scale(1) skewX(2deg)}100%{opacity:0;transform:scale(.9)}}
   #app:has(.screen.active) .noise{opacity:.02}
-  #app:has(.screen.active) .scanlines{opacity:.05}
+  #app:has(.screen.active) .scanlines{opacity:.035}
   #app:has(#screen-hud.active) .scanlines{animation:none;opacity:.035}
   #app:has(#screen-hud.active) .noise{animation:none;opacity:.015}
   #alert-cascade{position:absolute;top:8%;right:1%;width:28%;z-index:86;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
@@ -216,6 +216,8 @@
   #screen-boot .boot-video::-webkit-media-controls-enclosure{display:none!important}
   #screen-boot .boot-video::-webkit-media-controls-start-playback-button{display:none!important}
   #screen-boot .boot-video::-webkit-media-controls-overlay-play-button{display:none!important}
+  #screen-boot .boot-video::-webkit-media-controls-play-button{display:none!important}
+  #screen-boot .boot-video { pointer-events: none; }
   #screen-boot.xfade-out{opacity:0!important;transition:opacity .5s ease}
   #screen-hud.xfade-in{opacity:1!important;transition:opacity .5s ease}
   #screen-hud.xfade-prep{opacity:0}
@@ -579,7 +581,7 @@ const CASCADE_ALERTS=['PATTERN BLUE UNCONFIRMED','AT FIELD ±0.03','LCL DENSITY 
   'BERSERK LOCKED','GEOFRONT DEPTH 1200m','ENTRY PLUG STANDBY','NEURAL LINK ACTIVE','SYNC CABLE OFF'];
 const OPENING_FLASH=['DNA','ANGEL','SYNC','MAGI','AT FIELD','初号機','CROSS','LCL','NERV','LINK'];
 const BOOT_DURATION_MS=3000;
-const BOOT_PLAYBACK_RATE=2.38;
+const BOOT_PLAYBACK_RATE=1.0;
 const HUD_XFADE_MS=500;
 const EvaAudio=(()=>{
   const intro=document.getElementById('eva-intro-audio')||new Audio('/assets/sound/eva-ui-sound.mp3');
